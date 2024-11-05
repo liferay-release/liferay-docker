@@ -23,13 +23,13 @@ function main {
 	then
 		rm -fr "liferay-portal-ee"
 
-		local sha=$(_get_tag_sha "liferay-release" "liferay-portal-ee" "${_PRODUCT_VERSION}" "${LIFERAY_RELEASE_GITHUB_PAT}")
+		local sha=$(_get_tag_sha "lucasmiranda0" "liferay-portal-ee" "${_PRODUCT_VERSION}" "${LIFERAY_RELEASE_GITHUB_PAT}")
 
-		_get_github_repository_zip "liferay-release" "liferay-portal-ee" "${_PRODUCT_VERSION}" "${LIFERAY_RELEASE_GITHUB_PAT}" 
+		_get_github_repository_zip "lucasmiranda0" "liferay-portal-ee" "${_PRODUCT_VERSION}" "${LIFERAY_RELEASE_GITHUB_PAT}" 
 
 		unzip -q "repository.zip"
 
-		mv "liferay-release-liferay-portal-ee-${sha}" "liferay-portal-ee"
+		mv "lucasmiranda0-liferay-portal-ee-${sha}" "liferay-portal-ee"
 	fi
 
 	test_generate_pom_release_bom_api_portal
@@ -54,13 +54,13 @@ function set_up {
 	then
 		export _PROJECTS_DIR="${PWD}"
 
-		local sha=$(_get_tag_sha "liferay-release" "liferay-portal-ee" "${_PRODUCT_VERSION}" "${LIFERAY_RELEASE_GITHUB_PAT}") 
+		local sha=$(_get_tag_sha "lucasmiranda0" "liferay-portal-ee" "${_PRODUCT_VERSION}" "${LIFERAY_RELEASE_GITHUB_PAT}") 
 
-		_get_github_repository_zip "liferay-release" "liferay-portal-ee" "${_PRODUCT_VERSION}" "${LIFERAY_RELEASE_GITHUB_PAT}"
+		_get_github_repository_zip "lucasmiranda0" "liferay-portal-ee" "${_PRODUCT_VERSION}" "${LIFERAY_RELEASE_GITHUB_PAT}"
 
 		unzip -q "repository.zip"
 
-		mv "liferay-release-liferay-portal-ee-${sha}" "liferay-portal-ee"
+		mv "lucasmiranda0-liferay-portal-ee-${sha}" "liferay-portal-ee"
 	else
 		export _PROJECTS_DIR="${_RELEASE_ROOT_DIR}"/../..
 
