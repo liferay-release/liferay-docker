@@ -5,6 +5,8 @@ source ../_test_common.sh
 source _bom.sh
 
 function main {
+	echo "AQUI 1"
+	lc_log INFO "AQUI 1"
 	set_up
 
 	test_generate_pom_release_bom_api_dxp
@@ -47,7 +49,8 @@ function set_up {
 	if [ -n "${LIFERAY_RELEASE_GITHUB_PAT}" ]
 	then
 		export _PROJECTS_DIR="${PWD}"
-
+		echo "AQUI 2"
+		lc_log INFO "AQUI 2"
 		_extract_repository "liferay-release" "liferay-portal-ee" "${_PRODUCT_VERSION}" "${LIFERAY_RELEASE_GITHUB_PAT}"
 	else
 		export _PROJECTS_DIR="${_RELEASE_ROOT_DIR}"/../..
@@ -209,6 +212,8 @@ function test_generate_pom_release_bom_third_party_portal {
 }
 
 function _extract_repository {
+	echo "AQUI 3"
+	lc_log INFO "AQUI 3"
 	local sha=$(_get_tag_sha "${1}" "${2}" "${3}" "${4}")
 
 	_get_github_repository_zip "${1}" "${2}" "${3}" "${4}"
@@ -223,17 +228,17 @@ function _get_github_repository_zip {
 		"https://api.github.com/repos/${1}/${2}/zipball/${3}" \
 		--header "Authorization: token ${4}" \
 		--location \
-		--output repository.zip \
-		--silent
+		--output repository.zip
 }
 
 function _get_tag_sha {
+	echo "AQUI 4"
+	lc_log INFO "AQUI 4"
 	local sha=$(\
 		curl \
 			"https://api.github.com/repos/${1}/${2}/git/ref/tags/${3}" \
 			--header "Accept: application/vnd.github.v3+json" \
 			--header "Authorization: token ${4}" \
-			--silent \
 			| jq -r '.object.sha')
 
 	if [ -z "${sha}" ] || [ "${sha}" == "null" ]
@@ -242,7 +247,7 @@ function _get_tag_sha {
 
 		exit 1
 	fi
-
+	lc_log ERROR "SHA is ${sha}"
 	echo "${sha}"
 }
 
