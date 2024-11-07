@@ -10,6 +10,8 @@ jobs:
             - name: Execute run_tests.sh
               run: ./run_tests.sh
               shell: bash
+            env:
+              TOKEN: ${{ secrets.LIFERAY_RELEASE_GITHUB_PAT }}
 name: Release
 on:
     pull_request:
