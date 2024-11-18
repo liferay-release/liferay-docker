@@ -183,11 +183,14 @@ function prepare_next_release_branch {
 			-e "s/release.info.version.display.name\[release-private\]=.*/release.info.version.display.name[release-private]=${product_group_version^^}.${next_project_version_suffix}/" \
 			"${_PROJECTS_DIR}/liferay-portal-ee/release.properties"
 
-		commit_to_branch_and_send_pull_request \
-			"${_PROJECTS_DIR}/liferay-portal-ee/release.properties" \
-			"Prepare ${quarterly_release_branch_name}" \
-			"${quarterly_release_branch_name}" \
-			"Prep next"
+		if [[ ! " ${@} " =~ " --test " ]]
+		then
+			commit_to_branch_and_send_pull_request \
+				"${_PROJECTS_DIR}/liferay-portal-ee/release.properties" \
+				"Prepare ${quarterly_release_branch_name}" \
+				"${quarterly_release_branch_name}" \
+				"Prep next"
+		fi
 
 		if [ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_BAD}" ]
 		then
