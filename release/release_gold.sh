@@ -300,6 +300,19 @@ function tag_release {
 	then
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
+
+	lc_cd "${_PROJECTS_DIR}/${repository}"
+
+	local liferay_remote="git@github.com:liferay/${repository}.git"
+
+	if (! git ls remote --tags "${liferay_remote}" | grep -w ${_PRODUCT_VERSION} &> /dev/null)
+	then
+		lc_log INFO "Fetching and pushing ${_PRODUCT_VERSION} tag to liferay-release/${repository}."
+		
+		git fetch "${liferay_remote}" tag ${_PRODUCT_VERSION}
+
+		git push "git@github.com:liferay-release/${repository}.git" tag ${_PRODUCT_VERSION}
+	fi
 }
 
 function test_boms {
