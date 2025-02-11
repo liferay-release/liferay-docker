@@ -3,7 +3,7 @@
 source ./_common.sh
 
 function add_lts_suffix {
-	if [[ "${LIFERAY_DOCKER_RELEASE_VERSION}" == *.q1.* ]]
+	if [[ "${LIFERAY_DOCKER_RELEASE_VERSION}" =~ ^20(2[5-9]|[3-9][0-9])\.q1.*$ ]]
 	then
 		LIFERAY_DOCKER_RELEASE_VERSION="${LIFERAY_DOCKER_RELEASE_VERSION}-LTS"
 	fi
