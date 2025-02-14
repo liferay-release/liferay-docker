@@ -25,6 +25,7 @@ function main {
 
 		test_not_prepare_next_release_branch
 		test_not_update_release_info_date
+		test_prepare_next_lts_release_branch
 		test_prepare_next_release_branch
 		test_update_release_info_date
 	else
@@ -91,6 +92,18 @@ function test_not_update_release_info_date {
 	_test_not_update_release_info_date "7.3.10-u36" "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	_test_not_update_release_info_date "7.4.13-u101" "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	_test_not_update_release_info_date "7.4.3.125-ga125" "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
+}
+
+function test_prepare_next_lts_release_branch {
+	_PRODUCT_VERSION="2025.q1.0"
+
+	prepare_next_release_branch --test 1> /dev/null
+
+	assert_equals \
+		"$(lc_get_property "${_PROJECTS_DIR}"/liferay-portal-ee/release.properties "release.info.version.display.name[master-private]")" \
+		"2025.Q1.1 LTS" \
+		"$(lc_get_property "${_PROJECTS_DIR}"/liferay-portal-ee/release.properties "release.info.version.display.name[release-private]")" \
+		"2025.Q1.1 LTS"
 }
 
 function test_prepare_next_release_branch {
