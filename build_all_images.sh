@@ -67,7 +67,12 @@ function build_bundle_image {
 
 	if [ -z "${bundle_url}" ]
 	then
-		bundle_url="releases-cdn.liferay.com/dxp/${version}/"$(curl -fsSL "https://releases-cdn.liferay.com/dxp/${version}/.lfrrelease-tomcat-bundle")
+		if [[ "${version}" == *q1* ]] && [[ "$(echo "${version}" | cut -d '.' -f 1)" -ge 2025 ]]
+		then
+			bundle_url="releases-cdn.liferay.com/dxp/${version}-lts/"$(curl -fsSL "https://releases-cdn.liferay.com/dxp/${version}-lts/.lfrrelease-tomcat-bundle")
+		else
+			bundle_url="releases-cdn.liferay.com/dxp/${version}/"$(curl -fsSL "https://releases-cdn.liferay.com/dxp/${version}/.lfrrelease-tomcat-bundle")
+		fi
 	fi
 
 	if [ -n "${additional_tags}" ]
