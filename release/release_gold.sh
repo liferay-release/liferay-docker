@@ -281,7 +281,6 @@ function print_help {
 	echo "    LIFERAY_RELEASE_PREPARE_NEXT_RELEASE_BRANCH: Set to \"true\" to prepare the next release branch. The default is \"false\"."
 	echo "    LIFERAY_RELEASE_PRODUCT_NAME (optional): Set to \"portal\" for CE. The default is \"DXP\"."
 	echo "    LIFERAY_RELEASE_RC_BUILD_TIMESTAMP: Timestamp of the build to publish"
-	echo "    LIFERAY_RELEASE_REPOSITORY_OWNER (optional): Set to \"EnterpriseReleaseHU\" for development. The default is \"liferay\"."
 	echo "    LIFERAY_RELEASE_VERSION: DXP or portal version of the release to publish"
 	echo ""
 	echo "Example: LIFERAY_RELEASE_PREPARE_NEXT_RELEASE_BRANCH=true LIFERAY_RELEASE_RC_BUILD_TIMESTAMP=1695892964 LIFERAY_RELEASE_VERSION=2023.q3.0 ${0}"
@@ -476,7 +475,6 @@ function tag_release {
 
 	for repository_owner in brianchandotcom liferay
 	do
-		LIFERAY_RELEASE_REPOSITORY_OWNER="${repository_owner}"
 
 		local tag_data=$(
 			cat <<- END
@@ -489,7 +487,7 @@ function tag_release {
 			END
 		)
 
-		if [ $(invoke_github_api_post "${repository}/git/tags" "${tag_data}") -eq "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}" ]
+		if [ $(invoke_github_api_post "${repository_owner}" "${repository}/git/tags" "${tag_data}") -eq "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}" ]
 		then
 			lc_log ERROR "Unable to create tag ${_ARTIFACT_VERSION} in ${repository_owner}/${repository}."
 
@@ -506,13 +504,25 @@ function tag_release {
 			END
 		)
 
-		if [ $(invoke_github_api_post "${repository}/git/refs" "${ref_data}") -eq "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}" ]
+		if [ $(invoke_github_api_post "${repository_owner}" "${repository}/git/refs" "${ref_data}") -eq "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}" ]
 		then
 			lc_log ERROR "Unable to create tag reference for ${_ARTIFACT_VERSION} in ${repository_owner}/${repository}."
 
 			return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 		fi
 	done
+
+	if [[ "${_PRODUCT_VERSION}" == "7.4."*"-u"* ]]
+	then
+		local temp_branch="release-$(echo "${_PRODUCT_VERSION}" | tr '-' '.' | tr -d 'u')"
+
+		if [ $(invoke_github_api_delete "brianchandotcom" "${repository}/git/refs/heads/${temp_branch}") -eq "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}" ]
+		then
+			lc_log ERROR "Unable to delete temp branch ${temp_branch} in ${LIFERAY_RELEASE_REPOSITORY_OWNER}/${repository}."
+
+			return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
+		fi
+	fi
 }
 
 function test_boms {
