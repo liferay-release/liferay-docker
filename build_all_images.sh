@@ -605,6 +605,8 @@ function main {
 
 	build_base_image
 
+	#build_bundler_builder_image
+
 	build_jdk_image "JDK 11" "jdk11" "11"
 	build_jdk_image "JDK 11 JDK 8" "jdk11-jdk8" "8"
 	build_jdk_image "JDK 21 JDK 11 JDK 8" "jdk21-jdk11-jdk8" "21"
@@ -619,8 +621,6 @@ function main {
 	build_squid_image
 	#build_zabbix_server_image
 	#build_zabbix_web_image
-
-	#build_bundler_builder_image
 
 	build_bundle_images
 
