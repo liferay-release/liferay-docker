@@ -10,6 +10,7 @@ function main {
 	test_merge_json_snippets dxp
 	test_process_new_product_1
 	test_process_new_product_2
+	test_process_product
 	test_promote_product_versions dxp
 
 	tear_down
@@ -71,6 +72,17 @@ function test_process_new_product_2 {
 	assert_equals "${?}" "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 
 	_PRODUCT_VERSION="${temp_product_version}"
+}
+
+function test_process_product {
+    local is_json_file_created="false"
+
+    if [ -f "./2025-02-18-dxp-2025.q1.0-lts.json" ]
+	then
+        is_json_file_created="true"
+    fi
+
+    assert_equals "${is_json_file_created}" "true"
 }
 
 function test_promote_product_versions {
