@@ -137,6 +137,10 @@ function compare_jars {
 			grep -v "_jsp.class" | \
 			grep -v "_jsp.java" | \
 			grep -v "previous-compilation-data.bin" | \
+			grep -v "__liferay__/index.js" | \
+			grep -v "index.js.map" | \
+			grep -v "META-INF/resources/aui/aui_deprecated.css" | \
+			grep -v "META-INF/resources/language.json" | \
 			#
 			# TODO Include portal-impl.jar when the util-*jars changed
 			#
