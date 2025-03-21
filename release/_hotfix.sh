@@ -125,18 +125,29 @@ function compare_jars {
 	function describe_jar {
 		unzip -v "${1}" | \
 			#
+			# Remove 0 byte files
+			#
+			grep -v 00000000 | \
+			#
 			# Remove headers and footers
 			#
 			grep "Defl:N" | \
 			#
-			# Remove 0 byte files
+			# Remove generated files
 			#
-			grep -v 00000000 | \
-			grep -v "pom.properties" | \
-			grep -v "source-classes-mapping.txt" | \
+			grep -v "META-INF/resources/aui/aui_deprecated.css" | \
+			grep -v "META-INF/resources/language.json" | \
+			grep -v "__liferay__/index.js" | \
 			grep -v "_jsp.class" | \
 			grep -v "_jsp.java" | \
+			grep -v "index.js.map" | \
+			grep -v "pom.properties" | \
 			grep -v "previous-compilation-data.bin" | \
+			grep -v "source-classes-mapping.txt" | \
+			#
+			# TODO Decide what to do with osgi/modules/com.liferay.sharepoint.soap.repository.jar
+			#
+			grep -v "ws.jar" | \
 			#
 			# TODO Include portal-impl.jar when the util-*jars changed
 			#
@@ -145,10 +156,6 @@ function compare_jars {
 			# TODO Modify "ant all" to not update this file every time
 			#
 			grep -v "META-INF/system.packages.extra.mf" | \
-			#
-			# TODO Decide what to do with osgi/modules/com.liferay.sharepoint.soap.repository.jar
-			#
-			grep -v "ws.jar" | \
 			sed -e "s/[0-9][0-9][-]*[0-9][0-9][-]*[0-9][0-9][-]*[0-9][0-9]\ [0-9][0-9]:[0-9][0-9]//"
 	}
 
@@ -176,10 +183,48 @@ function compare_jars {
 			fi
 		fi
 
-		if [ -n "${jar_descriptions}" ]
+		local new_jar_descriptions=""
+
+		if (echo "${jar_descriptions}" | grep -q ".class")
+		then
+			mkdir -p "${_BUILD_DIR}/tmp/jar1" "${_BUILD_DIR}/tmp/jar2"
+
+			while IFS= read -r line
+			do
+				if (echo "${line}" | grep -q ".class")
+				then
+					local class_file_name=$(basename "${line}")
+
+					unzip -p "${jar1}" "${line}" > "${_BUILD_DIR}/tmp/jar1/${class_file_name}"
+					unzip -p "${jar2}" "${line}" > "${_BUILD_DIR}/tmp/jar2/${class_file_name}"
+
+					javap -c -private -verbose "${_BUILD_DIR}/tmp/jar1/${class_file_name}" | tail -n +4 > \
+						"${_BUILD_DIR}/tmp/jar1/${class_file_name}.txt"
+					javap -c -private -verbose "${_BUILD_DIR}/tmp/jar2/${class_file_name}" | tail -n +4 > \
+						"${_BUILD_DIR}/tmp/jar2/${class_file_name}.txt"
+
+					diff_result=$(diff \
+						"${_BUILD_DIR}/tmp/jar1/${class_file_name}.txt" \
+						"${_BUILD_DIR}/tmp/jar2/${class_file_name}.txt")
+
+					if [ -n "${diff_result}" ]
+					then
+						new_jar_descriptions+="${line}"$'\n'
+					fi
+				else
+					new_jar_descriptions+="${line}"$'\n'
+				fi
+			done <<< "${jar_descriptions}"
+
+			rm -fr "${_BUILD_DIR}/tmp/jar1" "${_BUILD_DIR}/tmp/jar2"
+		else
+			new_jar_descriptions="${jar_descriptions}"
+		fi
+
+		if [ -n "${new_jar_descriptions}" ]
 		then
 			lc_log INFO "Changes in ${1}: "
-			lc_log INFO "${jar_descriptions}" | sed "s/^/    /"
+			lc_log INFO "${new_jar_descriptions}" | sed "s/^/    /"
 			lc_log INFO ""
 
 			return 0
