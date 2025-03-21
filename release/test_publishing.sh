@@ -29,19 +29,19 @@ function tear_down {
 }
 
 function test_get_patcher_product_version_label {
-	_test_get_patcher_product_version_label "7.3.10-u100" "DXP 7.3"
+	_test_get_patcher_product_version_label "7.3.10-u20" "DXP 7.3"
 	_test_get_patcher_product_version_label "7.4.13-u100" "DXP 7.4"
 	_test_get_patcher_product_version_label "2025.q1.0" "Quarterly Releases"
 }
 
 function test_get_patcher_project_version {
-	_test_get_patcher_project_version "7.3.10-u100" "fix-pack-dxp-100-7310"
+	_test_get_patcher_project_version "7.3.10-u20" "fix-pack-dxp-20-7310"
 	_test_get_patcher_project_version "7.4.13-u100" "7.4.13-u100"
 	_test_get_patcher_project_version "2025.q1.0" "2025.q1.0"
 }
 
 function test_get_root_patcher_project_version_name {
-	_test_get_root_patcher_project_version_name "7.3.10-u100" "fix-pack-base-7310"
+	_test_get_root_patcher_project_version_name "7.3.10-u20" "fix-pack-base-7310"
 	_test_get_root_patcher_project_version_name "7.4.13-u100" "7.4.13-ga1"
 	_test_get_root_patcher_project_version_name "2025.q1.0" ""
 }
