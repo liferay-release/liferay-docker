@@ -54,9 +54,7 @@ function build_batch_image {
 	fi
 }
 
-function build_bundler_builder_image {
-	log_in_to_docker_hub
-
+function build_bundle_builder_image {
 	if [[ $(get_latest_docker_hub_version "bundle-builder") == $(./release_notes.sh get-version) ]] && [[ "${LIFERAY_DOCKER_DEVELOPER_MODE}" != "true" ]]
 	then
 		echo ""
@@ -605,7 +603,7 @@ function main {
 
 	build_base_image
 
-	#build_bundler_builder_image
+	#build_bundle_builder_image
 
 	build_jdk_image "JDK 11" "jdk11" "11"
 	build_jdk_image "JDK 11 JDK 8" "jdk11-jdk8" "8"
