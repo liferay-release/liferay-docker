@@ -3,6 +3,11 @@
 source ./_common.sh
 
 function build_docker_image {
+	if [ "${LIFERAY_DOCKER_SLIM}" == "true" ]
+	then
+		DOCKER_IMAGE_NAME=${DOCKER_IMAGE_NAME}-slim
+	fi
+
 	if [[ ${LIFERAY_DOCKER_RELEASE_FILE_URL%} == */snapshot-* ]]
 	then
 		DOCKER_IMAGE_NAME=${DOCKER_IMAGE_NAME}-snapshot
@@ -141,6 +146,8 @@ function check_usage {
 		echo "The script reads the following environment variables:"
 		echo ""
 		echo "    LIFERAY_DOCKER_DEVELOPER_MODE (optional): If set to \"true\", all local images will be deleted before building a new one"
+		echo "    LIFERAY_DOCKER_ELASTICSEARCH_NETWORK_ADDRESS (optional): Elasticsearch network address"
+		echo "    LIFERAY_DOCKER_ELASTICSEARCH_PASSWORD (optional): Elasticsearch password"
 		echo "    LIFERAY_DOCKER_FIX_PACK_URL (optional): URL to a fix pack"
 		echo "    LIFERAY_DOCKER_HUB_TOKEN (optional): Docker Hub token to log in automatically"
 		echo "    LIFERAY_DOCKER_HUB_USERNAME (optional): Docker Hub username to log in automatically"
@@ -149,6 +156,8 @@ function check_usage {
 		echo "    LIFERAY_DOCKER_LICENSE_API_URL (required for DXP): API URL to generate the trial license"
 		echo "    LIFERAY_DOCKER_RELEASE_FILE_URL (required): URL to a Liferay bundle"
 		echo "    LIFERAY_DOCKER_REPOSITORY (optional): Docker repository"
+		echo "    LIFERAY_DOCKER_SLIM (optional): If set to \"true\", the image will be the slim variant"
+		echo "    LIFERAY_DOCKER_TRUSTSTORE_PASSWORD (optional): Truststore password"
 		echo ""
 		echo "Example: LIFERAY_DOCKER_RELEASE_FILE_URL=files.liferay.com/private/ee/portal/7.2.10/liferay-dxp-tomcat-7.2.10-ga1-20190531140450482.7z ${0} push"
 		echo ""
@@ -225,6 +234,30 @@ function main {
 	clean_up_temp_directory
 }
 
+function prepare_slim_image {
+	rm -fr "${TEMP_DIR}/liferay/elasticsearch-sidecar"
+
+	touch "${TEMP_DIR}/liferay/osgi/configs/com.liferay.portal.search.elasticsearch7.configuration.ElasticsearchConfiguration.config"
+
+	cat >> "${TEMP_DIR}/liferay/osgi/configs/com.liferay.portal.search.elasticsearch7.configuration.ElasticsearchConfiguration.config" <<EOF
+password="${LIFERAY_DOCKER_ELASTICSEARCH_PASSWORD}"
+truststorePassword="${LIFERAY_DOCKER_TRUSTSTORE_PASSWORD}"
+networkHostAddresses="https://${LIFERAY_DOCKER_ELASTICSEARCH_NETWORK_ADDRESS}:9200"
+authenticationEnabled=B"true"
+httpSSLEnabled=B"true"
+logExceptionsOnly="false"
+productionModeEnabled=B"true"
+truststorePath="/opt/liferay/certs/http.p12"
+truststoreType="pkcs12"
+username="elastic"
+EOF
+	mkdir -p "${TEMP_DIR}/liferay/certs"
+
+	mv "/home/me/dev/certs/http.p12" "${TEMP_DIR}/liferay/certs/http.p12"
+
+	ls -l "${TEMP_DIR}/liferay"
+}
+
 function prepare_temp_directory {
 	RELEASE_FILE_NAME=${LIFERAY_DOCKER_RELEASE_FILE_URL##*/}
 
@@ -246,6 +279,11 @@ function prepare_temp_directory {
 	fi
 
 	mv "${TEMP_DIR}/liferay-"* "${TEMP_DIR}/liferay"
+
+	if [ "${LIFERAY_DOCKER_SLIM}" == "true" ]
+	then
+		prepare_slim_image
+	fi
 }
 
 function push_docker_image {
