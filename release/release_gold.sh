@@ -329,9 +329,13 @@ function reference_new_releases {
 			tail -1 | \
 			cut -d '=' -f 2)"
 
+	local is_new_quarter="false"
+
 	if [ -z "${previous_product_version}" ]
 	then
 		previous_product_version="$(grep "portal.latest.bundle.version\[master\]=" "build.properties" | cut -d '=' -f 2)"
+
+		is_new_quarter="true"
 	fi
 
 	for component in osgi sql tools
