@@ -39,6 +39,12 @@ function _generate_product_version_list {
 	echo "${directory_html}"
 }
 
+function _get_latest_product_version {
+	echo "$(_generate_product_version_list "${1}")" | \
+		grep -oP '(?<=<a href=")(?:\d{4}\.q[1-4]\.\d+(?:-lts)?|7\.4\.3\.\d+-ga\d+)(?=/")' | \
+		tail -n1
+}
+
 function _merge_json_snippets {
 	if (! jq -s add $(ls ./*.json | sort -r) > releases.json)
 	then
