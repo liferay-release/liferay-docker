@@ -3,6 +3,11 @@
 source ./_common.sh
 
 function build_docker_image {
+	if [ "${LIFERAY_DOCKER_SLIM}" == "true" ]
+	then
+		LIFERAY_DOCKER_SLIM="-slim"
+	fi
+
 	if [[ ${LIFERAY_DOCKER_RELEASE_FILE_URL%} == */snapshot-* ]]
 	then
 		DOCKER_IMAGE_NAME=${DOCKER_IMAGE_NAME}-snapshot
@@ -80,18 +85,18 @@ function build_docker_image {
 	do
 		if [[ ${LIFERAY_DOCKER_RELEASE_FILE_URL%} == */snapshot-* ]]
 		then
-			DOCKER_IMAGE_TAGS+=("${LIFERAY_DOCKER_REPOSITORY}/${DOCKER_IMAGE_NAME}:${release_branch}-${release_version_single}-${release_hash}")
-			DOCKER_IMAGE_TAGS+=("${LIFERAY_DOCKER_REPOSITORY}/${DOCKER_IMAGE_NAME}:${release_branch}-$(date "${CURRENT_DATE}" "+%Y%m%d")")
-			DOCKER_IMAGE_TAGS+=("${LIFERAY_DOCKER_REPOSITORY}/${DOCKER_IMAGE_NAME}:${release_branch}")
+			DOCKER_IMAGE_TAGS+=("${LIFERAY_DOCKER_REPOSITORY}/${DOCKER_IMAGE_NAME}${LIFERAY_DOCKER_SLIM}:${release_branch}-${release_version_single}-${release_hash}")
+			DOCKER_IMAGE_TAGS+=("${LIFERAY_DOCKER_REPOSITORY}/${DOCKER_IMAGE_NAME}${LIFERAY_DOCKER_SLIM}:${release_branch}-$(date "${CURRENT_DATE}" "+%Y%m%d")")
+			DOCKER_IMAGE_TAGS+=("${LIFERAY_DOCKER_REPOSITORY}/${DOCKER_IMAGE_NAME}${LIFERAY_DOCKER_SLIM}:${release_branch}")
 		else
-			DOCKER_IMAGE_TAGS+=("${LIFERAY_DOCKER_REPOSITORY}/${DOCKER_IMAGE_NAME}:${release_version_single}-d$(./release_notes.sh get-version)-${TIMESTAMP}")
-			DOCKER_IMAGE_TAGS+=("${LIFERAY_DOCKER_REPOSITORY}/${DOCKER_IMAGE_NAME}:${release_version_single}")
+			DOCKER_IMAGE_TAGS+=("${LIFERAY_DOCKER_REPOSITORY}/${DOCKER_IMAGE_NAME}${LIFERAY_DOCKER_SLIM}:${release_version_single}-d$(./release_notes.sh get-version)-${TIMESTAMP}")
+			DOCKER_IMAGE_TAGS+=("${LIFERAY_DOCKER_REPOSITORY}/${DOCKER_IMAGE_NAME}${LIFERAY_DOCKER_SLIM}:${release_version_single}")
 		fi
 	done
 
 	if [[ "${LIFERAY_DOCKER_LATEST}" = "true" ]]
 	then
-		DOCKER_IMAGE_TAGS+=("${LIFERAY_DOCKER_REPOSITORY}/${DOCKER_IMAGE_NAME}:latest")
+		DOCKER_IMAGE_TAGS+=("${LIFERAY_DOCKER_REPOSITORY}/${DOCKER_IMAGE_NAME}${LIFERAY_DOCKER_SLIM}:latest")
 	fi
 
 	if [ -e "${TEMP_DIR}/liferay/.githash" ]
@@ -141,6 +146,7 @@ function check_usage {
 		echo "The script reads the following environment variables:"
 		echo ""
 		echo "    LIFERAY_DOCKER_DEVELOPER_MODE (optional): If set to \"true\", all local images will be deleted before building a new one"
+		echo "    LIFERAY_DOCKER_ELASTICSEARCH_NETWORK_ADDRESSES (optional): Elasticsearch remote server network address"
 		echo "    LIFERAY_DOCKER_FIX_PACK_URL (optional): URL to a fix pack"
 		echo "    LIFERAY_DOCKER_HUB_TOKEN (optional): Docker Hub token to log in automatically"
 		echo "    LIFERAY_DOCKER_HUB_USERNAME (optional): Docker Hub username to log in automatically"
@@ -149,6 +155,7 @@ function check_usage {
 		echo "    LIFERAY_DOCKER_LICENSE_API_URL (required for DXP): API URL to generate the trial license"
 		echo "    LIFERAY_DOCKER_RELEASE_FILE_URL (required): URL to a Liferay bundle"
 		echo "    LIFERAY_DOCKER_REPOSITORY (optional): Docker repository"
+		echo "    LIFERAY_DOCKER_SLIM (optional): If set to \"true\", the image will be the slim variant"
 		echo ""
 		echo "Example: LIFERAY_DOCKER_RELEASE_FILE_URL=files.liferay.com/private/ee/portal/7.2.10/liferay-dxp-tomcat-7.2.10-ga1-20190531140450482.7z ${0} push"
 		echo ""
@@ -212,6 +219,11 @@ function main {
 
 	prepare_tomcat
 
+	if [ -n "${LIFERAY_DOCKER_SLIM}" ]
+	then
+		prepare_slim_image
+	fi
+
 	download_trial_dxp_license
 
 	build_docker_image
@@ -223,6 +235,17 @@ function main {
 	push_docker_image "${1}"
 
 	clean_up_temp_directory
+}
+
+function prepare_slim_image {
+	rm -fr "${TEMP_DIR}/liferay/elasticsearch-sidecar"
+
+	touch "${TEMP_DIR}/liferay/osgi/configs/com.liferay.portal.search.elasticsearch7.configuration.ElasticsearchConfiguration.config"
+
+(
+	echo "networkHostAddresses=\"${LIFERAY_DOCKER_ELASTICSEARCH_NETWORK_ADDRESSES}\""
+	echo "productionModeEnabled=B\"true\""
+) > "${TEMP_DIR}/liferay/osgi/configs/com.liferay.portal.search.elasticsearch7.configuration.ElasticsearchConfiguration.config"
 }
 
 function prepare_temp_directory {
