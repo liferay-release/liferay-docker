@@ -17,6 +17,8 @@ function generate_releases_json {
 	_promote_product_versions dxp
 	_promote_product_versions portal
 
+	_tag_recommended_product_versions
+
 	_merge_json_snippets
 
 	_upload_releases_json
@@ -194,6 +196,28 @@ function _promote_product_versions {
 			lc_log INFO "No product version found to promote for ${product_name}-${group_version}."
 		fi
 	done < "${_RELEASE_ROOT_DIR}/supported-${product_name}-versions.txt"
+}
+
+function _tag_recommended_product_versions {
+	for release_type in "dxp" "ga" "quartely"
+	do
+		local latest_product_version=$(_get_latest_product_version "${release_type}")
+		local json_snippet=$(ls | grep "${latest_product_version}")
+
+		if [ -f "${json_snippet}" ]
+		then
+			jq "map(
+					(. + {tags: [\"recommended\"]})
+					| to_entries
+					| sort_by(.key)
+					| from_entries
+				)" "${json_snippet}" > "${json_snippet}.tmp" && mv "${json_snippet}.tmp" "${json_snippet}"
+
+			lc_log INFO "Tagging ${json_snippet} as recommended."
+		else
+			lc_log INFO "No json snippet found to tag for ${release_type^^} release."
+		fi
+	done
 }
 
 function _upload_releases_json {
