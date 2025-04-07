@@ -82,6 +82,10 @@ function test_process_product {
 	assert_equals \
 		"$(jq 'map(select(.releaseKey == "'"${LIFERAY_RELEASE_PRODUCT_NAME}-${latest_product_version}"'" and (.tags == ["recommended"]))) | length == 1' releases.json)" \
 		"true"
+
+	assert_equals \
+		"$(jq 'map(select(.tags == ["recommended"])) | length == 1' releases.json)" \
+		"true"
 }
 
 function test_promote_product_versions {
