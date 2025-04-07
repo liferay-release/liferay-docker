@@ -182,6 +182,19 @@ function download_trial_dxp_license {
 	fi
 }
 
+function get_newest_tomcat_version {
+	local tomcat_version=$(get_tomcat_version "${TEMP_DIR}/liferay")
+
+	if [[ "${tomcat_version}" == "9.0"* ]]
+	then
+		echo "9.0.100"
+	else
+		echo "Unable to get full version for ${1}."
+
+		exit 1
+	fi
+}
+
 function install_fix_pack {
 	if [ -n "${LIFERAY_DOCKER_FIX_PACK_URL}" ]
 	then
@@ -259,7 +272,7 @@ function prepare_temp_directory {
 
 	mv "${TEMP_DIR}/liferay-"* "${TEMP_DIR}/liferay"
 
-	local tomcat_version=$(./tomcat_version.sh $(get_tomcat_version "${TEMP_DIR}/liferay"))
+	local tomcat_version=$(get_newest_tomcat_version)
 	local tomcat_url="https://dlcdn.apache.org/tomcat/tomcat-${tomcat_version%%.*}/v${tomcat_version}/bin/apache-tomcat-${tomcat_version}.zip"
 	local tomcat_download_dir="downloads/tomcat/apache-tomcat-${tomcat_version}"
 
