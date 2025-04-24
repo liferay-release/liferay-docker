@@ -152,7 +152,7 @@ function _process_new_product {
 function _process_products {
 	for product_name in "dxp" "portal"
 	do
-		for product_version in  $(echo -en "$(_download_product_version_list_html "${product_name}")" | \
+		for product_version in $(echo -en "$(_download_product_version_list_html "${product_name}")" | \
 			grep \
 				--extended-regexp \
 				--only-matching \
