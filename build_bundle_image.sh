@@ -267,29 +267,36 @@ function prepare_temp_directory {
 
 	download "${tomcat_download_dir}/apache-tomcat.zip" "${tomcat_url}"
 
-	mv "${TEMP_DIR}/liferay/tomcat" "${TEMP_DIR}/liferay/tomcat-temp"
+	local tomcat_folder="tomcat"
+
+	if [ ! -e "${TEMP_DIR}/liferay/tomcat" ]
+	then
+		tomcat_folder="tomcat-${tomcat_version}"
+	fi
+
+	mv "${TEMP_DIR}/liferay/${tomcat_folder}" "${TEMP_DIR}/liferay/tomcat-temp"
 
 	unzip -d "${TEMP_DIR}/liferay" -q "${tomcat_download_dir}/apache-tomcat.zip" || exit 3
 
-	mv "${TEMP_DIR}/liferay/apache-tomcat-"* "${TEMP_DIR}/liferay/tomcat"
+	mv "${TEMP_DIR}/liferay/apache-tomcat-"* "${TEMP_DIR}/liferay/${tomcat_folder}"
 
-	rm -fr "${TEMP_DIR}/liferay/tomcat/conf"
-	rm -fr "${TEMP_DIR}/liferay/tomcat/temp/safeToDelete.tmp"
-	rm -fr "${TEMP_DIR}/liferay/tomcat/webapps"
+	rm -fr "${TEMP_DIR}/liferay/${tomcat_folder}/conf"
+	rm -fr "${TEMP_DIR}/liferay/${tomcat_folder}/temp/safeToDelete.tmp"
+	rm -fr "${TEMP_DIR}/liferay/${tomcat_folder}/webapps"
 
-	cp -r "${TEMP_DIR}/liferay/tomcat-temp/LICENSE" "${TEMP_DIR}/liferay/tomcat/LICENSE"
-	cp -r "${TEMP_DIR}/liferay/tomcat-temp/NOTICE" "${TEMP_DIR}/liferay/tomcat/NOTICE"
-	cp -r "${TEMP_DIR}/liferay/tomcat-temp/RELEASE-NOTES" "${TEMP_DIR}/liferay/tomcat/RELEASE-NOTES"
-	cp -r "${TEMP_DIR}/liferay/tomcat-temp/bin/catalina-tasks.xml" "${TEMP_DIR}/liferay/tomcat/bin/catalina-tasks.xml"
-	cp -r "${TEMP_DIR}/liferay/tomcat-temp/bin/setenv.bat" "${TEMP_DIR}/liferay/tomcat/bin/setenv.bat"
-	cp -r "${TEMP_DIR}/liferay/tomcat-temp/bin/setenv.sh" "${TEMP_DIR}/liferay/tomcat/bin/setenv.sh"
-	cp -r "${TEMP_DIR}/liferay/tomcat-temp/conf" "${TEMP_DIR}/liferay/tomcat/"
-	cp -r "${TEMP_DIR}/liferay/tomcat-temp/webapps" "${TEMP_DIR}/liferay/tomcat/"
-	cp -r "${TEMP_DIR}/liferay/tomcat-temp/work/Catalina" "${TEMP_DIR}/liferay/tomcat/work/Catalina"
+	cp -r "${TEMP_DIR}/liferay/tomcat-temp/LICENSE" "${TEMP_DIR}/liferay/${tomcat_folder}/LICENSE"
+	cp -r "${TEMP_DIR}/liferay/tomcat-temp/NOTICE" "${TEMP_DIR}/liferay/${tomcat_folder}/NOTICE"
+	cp -r "${TEMP_DIR}/liferay/tomcat-temp/RELEASE-NOTES" "${TEMP_DIR}/liferay/${tomcat_folder}/RELEASE-NOTES"
+	cp -r "${TEMP_DIR}/liferay/tomcat-temp/bin/catalina-tasks.xml" "${TEMP_DIR}/liferay/${tomcat_folder}/bin/catalina-tasks.xml"
+	cp -r "${TEMP_DIR}/liferay/tomcat-temp/bin/setenv.bat" "${TEMP_DIR}/liferay/${tomcat_folder}/bin/setenv.bat"
+	cp -r "${TEMP_DIR}/liferay/tomcat-temp/bin/setenv.sh" "${TEMP_DIR}/liferay/${tomcat_folder}/bin/setenv.sh"
+	cp -r "${TEMP_DIR}/liferay/tomcat-temp/conf" "${TEMP_DIR}/liferay/${tomcat_folder}/"
+	cp -r "${TEMP_DIR}/liferay/tomcat-temp/webapps" "${TEMP_DIR}/liferay/${tomcat_folder}/"
+	cp -r "${TEMP_DIR}/liferay/tomcat-temp/work/Catalina" "${TEMP_DIR}/liferay/${tomcat_folder}/work/Catalina"
 
 	rm -fr "${TEMP_DIR}/liferay/tomcat-temp"
 
-	chmod +x "${TEMP_DIR}/liferay/tomcat/bin/"*
+	chmod +x "${TEMP_DIR}/liferay/${tomcat_folder}/bin/"*
 }
 
 function push_docker_image {
