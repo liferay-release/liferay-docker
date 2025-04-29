@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source build_bundle_image.sh --test
+source build_bundle_image.sh
 source _test_common.sh
 
 function main {
@@ -12,10 +12,12 @@ function main {
 }
 
 function set_up {
+	export LIFERAY_RELEASE_TEST_MODE="true"
 	export TEMP_DIR="${PWD}"
 }
 
 function tear_down {
+	unset LIFERAY_RELEASE_TEST_MODE
 	unset TEMP_DIR
 }
 

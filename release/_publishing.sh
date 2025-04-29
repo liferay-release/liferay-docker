@@ -366,7 +366,7 @@ function _update_bundles_yml {
 
 	truncate -s -1 "${_BASE_DIR}/bundles.yml"
 
-	if [[ ! " ${@} " =~ " --test " ]]
+	if [ "${LIFERAY_RELEASE_TEST_MODE}" != "true" ]
 	then
 		git add "${_BASE_DIR}/bundles.yml"
 

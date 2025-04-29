@@ -547,7 +547,7 @@ function get_tag_from_image {
 }
 
 function main {
-	if [[ " ${@} " =~ " --test " ]]
+	if [ "${LIFERAY_RELEASE_TEST_MODE}" == "true" ]
 	then
 		return
 	fi

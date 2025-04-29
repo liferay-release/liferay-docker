@@ -1,10 +1,22 @@
 #!/bin/bash
 
-source build_all_images.sh --test
+source build_all_images.sh
 source _test_common.sh
 
 function main {
+	set_up
+
 	test_build_all_images_get_latest_available_zulu_version
+
+	tear_down
+}
+
+function set_up {
+	export LIFERAY_DOCKER_TEST_MODE="true"
+}
+
+function tear_down {
+	unset LIFERAY_DOCKER_TEST_MODE
 }
 
 function test_build_all_images_get_latest_available_zulu_version {

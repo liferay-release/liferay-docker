@@ -5,7 +5,7 @@ source ../_test_common.sh
 source _publishing.sh
 
 function main {
-	setup
+	set_up
 
 	test_publishing_get_patcher_product_version_label
 	test_publishing_get_patcher_project_version
@@ -15,7 +15,8 @@ function main {
 	tear_down
 }
 
-function setup {
+function set_up {
+	export LIFERAY_RELEASE_TEST_MODE="true"
 	export _RELEASE_ROOT_DIR="${PWD}"
 
 	export _BASE_DIR="${_RELEASE_ROOT_DIR}/test-dependencies/actual"
@@ -24,6 +25,7 @@ function setup {
 function tear_down {
 	git restore "${_BASE_DIR}/bundles.yml"
 
+	unset LIFERAY_RELEASE_TEST_MODE
 	unset _BASE_DIR
 	unset _RELEASE_ROOT_DIR
 }
@@ -61,7 +63,7 @@ function _run_update_bundles_yml {
 
 	echo -e "Running _update_bundles_yml for ${_PRODUCT_VERSION}.\n"
 
-	_update_bundles_yml --test &> /dev/null
+	_update_bundles_yml &> /dev/null
 }
 
 function _test_publishing_get_patcher_product_version_label {

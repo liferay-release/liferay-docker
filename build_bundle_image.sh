@@ -204,7 +204,7 @@ function install_fix_pack {
 }
 
 function main {
-	if [[ " ${@} " =~ " --test " ]]
+	if [ "${LIFERAY_RELEASE_TEST_MODE}" == "true" ]
 	then
 		return
 	fi
