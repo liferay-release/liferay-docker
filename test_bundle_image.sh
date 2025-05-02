@@ -148,7 +148,19 @@ function start_container {
 		test_dir="/data/${LIFERAY_DOCKER_NETWORK_NAME}/liferay/liferay-docker/${TEST_DIR}"
 	fi
 
-	CONTAINER_ID=$(docker run -d -p 8080 -v "${test_dir}/mnt:/mnt:rw" ${network_parameters} "${LIFERAY_DOCKER_IMAGE_ID}")
+	if [[ "${LIFERAY_DOCKER_NETWORK_NAME}" == *slave* ]]
+	then
+		CONTAINER_HOSTNAME=172.17.0.1
+		CONTAINER_HTTP_PORT=8081
+
+		echo -e "web.server.host=172.17.0.1\nweb.server.http.port=8081" > portal-ext.properties
+
+		test_dir="/mnt/pd/liferay-docker/${TEST_DIR}"
+
+		CONTAINER_ID=$(docker run -d -p 8081:8080 -v "${test_dir}/mnt:/mnt:rw" -v "/mnt/pd/liferay-docker/portal-ext.properties:/opt/liferay/portal-ext.properties" ${network_parameters} "${LIFERAY_DOCKER_IMAGE_ID}")
+	else
+		CONTAINER_ID=$(docker run -d -p 8080 -v "${test_dir}/mnt:/mnt:rw" ${network_parameters} "${LIFERAY_DOCKER_IMAGE_ID}")
+	fi
 
 	if [ ! -n "${LIFERAY_DOCKER_NETWORK_NAME}" ]
 	then
