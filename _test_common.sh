@@ -69,7 +69,7 @@ function assert_equals {
 	fi
 }
 
-function main {
+function display_test_location {
 	_TEST_RESULT="true"
 
 	if [ -n "${BASH_SOURCE[3]}" ]
@@ -79,6 +79,12 @@ function main {
 	then
 		echo -e "\n##### Running tests from $(echo ${BASH_SOURCE[2]} | sed -r 's/\.\///g') #####\n"
 	fi
+}
+
+function main {
+	LIFERAY_RELEASE_TEST_MODE="true"
+
+	display_test_location
 }
 
 main
