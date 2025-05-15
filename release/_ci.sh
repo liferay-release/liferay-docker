@@ -10,8 +10,6 @@ function trigger_ci_test_suite {
 			--data-urlencode "CI_TEST_SUITE=${CI_TEST_SUITE}" \
 			--data-urlencode "RUN_SCANCODE_PIPELINE=${RUN_SCANCODE_PIPELINE}" \
 			--data-urlencode "TEST_PORTAL_BRANCH_NAME=$(_get_test_portal_branch_name "${LIFERAY_RELEASE_GIT_REF}")" \
-			--data-urlencode "TEST_PORTAL_USER_BRANCH_NAME=${LIFERAY_RELEASE_GIT_REF}" \
-			--data-urlencode "TEST_PORTAL_USER_NAME=brianchandotcom" \
 			--data-urlencode "TEST_PORTAL_BUILD_PROFILE=${LIFERAY_RELEASE_PRODUCT_NAME}" \
 			--data-urlencode "TEST_PORTAL_RELEASE_GIT_ID=${_GIT_SHA}" \
 			--data-urlencode "TEST_PORTAL_RELEASE_OSGI_URL=${release_url}${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}/liferay-dxp-osgi-${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}.zip" \
@@ -21,6 +19,8 @@ function trigger_ci_test_suite {
 			--data-urlencode "TEST_PORTAL_RELEASE_WAR_URL=${release_url}${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}/liferay-dxp-${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}.war" \
 			--data-urlencode "TEST_PORTAL_RELEASE_VERSION=${_PRODUCT_VERSION}" \
 			--data-urlencode "TEST_PORTAL_REPOSITORY_NAME=liferay-portal-ee" \
+			--data-urlencode "TEST_PORTAL_USER_BRANCH_NAME=${LIFERAY_RELEASE_GIT_REF}" \
+			--data-urlencode "TEST_PORTAL_USER_NAME=brianchandotcom" \
 			--fail \
 			--max-time 10 \
 			--request "POST" \
