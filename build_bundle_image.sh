@@ -346,7 +346,7 @@ function prepare_temp_directory {
 
 		if [ ! -e "${TEMP_DIR}/liferay/tomcat" ]
 		then
-			tomcat_dir_name="tomcat-${tomcat_version}"
+			mv "${TEMP_DIR}/liferay/tomcat-"* "${TEMP_DIR}/liferay/tomcat"
 		fi
 
 		mv "${TEMP_DIR}/liferay/${tomcat_dir_name}" "${TEMP_DIR}/liferay/tomcat-temp"
@@ -366,7 +366,12 @@ function prepare_temp_directory {
 		cp -r "${TEMP_DIR}/liferay/tomcat-temp/bin/setenv.bat" "${TEMP_DIR}/liferay/${tomcat_dir_name}/bin/setenv.bat"
 		cp -r "${TEMP_DIR}/liferay/tomcat-temp/bin/setenv.sh" "${TEMP_DIR}/liferay/${tomcat_dir_name}/bin/setenv.sh"
 		cp -r "${TEMP_DIR}/liferay/tomcat-temp/conf" "${TEMP_DIR}/liferay/${tomcat_dir_name}/"
-		cp -r "${TEMP_DIR}/liferay/tomcat-temp/lib/ext" "${TEMP_DIR}/liferay/${tomcat_dir_name}/lib/ext"
+
+		if [[ "${LIFERAY_DOCKER_RELEASE_FILE_URL}" == *7.3.* ]]
+		then
+			cp -r "${TEMP_DIR}/liferay/tomcat-temp/lib/ext" "${TEMP_DIR}/liferay/${tomcat_dir_name}/lib/ext"
+		fi
+
 		cp -r "${TEMP_DIR}/liferay/tomcat-temp/webapps" "${TEMP_DIR}/liferay/${tomcat_dir_name}/"
 		cp -r "${TEMP_DIR}/liferay/tomcat-temp/work/Catalina" "${TEMP_DIR}/liferay/${tomcat_dir_name}/work/Catalina"
 
