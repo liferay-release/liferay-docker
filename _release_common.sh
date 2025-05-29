@@ -98,9 +98,9 @@ function is_early_product_version_than {
 
 	if [ -n "${ACTUAL_PRODUCT_VERSION}" ]
 	then
-		product_version_1=$(echo "${ACTUAL_PRODUCT_VERSION}" | sed -e "s/-lts//")
+		product_version_1="$(echo "${ACTUAL_PRODUCT_VERSION}" | sed -e "s/-lts//")"
 	else
-		product_version_1=$(_get_product_version | sed -e "s/-lts//")
+		product_version_1="$(_get_product_version | sed -e "s/-lts//")"
 	fi
 
 	local product_version_1_quarter
