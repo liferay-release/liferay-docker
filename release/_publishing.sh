@@ -144,17 +144,6 @@ function get_root_patcher_project_version_name {
 	fi
 }
 
-function has_ssh_connection {
-	ssh "root@${1}" "exit" &> /dev/null
-
-	if [ $? -eq 0 ]
-	then
-		return "${LIFERAY_COMMON_EXIT_CODE_OK}"
-	fi
-
-	return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
-}
-
 function init_gcs {
 	if [ ! -n "${LIFERAY_RELEASE_GCS_TOKEN}" ]
 	then
@@ -260,9 +249,11 @@ function upload_hotfix {
 		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 	fi
 
-	gsutil cp "${_BUILD_DIR}/${_HOTFIX_FILE_NAME}" "gs://liferay-releases-hotfix/${_PRODUCT_VERSION}"
+	gsutil cp "${_BUILD_DIR}/${_HOTFIX_FILE_NAME}" "gs://files_liferay_com/private/ee/portal/hotfix/${_PRODUCT_VERSION}/"
+	gsutil cp "${_BUILD_DIR}/${_HOTFIX_FILE_NAME}" "gs://liferay-releases-hotfix/${_PRODUCT_VERSION}/"
 
 	echo "# Uploaded" > ../output.md
+	echo " - https://files.liferay.com/private/ee/portal/hotfix/${_PRODUCT_VERSION}/${_HOTFIX_FILE_NAME}" >> ../output.md
 	echo " - https://releases.liferay.com/dxp/hotfix/${_PRODUCT_VERSION}/${_HOTFIX_FILE_NAME}" >> ../output.md
 }
 
