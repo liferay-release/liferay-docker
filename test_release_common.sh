@@ -4,6 +4,7 @@ source ./_release_common.sh
 source ./_test_common.sh
 
 function main {
+	test_release_common_get_patch_version
 	test_release_common_get_product_group_version
 	test_release_common_get_release_quarter
 	test_release_common_get_release_version
@@ -24,6 +25,13 @@ function main {
 
 	unset _PRODUCT_VERSION
 	unset ACTUAL_PRODUCT_VERSION
+}
+
+function test_release_common_get_patch_version {
+	_test_release_common_get_patch_version "2023.q4.3" "3"
+	_test_release_common_get_patch_version "2024.q3.7" "7"
+	_test_release_common_get_patch_version "2025.q1.13-lts" "13"
+	_test_release_common_get_patch_version "2025.q2.0" "0"
 }
 
 function test_release_common_get_product_group_version {
@@ -141,6 +149,14 @@ function test_release_common_is_u_release {
 	_test_release_common_is_u_release "7.3.10-u2" "0"
 	_test_release_common_is_u_release "7.4.0-ga1" "1"
 	_test_release_common_is_u_release "7.4.13-u1" "0"
+}
+
+function _test_release_common_get_patch_version {
+	_PRODUCT_VERSION="${1}"
+
+	echo -e "Running _test_release_common_get_patch_version for ${_PRODUCT_VERSION}.\n"
+
+	assert_equals "$(get_patch_version)" "${2}"
 }
 
 function _test_release_common_get_product_group_version {
