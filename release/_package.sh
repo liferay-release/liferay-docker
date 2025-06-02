@@ -24,11 +24,22 @@ function generate_checksum_files {
 function generate_javadocs {
 	if ! is_7_3_ga_release &&
 	   ! is_7_3_u_release &&
-	   ! is_7_4_ga_release
+	   ! is_7_4_ga_release &&
+	   ! is_quarterly_release
 	then
 		lc_log INFO "Javadocs should not be generated for ${_PRODUCT_VERSION}."
 
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
+	fi
+
+	if is_quarterly_release
+	then
+		if is_early_product_version_than "2025.q3.0" || [[ "$(get_patch_version)" -ne 0 ]]
+		then
+			lc_log INFO "Javadocs should not be generated for ${_PRODUCT_VERSION}."
+
+			return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
+		fi
 	fi
 
 	lc_log INFO "Generating javadocs for ${_PRODUCT_VERSION}."
