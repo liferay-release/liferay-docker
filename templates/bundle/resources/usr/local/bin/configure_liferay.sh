@@ -4,6 +4,13 @@ source /usr/local/bin/_liferay_bundle_common.sh
 source /usr/local/bin/_liferay_common.sh
 
 function main {
+	if [[ "${JAVA_VERSION}" == *21* ]] && [ ! -f "/opt/liferay/data/.inites7" ]
+	then
+		rm -fr /opt/liferay/data/elasticsearch7
+
+		touch /opt/liferay/data/.inites7
+	fi
+
 	if [ "${LIFERAY_DISABLE_TRIAL_LICENSE}" == "true" ]
 	then
 		rm -f /opt/liferay/data/license/trial-commerce-enterprise-license-*.li
