@@ -207,7 +207,7 @@ function generate_distro_jar {
 		osgi_version=$(echo "${osgi_version}" | sed 's/q//g')
 	fi
 
-	java -jar biz.aQute.bnd-6.4.0.jar remote distro -o "release.${LIFERAY_RELEASE_PRODUCT_NAME}.distro-${_ARTIFACT_RC_VERSION}.jar" "release.${LIFERAY_RELEASE_PRODUCT_NAME}.distro" "${osgi_version}"
+	java -jar biz.aQute.bnd-6.4.0.jar remote distro -o "$(_get_file_name "distro" "jar")" "release.${LIFERAY_RELEASE_PRODUCT_NAME}.distro" "${osgi_version}"
 
 	rm -f biz.aQute.bnd-6.4.0.jar
 	rm -f "${_BUNDLES_DIR}/osgi/modules/biz.aQute.remote.agent-6.4.0.jar"
@@ -221,7 +221,7 @@ function generate_distro_jar {
 }
 
 function generate_pom_release_api {
-	local pom_file_name="release.${LIFERAY_RELEASE_PRODUCT_NAME}.api-${_ARTIFACT_RC_VERSION}.pom"
+	local pom_file_name="$(_get_file_name "api" "pom")"
 
 	lc_log DEBUG "Generating ${pom_file_name}."
 
@@ -233,7 +233,7 @@ function generate_pom_release_api {
 }
 
 function generate_pom_release_bom {
-	local pom_file_name="release.${LIFERAY_RELEASE_PRODUCT_NAME}.bom-${_ARTIFACT_RC_VERSION}.pom"
+	local pom_file_name="$(_get_file_name "bom" "pom")"
 
 	lc_log DEBUG "Generating ${pom_file_name}."
 
@@ -301,7 +301,7 @@ function generate_pom_release_bom {
 }
 
 function generate_pom_release_bom_compile_only {
-	local pom_file_name="release.${LIFERAY_RELEASE_PRODUCT_NAME}.bom.compile.only-${_ARTIFACT_RC_VERSION}.pom"
+	local pom_file_name="$(_get_file_name "bom.compile.only" "pom")"
 
 	lc_log DEBUG "Generating ${pom_file_name}."
 
@@ -334,7 +334,7 @@ function generate_pom_release_bom_compile_only {
 }
 
 function generate_pom_release_bom_third_party {
-	local pom_file_name="release.${LIFERAY_RELEASE_PRODUCT_NAME}.bom.third.party-${_ARTIFACT_RC_VERSION}.pom"
+	local pom_file_name="$(_get_file_name "bom.third.party" "pom")"
 
 	lc_log DEBUG "Generating ${pom_file_name}."
 
@@ -394,7 +394,7 @@ function generate_pom_release_bom_third_party {
 }
 
 function generate_pom_release_distro {
-	local pom_file_name="release.${LIFERAY_RELEASE_PRODUCT_NAME}.distro-${_ARTIFACT_RC_VERSION}.pom"
+	local pom_file_name="$(_get_file_name "distro" "pom")"
 
 	lc_log DEBUG "Generating ${pom_file_name}."
 
@@ -467,6 +467,17 @@ function _copy_tld {
 	do
 		cp "${file}" "${1}"
 	done
+}
+
+function _get_file_name {
+	local pom_version="${_ARTIFACT_RC_VERSION}"
+
+	if is_7_4_u_release
+	then
+		pom_version=$(echo "${_ARTIFACT_RC_VERSION}" | tr '-' '.')
+	fi
+
+	echo "release.${LIFERAY_RELEASE_PRODUCT_NAME}.${1}-${pom_version}.${2}"
 }
 
 function _manage_bom_jar {

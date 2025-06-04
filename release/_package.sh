@@ -160,12 +160,19 @@ function package_boms {
 
 	cp -a ./*.pom "${_BUILD_DIR}/release"
 
-	cp "release.${LIFERAY_RELEASE_PRODUCT_NAME}.distro-${_ARTIFACT_RC_VERSION}.jar" "${_BUILD_DIR}/release"
+	local pom_version="${_ARTIFACT_RC_VERSION}"
+
+	if is_7_4_u_release
+	then
+		pom_version=$(echo "${_ARTIFACT_RC_VERSION}" | tr '-' '.')
+	fi
+
+	cp "release.${LIFERAY_RELEASE_PRODUCT_NAME}.distro-${pom_version}.jar" "${_BUILD_DIR}/release"
 
 	touch .touch
 
-	jar cvfm "${_BUILD_DIR}/release/release.${LIFERAY_RELEASE_PRODUCT_NAME}.api-${_ARTIFACT_RC_VERSION}.jar" .touch -C api-jar .
-	jar cvfm "${_BUILD_DIR}/release/release.${LIFERAY_RELEASE_PRODUCT_NAME}.api-${_ARTIFACT_RC_VERSION}-sources.jar" .touch -C api-sources-jar .
+	jar cvfm "${_BUILD_DIR}/release/release.${LIFERAY_RELEASE_PRODUCT_NAME}.api-${pom_version}.jar" .touch -C api-jar .
+	jar cvfm "${_BUILD_DIR}/release/release.${LIFERAY_RELEASE_PRODUCT_NAME}.api-${pom_version}-sources.jar" .touch -C api-sources-jar .
 
 	rm -f .touch
 }
