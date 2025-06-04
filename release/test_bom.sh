@@ -30,6 +30,13 @@ function main {
 	test_bom_generate_pom_release_bom_portal
 	test_bom_generate_pom_release_bom_third_party_portal
 
+	_PRODUCT_VERSION="7.4.13-u136"
+
+	_ARTIFACT_RC_VERSION="${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}"
+	LIFERAY_RELEASE_PRODUCT_NAME="dxp"
+
+	test_bom_get_file_name
+
 	tear_down
 }
 
@@ -197,6 +204,23 @@ function test_bom_generate_pom_release_bom_third_party_portal {
 
 	rm release.${LIFERAY_RELEASE_PRODUCT_NAME}.bom.compile.only-${_ARTIFACT_RC_VERSION}.pom
 	rm release.${LIFERAY_RELEASE_PRODUCT_NAME}.bom.third.party-${_ARTIFACT_RC_VERSION}.pom
+}
+
+function test_bom_get_file_name {
+	_test_bom_get_file_name "api" "pom"
+	_test_bom_get_file_name "bom" "pom"
+	_test_bom_get_file_name "bom.compile.only"
+	_test_bom_get_file_name "bom.third.party"
+	_test_bom_get_file_name "distro" "jar"
+	_test_bom_get_file_name "distro" "pom"
+}
+
+function _test_bom_get_file_name {
+	echo -e "Running _test_bom_get_file_name for ${_PRODUCT_VERSION}"
+
+	assert_equals \
+		"$(_get_file_name "${1}" "${2}")" \
+		"release.${LIFERAY_RELEASE_PRODUCT_NAME}.${1}-$(echo "${_ARTIFACT_RC_VERSION}" | tr '-' '.').${2}"
 }
 
 main
