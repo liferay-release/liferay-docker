@@ -400,7 +400,7 @@ function reference_new_releases {
 		commit_to_branch_and_send_pull_request \
 			"${_PROJECTS_DIR}/liferay-jenkins-ee/commands/build.properties" \
 			"${issue_key} Add release references for ${_PRODUCT_VERSION}" \
-			"${issue_key}" \
+			"${_TEMP_BRANCH}" \
 			"master" \
 			"pyoo47/liferay-jenkins-ee" \
 			"${issue_key} Add release references for ${_PRODUCT_VERSION}."
@@ -419,6 +419,12 @@ function reference_new_releases {
 				--jq ".url" \
 				--json "url" \
 				--repo "pyoo47/liferay-jenkins-ee")"
+
+		git checkout master
+
+		git branch -D "${_TEMP_BRANCH}"
+
+		git push "git@github.com:liferay-release/liferay-jenkins-ee.git" --delete "${_TEMP_BRANCH}"
 
 		add_jira_issue_comment "Related pull request: ${pull_request_url}" "${issue_key}"
 	fi
