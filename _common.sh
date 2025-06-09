@@ -174,17 +174,6 @@ function get_tomcat_version {
 	echo "${liferay_tomcat_version}"
 }
 
-function has_ssh_connection {
-	ssh "root@${1}" "exit" &> /dev/null
-
-	if [ $? -eq 0 ]
-	then
-		return "${LIFERAY_COMMON_EXIT_CODE_OK}"
-	fi
-
-	return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
-}
-
 function log_in_to_docker_hub {
 	if [ ! -n "${LIFERAY_DOCKER_HUB_LOGGED_IN}" ] && [ -n "${LIFERAY_DOCKER_HUB_TOKEN}" ] && [ -n "${LIFERAY_DOCKER_HUB_USERNAME}" ]
 	then

@@ -1,5 +1,6 @@
 #!/bin/bash
 
+source ../_release_common.sh
 source ../_common.sh
 
 function lc_time_run_error {
