@@ -176,7 +176,7 @@ function download_file_from_github {
 function download_trial_dxp_license {
 	if [[ ${DOCKER_IMAGE_NAME} == "dxp" ]]
 	then
-		rm -fr "${TEMP_DIR}/liferay/data/license"
+		rm --force --recursive "${TEMP_DIR}/liferay/data/license"
 
 		if (! ./download_trial_dxp_license.sh "${TEMP_DIR}/liferay" $(date "${CURRENT_DATE}" "+%s000"))
 		then
@@ -205,7 +205,7 @@ function get_latest_tomcat_version {
 	then
 		local master_tomcat_version=$(lc_get_property "app.server.properties" "app.server.tomcat.version")
 
-		rm -f "app.server.properties"
+		rm --force "app.server.properties"
 
 		latest_tomcat_version=$(\
 			echo -e "${latest_tomcat_version}\n${master_tomcat_version}" | \
@@ -229,8 +229,8 @@ function install_fix_pack {
 
 		"${TEMP_DIR}/liferay/patching-tool/patching-tool.sh" install
 
-		rm -fr "${TEMP_DIR}/liferay/data/hypersonic/"*
-		rm -fr "${TEMP_DIR}/liferay/osgi/state/"*
+		rm --force --recursive "${TEMP_DIR}/liferay/data/hypersonic/"*
+		rm --force --recursive "${TEMP_DIR}/liferay/osgi/state/"*
 	fi
 }
 
@@ -280,7 +280,7 @@ function main {
 }
 
 function prepare_slim_image {
-	rm -fr "${TEMP_DIR}/liferay/elasticsearch-sidecar"
+	rm --force --recursive "${TEMP_DIR}/liferay/elasticsearch-sidecar"
 
 	local product_name=$(echo "${LIFERAY_DOCKER_RELEASE_FILE_URL}" | cut --delimiter '/' --fields 2)
 	local product_version=$(echo "${LIFERAY_DOCKER_RELEASE_FILE_URL}" | cut --delimiter '/' --fields 3)
@@ -347,7 +347,13 @@ function prepare_temp_directory {
 
 		local latest_tomcat_major_version=$(echo "${latest_tomcat_version}" | cut --delimiter '.' --fields 1)
 
+<<<<<<< HEAD
 		local latest_tomcat_url="https://dlcdn.apache.org/tomcat/tomcat-${latest_tomcat_major_version}/v${latest_tomcat_version}/bin/apache-tomcat-${latest_tomcat_version}.zip"
+=======
+		rm --force --recursive "${TEMP_DIR}/liferay/${tomcat_dir_name}/conf"
+		rm --force --recursive "${TEMP_DIR}/liferay/${tomcat_dir_name}/temp/safeToDelete.tmp"
+		rm --force --recursive "${TEMP_DIR}/liferay/${tomcat_dir_name}/webapps"
+>>>>>>> fba0f16 (LPD-57868 Standardize rm options to long format in liferay-docker/*.sh scripts)
 
 		download "${latest_tomcat_download_dir}/apache-tomcat.zip" "${latest_tomcat_url}"
 
@@ -375,7 +381,7 @@ function prepare_temp_directory {
 		cp --recursive "${TEMP_DIR}/liferay/tomcat-temp/webapps" "${TEMP_DIR}/liferay/${latest_tomcat_dir_name}/"
 		cp --recursive "${TEMP_DIR}/liferay/tomcat-temp/work/Catalina" "${TEMP_DIR}/liferay/${latest_tomcat_dir_name}/work/Catalina"
 
-		rm -fr "${TEMP_DIR}/liferay/tomcat-temp"
+		rm --force --recursive "${TEMP_DIR}/liferay/tomcat-temp"
 
 		chmod +x "${TEMP_DIR}/liferay/${latest_tomcat_dir_name}/bin/"*
 	fi
@@ -504,7 +510,7 @@ function update_patching_tool {
 
 		mv "${TEMP_DIR}/liferay/patching-tool/patches" "${TEMP_DIR}/liferay/patching-tool-upgrade-patches"
 
-		rm -fr "${TEMP_DIR}/liferay/patching-tool"
+		rm --force --recursive "${TEMP_DIR}/liferay/patching-tool"
 
 		local latest_patching_tool_version
 
@@ -534,7 +540,7 @@ function update_patching_tool {
 
 		"${TEMP_DIR}/liferay/patching-tool/patching-tool.sh" auto-discovery
 
-		rm -fr "${TEMP_DIR}/liferay/patching-tool/patches"
+		rm --force --recursive "${TEMP_DIR}/liferay/patching-tool/patches"
 
 		mv "${TEMP_DIR}/liferay/patching-tool-upgrade-patches" "${TEMP_DIR}/liferay/patching-tool/patches"
 
