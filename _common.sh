@@ -303,7 +303,7 @@ function start_tomcat {
 function stat {
 	if [ "$(uname)" == "Darwin" ]
 	then
-		/usr/bin/stat -f "%z" "${1}"
+		/usr/bin/stat --file-system "%z" "${1}"
 	else
 		/usr/bin/stat --printf="%s" "${1}"
 	fi
