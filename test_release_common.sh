@@ -121,6 +121,10 @@ function test_release_common_is_early_product_version_than {
 	_test_release_common_is_early_product_version_than "2024.q4.7" "2025.q1.0" "0"
 	_test_release_common_is_early_product_version_than "2025.q1.0" "2025.q1.1" "0"
 	_test_release_common_is_early_product_version_than "2025.q1.1-lts" "2025.q1.0-lts" "1"
+	_test_release_common_is_early_product_version_than "2025.q1.1-lts" "7.4.13-u102" "1"
+	_test_release_common_is_early_product_version_than "7.4.13-u102" "7.4.13-u101" "1"
+	_test_release_common_is_early_product_version_than "7.4.13-u102" "7.4.13-u102" "1"
+	_test_release_common_is_early_product_version_than "7.4.13-u102" "7.4.13-u103" "0"
 }
 
 function test_release_common_is_ga_release {
