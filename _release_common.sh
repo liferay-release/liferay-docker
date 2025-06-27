@@ -136,43 +136,66 @@ function is_early_product_version_than {
 		product_version_1=$(_get_product_version | sed -e "s/-lts//")
 	fi
 
-	local product_version_1_quarter
-	local product_version_1_suffix
-
-	IFS='.' read -r product_version_1_year product_version_1_quarter product_version_1_suffix <<< "${product_version_1}"
-
-	product_version_1_quarter=$(echo "${product_version_1_quarter}" | sed -e "s/q//")
-
 	local product_version_2=$(echo "${1}" | sed -e "s/-lts//")
-	local product_version_2_quarter
-	local product_version_2_suffix
 
-	IFS='.' read -r product_version_2_year product_version_2_quarter product_version_2_suffix <<< "${product_version_2}"
-
-	product_version_2_quarter=$(echo "${product_version_2_quarter}" | sed -e "s/q//")
-
-	if [ "${product_version_1_year}" -lt "${product_version_2_year}" ]
+	if is_u_release "${product_version_1}" &&
+	   is_u_release "${product_version_2}"
 	then
-		return 0
-	elif [ "${product_version_1_year}" -gt "${product_version_2_year}" ]
-	then
-		return 1
+		_is_early_product_version_for_u_releases "${product_version_1}" "${product_version_2}"
+
+		return "${?}"
 	fi
 
-	if [ "${product_version_1_quarter}" -lt "${product_version_2_quarter}" ]
+	if is_quarterly_release "${product_version_1}" &&
+	   is_quarterly_release "${product_version_2}"
 	then
-		return 0
-	elif [ "${product_version_1_quarter}" -gt "${product_version_2_quarter}" ]
-	then
-		return 1
+
+		local product_version_1_quarter
+		local product_version_1_suffix
+
+		IFS='.' read -r product_version_1_year product_version_1_quarter product_version_1_suffix <<< "${product_version_1}"
+
+		product_version_1_quarter=$(echo "${product_version_1_quarter}" | sed -e "s/q//")
+
+		local product_version_2_quarter
+		local product_version_2_suffix
+
+		IFS='.' read -r product_version_2_year product_version_2_quarter product_version_2_suffix <<< "${product_version_2}"
+
+		product_version_2_quarter=$(echo "${product_version_2_quarter}" | sed -e "s/q//")
+
+		if [ "${product_version_1_year}" -lt "${product_version_2_year}" ]
+		then
+			return 0
+		elif [ "${product_version_1_year}" -gt "${product_version_2_year}" ]
+		then
+			return 1
+		fi
+
+		if [ "${product_version_1_quarter}" -lt "${product_version_2_quarter}" ]
+		then
+			return 0
+		elif [ "${product_version_1_quarter}" -gt "${product_version_2_quarter}" ]
+		then
+			return 1
+		fi
+
+		if [ "${product_version_1_suffix}" -lt "${product_version_2_suffix}" ]
+		then
+			return 0
+		elif [ "${product_version_1_suffix}" -gt "${product_version_2_suffix}" ]
+		then
+			return 1
+		fi
 	fi
 
-	if [ "${product_version_1_suffix}" -lt "${product_version_2_suffix}" ]
+	return 1
+}
+
+function _is_early_product_version_for_u_releases {
+	if (( $(get_release_version_trivial "${1}") < $(get_release_version_trivial "${2}") ))
 	then
 		return 0
-	elif [ "${product_version_1_suffix}" -gt "${product_version_2_suffix}" ]
-	then
-		return 1
 	fi
 
 	return 1
