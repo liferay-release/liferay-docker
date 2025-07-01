@@ -195,6 +195,13 @@ function get_latest_tomcat_version {
 
 	if [ -z "${LIFERAY_RELEASE_TEST_MODE}" ]
 	then
+		latest_tomcat_version=$(curl --silent "https://downloads.apache.org/tomcat/tomcat-9/" | grep --only-matching --perl-regexp "9\.\d+\.\d+" | sort --version-sort | tail --lines=1)
+
+		if [ "${latest_tomcat_version}" == "9.0.104" ]
+		then
+			return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+		fi
+
 		download_file_from_github \
 			"app.server.properties" \
 			"app.server.properties" \
@@ -247,6 +254,11 @@ function main {
 	set_parent_image
 
 	prepare_temp_directory "${@}"
+
+	if [ "${?}" -ne 0 ]
+	then
+		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+	fi
 
 	check_release "${@}"
 
@@ -329,6 +341,15 @@ function prepare_temp_directory {
 	local tomcat_version=$(get_tomcat_version "${TEMP_DIR}/liferay")
 
 	local latest_tomcat_version=$(get_latest_tomcat_version "${tomcat_version}")
+
+	if [ -z "${latest_tomcat_version}" ]
+	then
+		lc_log ERROR "Unable to retrieve the latest Tomcat version."
+
+		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+	else
+		lc_log INFO "Latest Tomcat version set to ${latest_tomcat_version}."
+	fi
 
 	if [ "${tomcat_version}" != "${latest_tomcat_version}" ]
 	then
