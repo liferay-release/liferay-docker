@@ -274,7 +274,7 @@ function decrement_module_versions {
 
 		micro_version=$((micro_version - 1))
 
-		sed --in-place --expression "s/Bundle-Version: ${bundle_version}/Bundle-Version: ${major_minor_version}.${micro_version}/" "${bnd_bnd_file}"
+		sed --expression "s/Bundle-Version: ${bundle_version}/Bundle-Version: ${major_minor_version}.${micro_version}/" --in-place "${bnd_bnd_file}"
 	done
 }
 
