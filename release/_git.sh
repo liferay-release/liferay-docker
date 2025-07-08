@@ -107,7 +107,7 @@ function generate_release_notes {
 		grep -v LRQA | \
 		grep -v POSHI | \
 		grep -v RELEASE | \
-		paste -sd, > "${_BUILD_DIR}/release/release-notes.txt"
+		paste --delimiters ',' --serial > "${_BUILD_DIR}/release/release-notes.txt"
 }
 
 function prepare_branch_to_commit {
