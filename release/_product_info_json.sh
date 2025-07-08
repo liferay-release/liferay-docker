@@ -17,12 +17,12 @@ function generate_product_info_json {
 	cp --force "${_PROMOTION_DIR}/.product_info.json.tmp" "${LIFERAY_COMMON_LOG_DIR}/.product_info.json-BACKUP.txt"
 
 	sed \
-		--regexp-extended \
 		--expression 's@\r?\n        "@"@g' \
 		--expression 's@\r?\n    \}(,)?@\}\1@g' \
 		--expression 's@[ ]+"@"@g' \
 		--in-place \
 		--null-data \
+		--regexp-extended \
 		"${_PROMOTION_DIR}/.product_info.json.tmp"
 
 	LIFERAY_COMMON_DOWNLOAD_SKIP_CACHE="true" lc_download "https://releases.liferay.com/${LIFERAY_RELEASE_PRODUCT_NAME}/${LIFERAY_RELEASE_VERSION}/release.properties"

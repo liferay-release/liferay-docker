@@ -184,12 +184,14 @@ function prepare_next_release_branch {
 			fi
 		fi
 
-		sed --in-place \
-			-e "s/release.info.version.display.name\[master-private\]=.*/release.info.version.display.name[master-private]=${product_group_version^^}.${next_release_patch_version}/" \
+		sed \
+			--expression "s/release.info.version.display.name\[master-private\]=.*/release.info.version.display.name[master-private]=${product_group_version^^}.${next_release_patch_version}/" \
+			--in-place \
 			"${_PROJECTS_DIR}/liferay-portal-ee/release.properties"
 
-		sed --in-place \
-			-e "s/release.info.version.display.name\[release-private\]=.*/release.info.version.display.name[release-private]=${product_group_version^^}.${next_release_patch_version}/" \
+		sed \
+			--expression "s/release.info.version.display.name\[release-private\]=.*/release.info.version.display.name[release-private]=${product_group_version^^}.${next_release_patch_version}/" \
+			--in-place \
 			"${_PROJECTS_DIR}/liferay-portal-ee/release.properties"
 
 		if [ -z "${LIFERAY_RELEASE_TEST_MODE}" ]
@@ -581,8 +583,9 @@ function update_release_info_date {
 		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 	fi
 
-	sed --in-place \
-		-e "s/release.info.date=.*/release.info.date=$(date -d "next monday" +"%B %-d, %Y")/" \
+	sed \
+		--expression "s/release.info.date=.*/release.info.date=$(date -d "next monday" +"%B %-d, %Y")/" \
+		--in-place \
 		release.properties
 
 	if [ -z "${LIFERAY_RELEASE_TEST_MODE}" ]
