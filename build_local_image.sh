@@ -97,7 +97,8 @@ function prepare_temp_directory {
 	fi
 
 	rsync \
-		--archive --quiet \
+		--archive \
+		--quiet \
 		"${excludes[@]}" \
 		"${1}/" "${TEMP_DIR}/liferay"
 }
