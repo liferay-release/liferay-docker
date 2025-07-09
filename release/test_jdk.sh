@@ -22,6 +22,10 @@ function set_up {
 	export _JDK_PARAMETERS_8="${JAVA_OPTS} -XX:MaxPermSize=256m"
 	export _JDK_PARAMETERS_17=$(echo "${JAVA_OPTS}" | sed "s/-XX:MaxPermSize=[^ ]*//g")
 
+	echo "Current JAVA_HOME: ${_CURRENT_JAVA_HOME}"
+	echo "Current JAVA_OPTS: ${_CURRENT_JAVA_OPTS}"
+	echo "Current PATH: ${_CURRENT_PATH}"
+
 	export _JDK_VERSION_8="zulu8"
 
 	if [ ! -d "/opt/java/zulu8" ]
@@ -42,6 +46,11 @@ function set_up {
 
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
+
+	echo "JDK 8: ${_JDK_VERSION_8}"
+	echo "JDK 17: ${_JDK_VERSION_17}"
+	echo "JDK 8 parameters: ${_JDK_PARAMETERS_8}"
+	echo "JDK 17 parameters: ${_JDK_PARAMETERS_17}"
 }
 
 function tear_down {
