@@ -534,6 +534,12 @@ function _manage_bom_jar {
 		rm -fr temp_dir_manage_bom_jar/META-INF/sql
 		rm -fr temp_dir_manage_bom_jar/META-INF/versions
 
+		if [ "${1}" == "javax.persistence-*.jar" ]
+		then
+			rm -fr temp_dir_manage_bom_jar/META-INF/ECLIPSE_.RSA
+			rm -fr temp_dir_manage_bom_jar/META-INF/ECLIPSE_.SF
+		fi
+
 		cp --archive temp_dir_manage_bom_jar/* api-jar
 	fi
 
