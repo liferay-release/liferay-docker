@@ -162,7 +162,7 @@ function start_container {
 		fi
 	fi
 
-	CONTAINER_ID=$(docker run -d ${parameters} "${LIFERAY_DOCKER_IMAGE_ID}")
+	CONTAINER_ID=$(docker run --detach ${parameters} "${LIFERAY_DOCKER_IMAGE_ID}")
 
 	if [ ! -n "${LIFERAY_DOCKER_NETWORK_NAME}" ]
 	then
