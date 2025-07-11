@@ -57,9 +57,21 @@ function assert_equals {
 
 	if [ "${_TEST_RESULT}" == "true" ]
 	then
+		if _is_test_server
+		then
+			echo -e "${FUNCNAME[1]} <span style='color: green; font-weight: bold;'>SUCCESS</span>\n"
+
+			return 0
+		fi
+
 		echo -e "${FUNCNAME[1]} \e[1;32mSUCCESS\e[0m\n"
 	else
-		echo -e "${FUNCNAME[1]} \e[1;31mFAILED\e[0m\n"
+		if _is_test_server
+		then
+			echo -e "${FUNCNAME[1]} <span style='color: red; font-weight: bold;'>FAILED</span>\n"
+		else
+			echo -e "${FUNCNAME[1]} \e[1;31mFAILED\e[0m\n"
+		fi
 
 		cat "${assertion_error_file}"
 
@@ -87,6 +99,15 @@ function main {
 	then
 		echo -e "\n##### Running tests from $(echo ${BASH_SOURCE[2]} | sed --regexp-extended 's/\.\///g') #####\n"
 	fi
+}
+
+function _is_test_server {
+	if [[ "$(hostname)" == test* ]]
+	then
+		return 0
+	fi
+
+	return 1
 }
 
 main
