@@ -92,22 +92,33 @@ function common_tear_down {
 function main {
 	_TEST_RESULT="true"
 
+	local source_file=""
+
 	if [ -n "${BASH_SOURCE[3]}" ]
 	then
-		echo -e "\n##### Running tests from $(echo ${BASH_SOURCE[3]} | sed --regexp-extended 's/\.\///g') #####\n"
+		source_file="${BASH_SOURCE[3]}"
 	elif [ -n "${BASH_SOURCE[2]}" ]
 	then
-		echo -e "\n##### Running tests from $(echo ${BASH_SOURCE[2]} | sed --regexp-extended 's/\.\///g') #####\n"
+		source_file="${BASH_SOURCE[2]}"
 	fi
+
+	if _is_test_server
+	then
+		echo -e "\n<h3>Running tests from $(echo "${source_file}" | sed --regexp-extended 's/\.\///g')</h3>\n"
+
+		return
+	fi
+
+	echo -e "\n##### Running tests from $(echo "${source_file}" | sed --regexp-extended 's/\.\///g') #####\n"
 }
 
 function _is_test_server {
 	if [[ "$(hostname)" =~ ^test-[0-9]+-[0-9]+(-[0-9]+)? ]]
 	then
-		return 0
+		return 1
 	fi
 
-	return 1
+	return 0
 }
 
 main
