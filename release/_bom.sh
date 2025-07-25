@@ -123,7 +123,7 @@ function generate_api_jars {
 			manage_bom_jar "${_BUNDLES_DIR}/tomcat/webapps/ROOT/WEB-INF/shielded-container-lib/${portal_jar}.jar"
 		done
 
-		find "${_BUNDLES_DIR}/osgi" "${_BUNDLES_DIR}/tomcat/webapps/ROOT/WEB-INF/shielded-container-lib" \( -name "com.liferay.*.jar" -o -name "jakarta*.jar" \) -type f -print0 | while IFS= read -r -d '' module_jar
+		find "${_BUNDLES_DIR}/osgi" "${_BUNDLES_DIR}/tomcat/webapps/ROOT/WEB-INF/shielded-container-lib" \( -name "com.liferay.*.jar" -o -name "jakarta*.jar" -o -name "javax*.jar" \) -type f -print0 | while IFS= read -r -d '' module_jar
 		do
 			manage_bom_jar "${module_jar}"
 		done
@@ -133,8 +133,11 @@ function generate_api_jars {
 	   (is_quarterly_release && is_later_product_version_than "2025.q3.0") ||
 	   (is_u_release && is_later_product_version_than "7.4.13-u135")
 	then
-		_manage_bom_jar "${_BUNDLES_DIR}/tomcat/lib/servlet-api.jar"
-		_manage_bom_jar "${_BUNDLES_DIR}/tomcat/webapps/ROOT/WEB-INF/shielded-container-lib/com.liferay.jakarta.portlet-api.jar"
+		lc_download "https://repository-cdn.liferay.com/nexus/service/local/repo_groups/public/content/jakarta/servlet/jakarta.servlet-api/6.0.0/jakarta.servlet-api-6.0.0.jar" "jakarta.servlet-api.jar"
+
+		manage_bom_jar "${_BUNDLES_DIR}/tomcat/lib/servlet-api.jar"
+		manage_bom_jar "${_BUNDLES_DIR}/tomcat/webapps/ROOT/WEB-INF/shielded-container-lib/com.liferay.jakarta.portlet-api.jar"
+		manage_bom_jar "jakarta.servlet-api.jar"
 	fi
 
 	for file in $(ls api-jar/META-INF --almost-all | grep --extended-regexp --invert-match '^(alloy-util.tld|alloy.tld|c.tld|liferay.tld)$')
