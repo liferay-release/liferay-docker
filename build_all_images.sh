@@ -584,7 +584,11 @@ function get_tag_from_image {
 }
 
 function has_slim_build_criteria {
+<<<<<<< HEAD
 	if (is_nightly_release "${1}" || is_release_candidate "${1}" || is_u_release "${1}")
+=======
+	if (is_u_release "${1}" || is_nightly_release "${1}" || is_candidate_release)
+>>>>>>> 44b31b7 (LPD-42979 Update the upload_to_docker_hub function to work for release candidates)
 	then
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
