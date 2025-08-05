@@ -343,7 +343,7 @@ function upload_to_docker_hub {
 
 	if [ "${1}" == "release-candidate" ]
 	then
-		LIFERAY_DOCKER_IMAGE_FILTER="${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}" LIFERAY_DOCKER_RELEASE_CANDIDATE="true" ./build_all_images.sh --push
+		LIFERAY_DOCKER_RELEASE_CANDIDATE="true" LIFERAY_DOCKER_IMAGE_FILTER="${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}" ./build_all_images.sh --push
 	else
 		prepare_branch_to_commit "${_PROJECTS_DIR}/liferay-docker" "liferay-docker"
 
@@ -356,7 +356,7 @@ function upload_to_docker_hub {
 
 		_update_bundles_yml
 
-		LIFERAY_DOCKER_IMAGE_FILTER="${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}" LIFERAY_DOCKER_RELEASE_CANDIDATE="true" ./build_all_images.sh --push
+		LIFERAY_DOCKER_RELEASE_CANDIDATE="false" LIFERAY_DOCKER_IMAGE_FILTER="${_PRODUCT_VERSION}" ./build_all_images.sh --push-all
 	fi
 
 	local exit_code="${?}"
