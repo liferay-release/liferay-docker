@@ -179,6 +179,16 @@ function start_container {
 			test_dir="/mnt/pd/liferay-docker/${TEST_DIR}"
 
 			parameters="--env=LIFERAY_DOCKER_TEST_MODE=true --hostname=${CONTAINER_HOSTNAME} --name=${CONTAINER_HOSTNAME} --network=${LIFERAY_DOCKER_NETWORK_NAME} --publish=8081:8080 --volume=${test_dir}/mnt:/mnt:rw --volume=/mnt/pd/liferay-docker/portal-ext.properties:/opt/liferay/portal-ext.properties"
+		elif [[ "${LIFERAY_DOCKER_NETWORK_NAME}" == release-1* ]]
+		then
+			CONTAINER_HOSTNAME=portal-container
+			CONTAINER_HTTP_PORT=8080
+
+			echo -e "web.server.host=${CONTAINER_HOSTNAME}" > "/opt/dev/projects/github/portal-ext.properties"
+
+			mv "${PWD}/${TEST_DIR}" "/opt/dev/projects/github"
+
+			parameters="--env=LIFERAY_DOCKER_TEST_MODE=true --hostname=${CONTAINER_HOSTNAME} --name=${CONTAINER_HOSTNAME} --network=${LIFERAY_DOCKER_NETWORK_NAME} --publish=8081:8080 --volume=/data/${LIFERAY_DOCKER_NETWORK_NAME}/liferay/${TEST_DIR}/mnt:/mnt:rw --volume=/data/${LIFERAY_DOCKER_NETWORK_NAME}/liferay/portal-ext.properties:/opt/liferay/portal-ext.properties"
 		else
 			CONTAINER_HOSTNAME=portal-container
 			CONTAINER_HTTP_PORT=8080
