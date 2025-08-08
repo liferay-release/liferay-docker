@@ -6,21 +6,16 @@ function main {
 
 	if [ -z "${changed_files}" ]
 	then
-		test_results=$(\
-			find . -maxdepth 1 \( -name "test_*.sh" ! -name "test_bundle_image.sh" \) -type f -exec ./{} \; && \
-			\
-			cd release && \
-			\
-			find . -name "test_*.sh" -type f -exec ./{} \;)
+		test_results=$(_run_docker_tests && _run_release_tests)
 	else
 		if (echo "${changed_files}" | grep --extended-regexp "^[^/]+\.sh$" --quiet)
 		then
-			test_results=$(find . -maxdepth 1 -name "test_*.sh" ! -name "test_bundle_image.sh" -type f -exec ./{} \;)
+			test_results=$(_run_docker_tests)
 		fi
 
 		if (echo "${changed_files}" | grep --extended-regexp "^release/.*\.sh$|^release/test-dependencies/.*" --quiet)
 		then
-			test_results+=$'\n'"$(cd release && find . -name "test_*.sh" -type f -exec ./{} \;)"
+			test_results+=$'\n'"$(_run_release_tests)"
 		fi
 	fi
 
@@ -30,6 +25,14 @@ function main {
 	then
 		exit 1
 	fi
+}
+
+function _run_docker_tests {
+	find . -maxdepth 1 -name "test_*.sh" ! -name "test_bundle_image.sh" -type f -exec ./{} \;
+}
+
+function _run_release_tests {
+	cd release && find . -name "test_*.sh" -type f -exec ./{} \;
 }
 
 main
