@@ -15,7 +15,12 @@ function main {
 
 		if (echo "${changed_files}" | grep --extended-regexp "^release/.*\.sh$|^release/test-dependencies/.*" --quiet)
 		then
-			test_results+=$'\n'"$(_run_release_tests)"
+			if [ -n "${test_results}" ]
+			then
+				test_results+=$'\n'
+			fi
+
+			test_results+="$(_run_release_tests)"
 		fi
 	fi
 
