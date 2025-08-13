@@ -202,7 +202,12 @@ function get_latest_tomcat_version {
 
 	if [ -z "${latest_tomcat_version}" ]
 	then
-		lc_log INFO "Unable to retrieve the latest Tomcat version from apache.org."
+		local latest_tomcat_version=$(curl \
+			"http://dlcdn.apache.org/tomcat/tomcat-${tomcat_major_version}/" \
+			--silent \
+			| grep --only-matching --perl-regexp "${tomcat_major_version}\.\d+\.\d+" \
+			| sort --version-sort \
+			| tail --lines=1)
 	fi
 
 	latest_tomcat_version=$(\
@@ -222,10 +227,13 @@ function get_latest_tomcat_version {
 	then
 		local master_tomcat_version=$(lc_get_property "app.server.properties" "app.server.tomcat.version")
 
-		latest_tomcat_version=$(\
-			echo -e "${latest_tomcat_version}\n${master_tomcat_version}" | \
-			sort --version-sort | \
-			tail -1)
+		if [[ "$(echo "${master_tomcat_version}" | cut --delimiter='.' --fields=1)" == "${tomcat_major_version}" ]]
+		then
+			latest_tomcat_version=$(\
+				echo -e "${latest_tomcat_version}\n${master_tomcat_version}" | \
+				sort --version-sort | \
+				tail -1)
+		fi
 	fi
 
 	rm --force "app.server.properties"
@@ -257,43 +265,47 @@ function main {
 		return
 	fi
 
-	check_usage "${@}"
+	local test="$(get_latest_tomcat_version "9.0.11")"
 
-	make_temp_directory templates/bundle
+	echo $"${test}"
 
-	set_parent_image
+	# check_usage "${@}"
 
-	prepare_temp_directory "${@}"
+	# make_temp_directory templates/bundle
 
-	check_release "${@}"
+	# set_parent_image
 
-	update_patching_tool
+	# prepare_temp_directory "${@}"
 
-	install_fix_pack "${@}"
+	# check_release "${@}"
 
-	prepare_tomcat
+	# update_patching_tool
 
-	if [ "${LIFERAY_DOCKER_SLIM}" == "true" ]
-	then
-		prepare_slim_image
+	# install_fix_pack "${@}"
 
-		if [ "${?}" -ne 0 ]
-		then
-			return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
-		fi
-	fi
+	# prepare_tomcat
 
-	download_trial_dxp_license
+	# if [ "${LIFERAY_DOCKER_SLIM}" == "true" ]
+	# then
+	# 	prepare_slim_image
 
-	build_docker_image
+	# 	if [ "${?}" -ne 0 ]
+	# 	then
+	# 		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+	# 	fi
+	# fi
 
-	test_docker_image
+	# download_trial_dxp_license
 
-	log_in_to_docker_hub
+	# build_docker_image
 
-	push_docker_image "${1}"
+	# test_docker_image
 
-	clean_up_temp_directory
+	# log_in_to_docker_hub
+
+	# push_docker_image "${1}"
+
+	# clean_up_temp_directory
 }
 
 function prepare_slim_image {
