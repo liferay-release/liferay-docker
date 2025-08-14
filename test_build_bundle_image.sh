@@ -1,5 +1,6 @@
 #!/bin/bash
 
+source ./_release_common.sh
 source ./_test_common.sh
 source ./build_bundle_image.sh --test
 
@@ -16,22 +17,10 @@ function set_up {
 	common_set_up
 
 	export TEMP_DIR="${PWD}"
-	export _LATEST_TOMCAT_VERSION_TEST=$(curl \
-		"https://downloads.apache.org/tomcat/tomcat-9/" \
-		--silent \
-		| grep --only-matching --perl-regexp "9\.\d+\.\d+" \
-		| sort --version-sort \
-		| tail --lines=1)
-
-	if [ -z "${_LATEST_TOMCAT_VERSION_TEST}" ]
-	then
-		_LATEST_TOMCAT_VERSION_TEST=$(curl \
+	export _LATEST_TOMCAT_VERSION_TEST=$( \
+		get_latest_version_from_url \
 			"http://dlcdn.apache.org/tomcat/tomcat-9/" \
-			--silent \
-			| grep --only-matching --perl-regexp "9\.\d+\.\d+" \
-			| sort --version-sort \
-			| tail --lines=1)
-	fi
+			"9\.\d+\.\d+")
 }
 
 function tear_down {
@@ -47,22 +36,10 @@ function test_build_bundle_image_get_latest_tomcat_version {
 	_test_build_bundle_image_get_latest_tomcat_version "9.0.84" "9.0.9999" "9.0.9999"
 	_test_build_bundle_image_get_latest_tomcat_version "9.0.9999" "" "9.0.9999"
 
-	_LATEST_TOMCAT_VERSION_TEST=$(curl \
-		"https://downloads.apache.org/tomcat/tomcat-10/" \
-		--silent \
-		| grep --only-matching --perl-regexp "10\.\d+\.\d+" \
-		| sort --version-sort \
-		| tail --lines=1)
-
-	if [ -z "${_LATEST_TOMCAT_VERSION_TEST}" ]
-	then
-		_LATEST_TOMCAT_VERSION_TEST=$(curl \
-			"https://dlcdn.apache.org/tomcat/tomcat-10/" \
-			--silent \
-			| grep --only-matching --perl-regexp "10\.\d+\.\d+" \
-			| sort --version-sort \
-			| tail --lines=1)
-	fi
+	_LATEST_TOMCAT_VERSION_TEST=$( \
+		get_latest_version_from_url \
+			"http://dlcdn.apache.org/tomcat/tomcat-10/" \
+			"10\.\d+\.\d+")
 
 	_test_build_bundle_image_get_latest_tomcat_version "10.1.40" "11.1.40" "${_LATEST_TOMCAT_VERSION_TEST}"
 	_test_build_bundle_image_get_latest_tomcat_version "10.1.40" "" "${_LATEST_TOMCAT_VERSION_TEST}"

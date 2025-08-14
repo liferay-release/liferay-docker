@@ -193,22 +193,10 @@ function download_trial_dxp_license {
 function get_latest_tomcat_version {
 	local tomcat_major_version=$(echo "${1}" | cut --delimiter='.' --fields=1)
 
-	local latest_tomcat_version=$(curl \
-		"https://downloads.apache.org/tomcat/tomcat-${tomcat_major_version}/" \
-		--silent \
-		| grep --only-matching --perl-regexp "${tomcat_major_version}\.\d+\.\d+" \
-		| sort --version-sort \
-		| tail --lines=1)
-
-	if [ -z "${latest_tomcat_version}" ]
-	then
-		local latest_tomcat_version=$(curl \
+	local latest_tomcat_version=$( \
+		get_latest_version_from_url \
 			"http://dlcdn.apache.org/tomcat/tomcat-${tomcat_major_version}/" \
-			--silent \
-			| grep --only-matching --perl-regexp "${tomcat_major_version}\.\d+\.\d+" \
-			| sort --version-sort \
-			| tail --lines=1)
-	fi
+			"${tomcat_major_version}\.\d+\.\d+")
 
 	latest_tomcat_version=$(\
 		echo -e "${latest_tomcat_version}\n${1}" | \
