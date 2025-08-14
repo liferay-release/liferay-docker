@@ -198,7 +198,7 @@ function get_latest_tomcat_version {
 			"http://dlcdn.apache.org/tomcat/tomcat-${tomcat_major_version}/" \
 			"${tomcat_major_version}\.\d+\.\d+")
 
-	latest_tomcat_version=$(\
+	latest_tomcat_version=$( \
 		echo -e "${latest_tomcat_version}\n${1}" | \
 		sort --version-sort | \
 		tail -1)
@@ -217,7 +217,7 @@ function get_latest_tomcat_version {
 
 		if [[ "$(echo "${master_tomcat_version}" | cut --delimiter='.' --fields=1)" == "${tomcat_major_version}" ]]
 		then
-			latest_tomcat_version=$(\
+			latest_tomcat_version=$( \
 				echo -e "${latest_tomcat_version}\n${master_tomcat_version}" | \
 				sort --version-sort | \
 				tail -1)
