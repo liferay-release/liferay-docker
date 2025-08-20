@@ -111,7 +111,7 @@ function main {
 
 	lc_time_run update_salesforce_product_version
 
-	lc_time_run upload_to_docker_hub
+	lc_time_run upload_to_docker_hub "release-gold"
 
 	#if [ -d "${_RELEASE_ROOT_DIR}/dev/projects" ]
 	#then
