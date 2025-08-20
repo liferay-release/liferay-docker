@@ -391,7 +391,7 @@ function upload_to_docker_hub {
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
 
-	lc_cd "$(dirname "${_RELEASE_TOOL_DIR}")"
+	lc_cd "${_BASE_DIR}"
 
 	if [ "${1}" == "release-candidate" ]
 	then
@@ -408,7 +408,7 @@ function upload_to_docker_hub {
 
 		_update_bundles_yml
 
-		lc_cd "$(dirname "${_RELEASE_TOOL_DIR}")"
+		lc_cd "${_BASE_DIR}"
 
 		LIFERAY_DOCKER_RELEASE_CANDIDATE="false" LIFERAY_DOCKER_IMAGE_FILTER="${_PRODUCT_VERSION}" ./build_all_images.sh --push-all
 	fi
