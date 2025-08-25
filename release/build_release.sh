@@ -157,9 +157,14 @@ function main {
 
 		lc_time_run build_product
 
-		lc_time_run deploy_opensearch
+		lc_time_run add_ckeditor_license
 
-		lc_time_run upload_opensearch
+		if [[ ! " ${@} " =~ " --integration-test " ]]
+		then
+			lc_time_run deploy_opensearch
+
+			lc_time_run upload_opensearch
+		fi
 
 		lc_background_run build_sql
 		lc_background_run copy_copyright
@@ -198,16 +203,22 @@ function main {
 
 			lc_time_run generate_release_notes
 
-			lc_time_run upload_boms xanadu
+			if [[ ! " ${@} " =~ " --integration-test " ]]
+			then
+				lc_time_run upload_boms xanadu
+			fi
 		fi
 
-		lc_time_run upload_release
+		if [[ ! " ${@} " =~ " --integration-test " ]]
+		then
+			lc_time_run upload_release
 
-		lc_time_run trigger_ci_test_suite
+			lc_time_run trigger_ci_test_suite
 
-		lc_time_run upload_to_docker_hub
+			lc_time_run upload_to_docker_hub
 
-		lc_time_run scan_release_candidate_docker_image
+			lc_time_run scan_release_candidate_docker_image
+		fi
 	elif [ "$(get_release_output)" == "hotfix" ]
 	then
 		lc_time_run prepare_release_dir
