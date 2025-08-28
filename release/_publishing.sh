@@ -391,6 +391,20 @@ function upload_to_docker_hub {
 	if [ "${1}" == "release-candidate" ]
 	then
 		LIFERAY_DOCKER_IMAGE_FILTER="${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}" LIFERAY_DOCKER_RELEASE_CANDIDATE="true" ./build_all_images.sh --push
+
+		lc_cd "${_RELEASE_TOOL_DIR}"
+
+		LIFERAY_IMAGE_NAMES="liferay/release-candidates:${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}" LIFERAY_PRISMA_CLOUD_ACCESS_KEY="f090247a-6348-4d7d-be69-d10ec2a07f9c" LIFERAY_PRISMA_CLOUD_SECRET="x/bqwzcIfUrlx11MxcLBY/IqVY4=" ./scan_docker_images.sh
+
+		for file in "$(find "${_RELEASE_TOOL_DIR}/logs" -name "log_*_scan_docker_images.txt" -type f)"
+		do
+			if (grep -q "has security vulnerabilities." "${file}")
+			then
+				lc_log ERROR "Release candidate image has vulnerabilities."
+
+				return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+			fi
+		done
 	else
 		prepare_branch_to_commit "${_PROJECTS_DIR}/liferay-docker" "liferay-docker"
 
@@ -407,6 +421,8 @@ function upload_to_docker_hub {
 
 		LIFERAY_DOCKER_IMAGE_FILTER="${_PRODUCT_VERSION}" LIFERAY_DOCKER_RELEASE_CANDIDATE="false" ./build_all_images.sh --push-all
 	fi
+
+	lc_cd "${_BASE_DIR}"
 
 	local exit_code="${?}"
 
