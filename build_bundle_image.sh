@@ -121,6 +121,7 @@ function build_docker_image {
 		--build-arg LABEL_VCS_REF=$(git rev-parse HEAD) \
 		--build-arg LABEL_VCS_URL="https://github.com/liferay/liferay-docker" \
 		--build-arg LABEL_VERSION="${LABEL_VERSION}" \
+		--iidfile "${LIFERAY_DOCKER_LOGS_DIR}/build_bundle_image_id.txt" \
 		$(get_docker_image_tags_args "${DOCKER_IMAGE_TAGS[@]}") \
 		"${TEMP_DIR}" || exit 1
 }
@@ -382,7 +383,7 @@ function prepare_temp_directory {
 		cp --recursive "${TEMP_DIR}/liferay/tomcat-temp/bin/setenv.sh" "${TEMP_DIR}/liferay/${latest_tomcat_dir_name}/bin/setenv.sh"
 		cp --recursive "${TEMP_DIR}/liferay/tomcat-temp/conf" "${TEMP_DIR}/liferay/${latest_tomcat_dir_name}/"
 
-		if is_7_3_release
+		if is_7_3_release "${LIFERAY_DOCKER_RELEASE_VERSION}"
 		then
 			cp --recursive "${TEMP_DIR}/liferay/tomcat-temp/lib/ext" "${TEMP_DIR}/liferay/${latest_tomcat_dir_name}/lib/ext"
 		fi
