@@ -32,6 +32,11 @@ function check_usage {
 }
 
 function main {
+	if [[ " ${@} " =~ " --release-candidate " ]]
+	then
+		return
+	fi
+
 	check_usage
 
 	lc_time_run scan_docker_images
@@ -114,6 +119,8 @@ function scan_docker_images {
 
 		lc_log INFO "${scan_output}"
 
+		rm --force ./twistcli
+
 		if [[ ${scan_output} == *"Compliance threshold check results: PASS"* ]] &&
 		   [[ ${scan_output} == *"Vulnerability threshold check results: PASS"* ]]
 		then
@@ -122,10 +129,16 @@ function scan_docker_images {
 			lc_log INFO "The result of scan for ${image_name} is: FAIL."
 
 			lc_log ERROR "The Docker image ${image_name} has security vulnerabilities."
+
+			return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 		fi
 	done
-
-	rm --force ./twistcli
 }
 
-main
+function scan_release_candidate_docker_image {
+	LIFERAY_IMAGE_NAMES="liferay/release-candidates:${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}"
+
+	scan_docker_images
+}
+
+main "${@}"
