@@ -55,8 +55,10 @@ function assert_equals {
 		fi
 	done
 
-	if [ "${_TEST_RESULT}" == "true" ]
+	if [[ "${_TEST_RESULT}" == "true"  && "${_DISPLAY_SUCCESSUL_TEST_RESULT}" == "true" ]]
 	then
+		_display_test_initial_message
+
 		if _is_test_server
 		then
 			echo -e "${FUNCNAME[1]} SUCCESS :white_check_mark:\n"
@@ -66,6 +68,8 @@ function assert_equals {
 
 		echo -e "${FUNCNAME[1]} \e[1;32mSUCCESS\e[0m\n"
 	else
+		_display_test_initial_message
+
 		if _is_test_server
 		then
 			echo -e "${FUNCNAME[1]} FAILED :x:\n"
@@ -90,8 +94,16 @@ function common_tear_down {
 }
 
 function main {
+	_DISPLAY_SUCCESSUL_TEST_RESULT="true"
 	_TEST_RESULT="true"
 
+	if [[ " ${@} " =~ " --no-successful-test-result " ]]
+	then
+		_DISPLAY_SUCCESSUL_TEST_RESULT="false"
+	fi
+}
+
+function _display_test_initial_message {
 	if [ -n "${BASH_SOURCE[3]}" ]
 	then
 		echo -e "\n### Running tests from $(echo ${BASH_SOURCE[3]} | sed --regexp-extended 's/\.\///g') ###\n"
