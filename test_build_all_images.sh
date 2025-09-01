@@ -5,7 +5,7 @@ source ./_test_common.sh
 source ./build_all_images.sh --test
 
 function main {
-	if [ "${#}" -eq 1 ]
+	if [[ "${#}" -eq 1 && ! " ${@} " =~ " --no-successful-test-result " ]]
 	then
 		"${1}"
 	else

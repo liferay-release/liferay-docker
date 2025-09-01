@@ -7,7 +7,7 @@ source ./build_bundle_image.sh --test
 function main {
 	set_up
 
-	if [ "${#}" -eq 1 ]
+	if [[ "${#}" -eq 1 && ! " ${@} " =~ " --no-successful-test-result " ]]
 	then
 		"${1}"
 	else
