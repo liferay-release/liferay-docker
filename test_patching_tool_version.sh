@@ -26,7 +26,7 @@ function _test_patching_tool_version {
 
 	if [ "${1}" == "1.0" ]
 	then
-		assert_equals "${latest_patching_tool_version}" "1.0.24"
+		assert_equals "${latest_patching_tool_version}" "1.0.23"
 	else
 		assert_equals \
 			"${latest_patching_tool_version}" \
