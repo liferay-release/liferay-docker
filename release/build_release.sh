@@ -11,6 +11,7 @@ source ./_patcher.sh
 source ./_product.sh
 source ./_publishing.sh
 source ./_releases_json.sh
+source ./scan_docker_images.sh
 
 function check_usage {
 
@@ -196,6 +197,8 @@ function main {
 		lc_time_run trigger_ci_test_suite
 
 		lc_time_run upload_to_docker_hub "release-candidate"
+
+		# lc_time_run scan_docker_images "liferay/release-candidates:${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}"
 	else
 		lc_time_run prepare_release_dir
 
