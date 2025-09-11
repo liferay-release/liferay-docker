@@ -2,56 +2,22 @@
 
 source ../_liferay_common.sh
 
-function check_usage {
-	if [ -z "${LIFERAY_IMAGE_NAMES}" ] ||
-	   [ -z "${LIFERAY_PRISMA_CLOUD_ACCESS_KEY}" ] ||
-	   [ -z "${LIFERAY_PRISMA_CLOUD_SECRET}" ]
+function scan_docker_images {
+	if [ -z "${LIFERAY_IMAGE_NAMES}" ]
 	then
-		print_help
+		lc_log ERROR "\${LIFERAY_IMAGE_NAMES} is undefined."
+
+		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 	fi
 
-	local image_name
+	if [ -z "${LIFERAY_PRISMA_CLOUD_ACCESS_KEY}" ] ||
+	   [ -z "${LIFERAY_PRISMA_CLOUD_SECRET}" ]
+	then
+		lc_log ERROR "Either \${LIFERAY_PRISMA_CLOUD_ACCESS_KEY} or \${LIFERAY_PRISMA_CLOUD_SECRET} is undefined."
 
-	while read -r image_name
-	do
-		if [ -z "$(docker images --quiet "${image_name}" 2> /dev/null)" ]
-		then
-			lc_log ERROR "Unable to find ${image_name} locally."
+		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+	fi
 
-			exit "${LIFERAY_COMMON_EXIT_CODE_BAD}"
-		fi
-	done <<< "$(echo "${LIFERAY_IMAGE_NAMES}" | tr ',' '\n')"
-
-	lc_cd "$(dirname "$(readlink /proc/$$/fd/255 2>/dev/null)")"
-
-	_RELEASE_ROOT_DIR="${PWD}"
-
-	LIFERAY_COMMON_LOG_DIR="${_RELEASE_ROOT_DIR}/logs"
-
-	mkdir --parents "${LIFERAY_COMMON_LOG_DIR}"
-}
-
-function main {
-	check_usage
-
-	lc_time_run scan_docker_images
-}
-
-function print_help {
-	echo "Usage: LIFERAY_IMAGE_NAMES=<image name> ${0}"
-	echo ""
-	echo "The script reads the following environment variables:"
-	echo ""
-	echo "    LIFERAY_IMAGE_NAMES: Comma separated list of DXP or Portal Docker images"
-	echo "    LIFERAY_PRISMA_CLOUD_ACCESS_KEY: Prisma Cloud access key"
-	echo "    LIFERAY_PRISMA_CLOUD_SECRET: Prisma Cloud secret"
-	echo ""
-	echo "Example: LIFERAY_IMAGE_NAMES=liferay/dxp:2025.q1.5-lts,liferay/dxp:2024.q2.2 ${0}"
-
-	exit "${LIFERAY_COMMON_EXIT_CODE_HELP}"
-}
-
-function scan_docker_images {
 	local api_url="https://api.eu.prismacloud.io"
 	local data=$(
 		cat <<- END
@@ -95,7 +61,9 @@ function scan_docker_images {
 
 	chmod +x ./twistcli
 
-	echo "${LIFERAY_IMAGE_NAMES}" | tr ',' '\n' | while read -r image_name
+	local scan_result=0
+
+	while read -r image_name
 	do
 		lc_log INFO "Scanning ${image_name}."
 
@@ -122,10 +90,18 @@ function scan_docker_images {
 			lc_log INFO "The result of scan for ${image_name} is: FAIL."
 
 			lc_log ERROR "The Docker image ${image_name} has security vulnerabilities."
+
+			scan_result="${LIFERAY_COMMON_EXIT_CODE_BAD}"
 		fi
-	done
+	done < <(echo "${LIFERAY_IMAGE_NAMES}" | tr ',' '\n')
 
 	rm --force ./twistcli
+
+	return "${scan_result}"
 }
 
-main
+function scan_release_candidate_docker_image {
+	LIFERAY_IMAGE_NAMES="liferay/release-candidates:${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}"
+
+	scan_docker_images
+}

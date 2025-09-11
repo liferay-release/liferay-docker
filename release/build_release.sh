@@ -11,6 +11,7 @@ source ./_patcher.sh
 source ./_product.sh
 source ./_publishing.sh
 source ./_releases_json.sh
+source ./_scan_docker_images.sh
 
 function check_usage {
 
@@ -95,7 +96,7 @@ function handle_automated_build {
 }
 
 function main {
-	if [[ " ${@} " =~ " --test " ]]
+	if [[ "${BASH_SOURCE[0]}" != "${0}" ]]
 	then
 		return
 	fi
@@ -196,6 +197,8 @@ function main {
 		lc_time_run trigger_ci_test_suite
 
 		lc_time_run upload_to_docker_hub "release-candidate"
+
+		lc_time_run scan_release_candidate_docker_image
 	else
 		lc_time_run prepare_release_dir
 
