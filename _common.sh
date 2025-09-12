@@ -244,7 +244,7 @@ function prepare_tomcat {
 }
 
 function remove_temp_dockerfile_target_platform {
-	sed 's/--platform=${TARGETPLATFORM} //g; s/${TARGETARCH}'/$(get_current_arch)/ "${TEMP_DIR}"/Dockerfile > "${TEMP_DIR}"/Dockerfile.temp
+	sed "s/--platform=${TARGETPLATFORM} //g; s/${TARGETARCH}"/$(get_current_arch)/ "${TEMP_DIR}"/Dockerfile > "${TEMP_DIR}"/Dockerfile.temp
 
 	mv "${TEMP_DIR}"/Dockerfile.temp "${TEMP_DIR}"/Dockerfile
 }
