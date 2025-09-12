@@ -1,5 +1,6 @@
 #!/bin/bash
 
+source ../_common.sh
 source ../_release_common.sh
 
 function generate_releases_json {
@@ -15,6 +16,7 @@ function generate_releases_json {
 		fi
 	fi
 
+	_add_database_schema_versions
 	_add_major_versions
 	_promote_product_versions
 	_tag_recommended_product_versions
@@ -24,39 +26,41 @@ function generate_releases_json {
 	_upload_releases_json
 }
 
-function get_latest_product_version {
-	local product_name=""
-	local product_version="${1}"
-	local product_version_regex="(?<=<a href=\")"
+function _add_database_schema_versions {
+    local product_version_json_file
 
-	if [ "${product_version}" == "dxp" ]
-	then
-		product_name="dxp"
-		product_version_regex="${product_version_regex}(7\.3\.10-u\d+)"
-	elif [ "${product_version}" == "ga" ]
-	then
-		product_name="portal"
-		product_version_regex="${product_version_regex}(7\.4\.3\.\d+-ga\d+)"
-	elif [ "${product_version}" == "lts" ]
-	then
-		product_name="dxp"
-		product_version_regex="${product_version_regex}(\d{4}\.q1\.[0-9]+-lts)"
-	elif [ "${product_version}" == "quarterly" ]
-	then
-		product_name="dxp"
-		product_version_regex="${product_version_regex}(\d{4}\.q[1-4]\.\d+(-lts)?)"
-	elif [ "${product_version}" == "quarterly-candidate" ]
-	then
-		product_name="dxp/release-candidates"
-		product_version_regex="${product_version_regex}(\d{4}\.q[1-4]\.\d+(-lts)?)"
-	fi
+    for product_version_json_file in $(find "${_PROMOTION_DIR}" -maxdepth 1 -type f | grep --extended-regexp "[0-9]{4}-[0-9]{2}-[0-9]{2}-(dxp|portal).*\.json")
+    do
+		local product_version=$(jq --raw-output ".[].url" "${product_version_json_file}" | xargs basename)
 
-	echo "$(_download_product_version_list_html "${product_name}")" | \
-		grep \
-			--only-matching \
-			--perl-regexp \
-			"${product_version_regex}" | \
-		tail --lines=1
+        if [ "$(get_product_group_version "${product_version}")" == "7.0" ]
+        then
+            continue
+        fi
+
+		local repository="liferay-portal-ee"
+
+		if [ "$(jq --raw-output ".[].product" "${product_version_json_file}")" == "portal" ]
+		then
+			repository="liferay-portal"
+		fi
+
+		local database_schema_version=$(_get_database_schema_version "${product_version}" "${repository}")
+
+		if [ -z "${database_schema_version}" ]
+		then
+			lc_log ERROR "Unable to get database schema version for ${product_version} release."
+
+			continue
+		fi
+
+        jq "map(
+                . + {databaseSchemaVersion: \"${database_schema_version}\"}
+                | to_entries
+                | sort_by(.key)
+                | from_entries
+        )" "${product_version_json_file}" > "${product_version_json_file}.tmp" && mv "${product_version_json_file}.tmp" "${product_version_json_file}"
+    done
 }
 
 function _add_major_versions {
@@ -82,28 +86,62 @@ function _add_major_versions {
 	done
 }
 
-function _download_product_version_list_html {
-	local product_version_list_url="https://releases.liferay.com/${1}"
+function _get_database_schema_version {
+	local product_version=${1}
+	local repository=${2}
 
-	lc_log INFO "Downloading product version list from ${product_version_list_url}."
-
-	local product_version_list_html=""
-
-	if [ "${LIFERAY_RELEASE_TEST_MODE}" == "true" ]
+	if [ -z "${LIFERAY_RELEASE_TEST_MODE}" ]
 	then
-		product_version_list_html=$(cat "${_RELEASE_ROOT_DIR}/test-dependencies/actual/$(basename "${1}").html")
+		rm --force "${_PROMOTION_DIR}"/PortalUpgradeProcessRegistryImpl.java
+
+		download_file_from_github \
+			"PortalUpgradeProcessRegistryImpl.java" \
+			"portal-impl/src/com/liferay/portal/upgrade/$(_get_liferay_upgrade_folder_version "${product_version}")/PortalUpgradeProcessRegistryImpl.java" \
+			"${repository}" \
+			"$(get_tag_name "${product_version}")" &> /dev/null
+
+		if [ "${?}" -ne 0 ]
+		then
+			rm --force "${_PROMOTION_DIR}"/PortalUpgradeProcessRegistryImpl.java
+
+			echo ""
+
+			return
+		fi
+	fi
+
+	local database_schema_version=$(\
+		grep \
+			--only-matching \
+			--perl-regexp "new Version\(\K[^)]+" \
+			"${_PROMOTION_DIR}"/PortalUpgradeProcessRegistryImpl.java |
+		tail --lines=1 |
+		cut --delimiter=',' --fields=1,2,3 |
+		tr ',' '.' |
+		tr --delete '[:space:]')
+
+	if [ -z "${database_schema_version}" ] ||
+	   [[ ! "${database_schema_version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+	then
+		rm --force "${_PROMOTION_DIR}"/PortalUpgradeProcessRegistryImpl.java
+
+		echo ""
+
+		return
+	fi
+
+	echo "${database_schema_version}"
+}
+
+function _get_liferay_upgrade_folder_version {
+	local product_version=${1}
+
+	if is_quarterly_release "${product_version}"
+	then
+		echo "v7_4_x"
 	else
-		product_version_list_html=$(lc_curl "${product_version_list_url}/")
+		echo "v$(get_product_group_version "${product_version}" | tr '.' '_')_x"
 	fi
-
-	if [ "${?}" -ne 0 ]
-	then
-		lc_log ERROR "Unable to download the product version list."
-
-		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
-	fi
-
-	echo "${product_version_list_html}"
 }
 
 function _merge_json_snippets {
