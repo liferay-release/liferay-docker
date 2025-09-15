@@ -56,7 +56,7 @@ function test_releases_json_add_database_schema_versions {
 	_add_database_schema_versions &> /dev/null
 
 	assert_equals \
-		"$(jq "[.[] | select(.databaseSchemaVersion == \"32.0.0\")] | length == 1" "$(ls "${_PROMOTION_DIR}" | grep "2025.q2.1")")" \
+		"$(jq "[.[] | select(.databaseSchemaVersion == \"32.0.0\")] | length == 1" "${_PROMOTION_DIR}/2025-06-05-dxp-2025.q2.1.json")" \
 		"true"
 }
 
@@ -64,9 +64,9 @@ function test_releases_json_add_major_versions {
 	_add_major_versions
 
 	assert_equals \
-		"$(jq "[.[] | select(.productMajorVersion == \"DXP 2024.Q4\")] | length == 1" "$(ls "${_PROMOTION_DIR}" | grep "2024.q4.5")")" \
+		"$(jq "[.[] | select(.productMajorVersion == \"DXP 2024.Q4\")] | length == 1" "${_PROMOTION_DIR}/2025-01-27-dxp-2024.q4.5.json")" \
 		"true" \
-		"$(jq "[.[] | select(.productMajorVersion == \"DXP 2025.Q1 LTS\")] | length == 1" "$(ls "${_PROMOTION_DIR}" | grep "2025.q1.8-lts")")" \
+		"$(jq "[.[] | select(.productMajorVersion == \"DXP 2025.Q1 LTS\")] | length == 1" "${_PROMOTION_DIR}/2025-04-16-dxp-2025.q1.8-lts.json")" \
 		"true"
 }
 
@@ -140,9 +140,9 @@ function test_releases_json_promote_product_versions {
 	_promote_product_versions &> /dev/null
 
 	assert_equals \
-		"$(jq "[.[] | select(.promoted == \"true\")] | length == 1" "$(ls "${_PROMOTION_DIR}" | grep "2025.q1.8-lts")")" \
+		"$(jq "[.[] | select(.promoted == \"true\")] | length == 1" "${_PROMOTION_DIR}/2025-02-18-portal-7.4.3.132-ga132.json")" \
 		"true"
-		"$(jq "[.[] | select(.promoted == \"true\")] | length == 1" "$(ls "${_PROMOTION_DIR}" | grep "7.4.3.132-ga132")")" \
+		"$(jq "[.[] | select(.promoted == \"true\")] | length == 1" "${_PROMOTION_DIR}/2025-04-16-dxp-2025.q1.8-lts.json")" \
 		"true"
 }
 
@@ -150,9 +150,9 @@ function test_releases_json_tag_recommended_product_versions {
 	_tag_recommended_product_versions &> /dev/null
 
 	assert_equals \
-		"$(jq "[.[] | select(.tags[]? == \"recommended\")] | length == 1" "$(ls "${_PROMOTION_DIR}" | grep "$(get_latest_product_version "ga")")")" \
+		"$(jq "[.[] | select(.tags[]? == \"recommended\")] | length == 1" "${_PROMOTION_DIR}/2025-02-18-portal-7.4.3.132-ga132.json")" \
 		"true" \
-		"$(jq "[.[] | select(.tags[]? == \"recommended\")] | length == 1" "$(ls "${_PROMOTION_DIR}" | grep "$(get_latest_product_version "lts")")")" \
+		"$(jq "[.[] | select(.tags[]? == \"recommended\")] | length == 1" "${_PROMOTION_DIR}/2025-04-16-dxp-2025.q1.8-lts.json")" \
 		"true"
 }
 
