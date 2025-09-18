@@ -37,12 +37,6 @@ function clean_up_temp_directory {
 	rm --force --recursive "${TEMP_DIR}"
 }
 
-function configure_tomcat {
-	printf "\nCATALINA_OPTS=\"\${CATALINA_OPTS} \${LIFERAY_JVM_OPTS}\"" >> "${TEMP_DIR}/liferay/tomcat/bin/setenv.sh"
-
-	sed --in-place "/<web-app /a <distributable />" "${TEMP_DIR}/liferay/tomcat/webapps/ROOT/WEB-INF/web.xml"
-}
-
 function date {
 	export LC_ALL=en_US.UTF-8
 	export TZ=America/Los_Angeles
@@ -240,12 +234,6 @@ function make_temp_directory {
 	cp --recursive templates/_common/* "${TEMP_DIR}"
 }
 
-function pid_8080 {
-	local pid=$(lsof -Fp -i 4tcp:8080 -sTCP:LISTEN | head --lines=1)
-
-	echo "${pid##p}"
-}
-
 function prepare_tomcat {
 	local liferay_tomcat_version=$(get_tomcat_version "${TEMP_DIR}/liferay")
 
@@ -256,11 +244,11 @@ function prepare_tomcat {
 		ln --symbolic tomcat "${TEMP_DIR}/liferay/tomcat-${liferay_tomcat_version}"
 	fi
 
-	configure_tomcat
+	_configure_tomcat
 
 	if [[ ! " ${@} " =~ " --no-warm-up " ]]
 	then
-		warm_up_tomcat
+		_warm_up_tomcat
 	fi
 
 	rm --force --recursive "${TEMP_DIR}"/liferay/logs/*
@@ -271,57 +259,6 @@ function remove_temp_dockerfile_target_platform {
 	sed 's/--platform=${TARGETPLATFORM} //g; s/${TARGETARCH}'/$(get_current_arch)/ "${TEMP_DIR}"/Dockerfile > "${TEMP_DIR}"/Dockerfile.temp
 
 	mv "${TEMP_DIR}"/Dockerfile.temp "${TEMP_DIR}"/Dockerfile
-}
-
-function start_tomcat {
-
-	#
-	# Increase the available memory for warming up Tomcat. This is needed
-	# because LPKG hash and OSGi state processing for 7.0.x is expensive. Set
-	# this for all scenarios since it is limited to warming up Tomcat.
-	#
-
-	LIFERAY_JVM_OPTS="-Xmx3G"
-
-	local pid=$(pid_8080)
-
-	if [ -n "${pid}" ]
-	then
-		echo ""
-		echo "Killing process ${pid} that is listening on port 8080."
-		echo ""
-
-		kill -9 "${pid}" 2>/dev/null
-	fi
-
-	"./${TEMP_DIR}/liferay/tomcat/bin/catalina.sh" start
-
-	for count in {0..30}
-	do
-		if (curl --fail --max-time 3 --output /dev/null --silent http://localhost:8080)
-		then
-			break
-		fi
-
-		sleep 3
-	done
-
-	pid=$(pid_8080)
-
-	"./${TEMP_DIR}/liferay/tomcat/bin/catalina.sh" stop
-
-	for i in {0..30..1}
-	do
-		if kill -0 "${pid}" 2>/dev/null
-		then
-			sleep 1
-		fi
-	done
-
-	kill -0 "${pid}" 2>/dev/null && kill -9 "${pid}" 2>/dev/null
-
-	rm --force --recursive "${TEMP_DIR}/liferay/data/osgi/state"
-	rm --force --recursive "${TEMP_DIR}/liferay/osgi/state"
 }
 
 function stat {
@@ -349,7 +286,70 @@ function test_docker_image {
 	fi
 }
 
-function warm_up_tomcat {
+function _configure_tomcat {
+	printf "\nCATALINA_OPTS=\"\${CATALINA_OPTS} \${LIFERAY_JVM_OPTS}\"" >> "${TEMP_DIR}/liferay/tomcat/bin/setenv.sh"
+
+	sed --in-place "/<web-app /a <distributable />" "${TEMP_DIR}/liferay/tomcat/webapps/ROOT/WEB-INF/web.xml"
+}
+
+function _pid_8080 {
+	local pid=$(lsof -Fp -i 4tcp:8080 -sTCP:LISTEN | head --lines=1)
+
+	echo "${pid##p}"
+}
+
+function _start_tomcat {
+
+	#
+	# Increase the available memory for warming up Tomcat. This is needed
+	# because LPKG hash and OSGi state processing for 7.0.x is expensive. Set
+	# this for all scenarios since it is limited to warming up Tomcat.
+	#
+
+	LIFERAY_JVM_OPTS="-Xmx3G"
+
+	local pid=$(_pid_8080)
+
+	if [ -n "${pid}" ]
+	then
+		echo ""
+		echo "Killing process ${pid} that is listening on port 8080."
+		echo ""
+
+		kill -9 "${pid}" 2>/dev/null
+	fi
+
+	"./${TEMP_DIR}/liferay/tomcat/bin/catalina.sh" start
+
+	for count in {0..30}
+	do
+		if (curl --fail --max-time 3 --output /dev/null --silent http://localhost:8080)
+		then
+			break
+		fi
+
+		sleep 3
+	done
+
+	pid=$(_pid_8080)
+
+	"./${TEMP_DIR}/liferay/tomcat/bin/catalina.sh" stop
+
+	for i in {0..30..1}
+	do
+		if kill -0 "${pid}" 2>/dev/null
+		then
+			sleep 1
+		fi
+	done
+
+	kill -0 "${pid}" 2>/dev/null && kill -9 "${pid}" 2>/dev/null
+
+	rm --force --recursive "${TEMP_DIR}/liferay/data/osgi/state"
+	rm --force --recursive "${TEMP_DIR}/liferay/osgi/state"
+}
+
+function _warm_up_tomcat {
 
 	#
 	# Warm up Tomcat for older versions to speed up starting Tomcat. Populating
@@ -360,7 +360,7 @@ function warm_up_tomcat {
 	then
 		if [ $(stat "${TEMP_DIR}/liferay/data/hsql/lportal.script") -lt 1024000 ]
 		then
-			start_tomcat
+			_start_tomcat
 		else
 			echo Tomcat is already warmed up.
 		fi
@@ -368,11 +368,11 @@ function warm_up_tomcat {
 	then
 		if [ $(stat "${TEMP_DIR}/liferay/data/hypersonic/lportal.script") -lt 1024000 ]
 		then
-			start_tomcat
+			_start_tomcat
 		else
 			echo Tomcat is already warmed up.
 		fi
 	else
-		start_tomcat
+		_start_tomcat
 	fi
 }
