@@ -32,29 +32,7 @@ function add_jira_issue {
 }
 
 function add_jira_issue_comment {
-	local data=$(
-		cat <<- END
-		{
-			"body": {
-				"content": [
-					{
-						"content": [
-							{
-								"text": "${1}",
-								"type": "text"
-							}
-						],
-						"type": "paragraph"
-					}
-				],
-				"type": "doc",
-				"version": 1
-			}
-		}
-		END
-	)
-
-	_invoke_jira_api "https://liferay.atlassian.net/rest/api/3/issue/${2}/comment" "${data}"
+	_invoke_jira_api "https://liferay.atlassian.net/rest/api/3/issue/${1}/comment" "${2}"
 }
 
 function _invoke_jira_api {

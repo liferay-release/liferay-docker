@@ -184,7 +184,7 @@ function prepare_next_release {
 	
 	if [ -z "${LIFERAY_RELEASE_TEST_MODE}" ]
 	then
-		lc_time_run prepare_next_release_pull_request "${product_group_version}" "${next_release_patch_version}" "${quarterly_release_branch}"
+		lc_time_run prepare_next_release_pull_request "${quarterly_release_branch}"
 	fi
 }
 
@@ -201,12 +201,29 @@ function prepare_next_release_branch {
 }
 
 function prepare_next_release_pull_request {
+	local issue_key="$( \
+		add_jira_issue \
+			"712020:69064438-1c54-4f6a-8740-64505ce4ebed" \
+			"Release" \
+			"Task" \
+			"LPD" \
+			"${_PRODUCT_VERSION} Patch release" \
+			"customfield_10001" \
+			"04c03e90-c5a7-4fda-82f6-65746fe08b83")"
+
+	if [[ "${issue_key}" != LPD-* ]]
+	then
+		lc_log ERROR "Unable to create a Jira issue for ${_PRODUCT_VERSION}."
+
+		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+	fi
+
 	commit_to_branch_and_send_pull_request \
 		"${_PROJECTS_DIR}/liferay-portal-ee/release.properties" \
-		"Prepare ${1}.${2}" \
-		"${3}" \
+		"${issue_key} prep next" \
+		"${1}" \
 		"brianchandotcom/liferay-portal-ee" \
-		"Prep next"
+		"${issue_key} prep next | ${1}"
 
 	local exit_code="${?}"
 
@@ -215,6 +232,44 @@ function prepare_next_release_pull_request {
 		lc_log ERROR "Unable to commit to the release branch."
 	else
 		lc_log INFO "The next release branch was prepared successfully."
+
+		local data=$(
+			cat <<- END
+			{
+				"body": {
+					"content": [
+						{
+							"content": [
+								{
+									"text": "Related pull request: $(get_pull_request_url brianchandotcom/liferay-portal-ee). cc ",
+									"type": "text"
+								},
+								{
+									"attrs": {
+										"id": "557058:fa80bc56-9933-4ce6-a738-f92c755deff4",
+										"text": "@username"
+									},
+									"type": "mention"
+								},
+								{
+									"attrs": {
+										"id": "6061b27b610003006801f4df",
+										"text": "@username"
+									},
+									"type": "mention"
+								}
+							],
+							"type": "paragraph"
+						}
+					],
+					"type": "doc",
+					"version": 1
+				}
+			}
+			END
+		)
+
+		add_jira_issue_comment "${issue_key}" "${data}"
 	fi
 
 	return "${exit_code}"
@@ -406,7 +461,29 @@ function reference_new_releases {
 		else
 			lc_log INFO "Pull request with references to the next release was sent successfully."
 
-			add_jira_issue_comment "Related pull request: $(get_pull_request_url pyoo47/liferay-jenkins-ee)" "${issue_key}"
+			local data=$(
+				cat <<- END
+				{
+					"body": {
+						"content": [
+							{
+								"content": [
+									{
+										"text": "Related pull request: $(get_pull_request_url pyoo47/liferay-jenkins-ee)",
+										"type": "text"
+									}
+								],
+								"type": "paragraph"
+							}
+						],
+						"type": "doc",
+						"version": 1
+					}
+				}
+				END
+			)
+
+			add_jira_issue_comment "${issue_key}" "${data}"
 		fi
 
 		return "${exit_code}"
