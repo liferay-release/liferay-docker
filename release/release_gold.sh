@@ -104,20 +104,16 @@ function main {
 
 	lc_time_run update_salesforce_product_version
 
-	#if [ -d "${_RELEASE_ROOT_DIR}/dev/projects" ]
-	#then
-	#	lc_background_run clone_repository liferay-portal-ee
+	if [ -d "${_RELEASE_ROOT_DIR}/dev/projects" ]
+	then
+		lc_background_run clone_repository liferay-portal-ee
 
-	#	lc_wait
-	#fi
+		lc_wait
+	fi
 
-	#lc_time_run clean_portal_repository
+	lc_time_run clean_portal_repository
 
-	#lc_time_run prepare_next_release_branch
-
-	#lc_time_run update_release_info_date
-
-	#lc_time_run upload_to_docker_hub
+	lc_time_run prepare_next_release_branch
 
 	lc_time_run add_patcher_project_version
 
@@ -125,19 +121,13 @@ function main {
 }
 
 function prepare_next_release_branch {
-	if [ ! $(echo "${LIFERAY_RELEASE_PREPARE_NEXT_RELEASE_BRANCH}" | grep --ignore-case "true") ] ||
-	   ! is_quarterly_release
+	if ! is_quarterly_release ||
+	   [ ! $(echo "${LIFERAY_RELEASE_PREPARE_NEXT_RELEASE_BRANCH}" | grep --ignore-case "true") ] ||
+	   [[ "$(get_release_patch_version)" -eq 0 ]]
 	then
 		lc_log INFO "Skipping the preparation of the next release branch."
 
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
-	fi
-
-	if [ -z "${LIFERAY_RELEASE_TEST_MODE}" ]
-	then
-		rm --force --recursive releases.json
-
-		LIFERAY_COMMON_DOWNLOAD_SKIP_CACHE="true" lc_download "https://releases.liferay.com/releases.json" releases.json
 	fi
 
 	local product_group_version="$(get_product_group_version)"
@@ -145,73 +135,83 @@ function prepare_next_release_branch {
 	local latest_quarterly_product_version="$(\
 		jq --raw-output ".[] | \
 			select(.productGroupVersion == \"${product_group_version}\" and .promoted == \"true\") | \
-			.targetPlatformVersion" releases.json)"
+			.targetPlatformVersion" ${_PROMOTION_DIR}/*releases.json)"
 
-	if [ -z "${LIFERAY_RELEASE_TEST_MODE}" ]
+	if [ "$(get_product_version_without_lts_suffix)" != "${latest_quarterly_product_version}" ]
 	then
-		rm --force --recursive releases.json
-	fi
-
-	if [ "${_PRODUCT_VERSION}" != "${latest_quarterly_product_version}" ]
-	then
-		lc_log INFO "The ${_PRODUCT_VERSION} version is not the latest quarterly release. Skipping the preparation of the next release branch."
+		lc_log INFO "The ${_PRODUCT_VERSION} is not the latest quarterly release. Skipping the preparation of the next release branch."
 
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
 
-	local quarterly_release_branch="release-${product_group_version}"
-
-	prepare_branch_to_commit "${_PROJECTS_DIR}/liferay-portal-ee" "liferay-portal-ee" "${quarterly_release_branch}"
-
-	if [ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_BAD}" ]
+	if [ -z "${LIFERAY_RELEASE_TEST_MODE}" ]
 	then
-		lc_log ERROR "Unable to prepare the next release branch."
+		local quarterly_release_branch="release-${product_group_version}"
 
-		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
-	else
-		local next_release_patch_version=$(get_release_patch_version)
+		prepare_branch_to_commit "${_PROJECTS_DIR}/liferay-portal-ee" "liferay-portal-ee" "${quarterly_release_branch}"
 
-		next_release_patch_version=$((next_release_patch_version + 1))
-
-		if [[ "${_PRODUCT_VERSION}" == *q1* ]]
+		if [ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_BAD}" ]
 		then
-			if [[ "$(get_release_year)" -ge 2025 ]]
-			then
-				next_release_patch_version="${next_release_patch_version} LTS"
-			fi
-		fi
+			lc_log ERROR "Unable to prepare the next release branch."
 
-		sed \
-			--expression "s/release.info.version.display.name\[master-private\]=.*/release.info.version.display.name[master-private]=${product_group_version^^}.${next_release_patch_version}/" \
-			--in-place \
-			"${_PROJECTS_DIR}/liferay-portal-ee/release.properties"
-
-		sed \
-			--expression "s/release.info.version.display.name\[release-private\]=.*/release.info.version.display.name[release-private]=${product_group_version^^}.${next_release_patch_version}/" \
-			--in-place \
-			"${_PROJECTS_DIR}/liferay-portal-ee/release.properties"
-
-		if [ -z "${LIFERAY_RELEASE_TEST_MODE}" ]
-		then
-			commit_to_branch_and_send_pull_request \
-				"${_PROJECTS_DIR}/liferay-portal-ee/release.properties" \
-				"Prepare ${product_group_version}.${next_release_patch_version}" \
-				"${quarterly_release_branch}" \
-				"brianchandotcom/liferay-portal-ee" \
-				"Prep next"
-
-			local exit_code="${?}"
-
-			if [ "${exit_code}" -eq "${LIFERAY_COMMON_EXIT_CODE_BAD}" ]
-			then
-				lc_log ERROR "Unable to commit to the release branch."
-			else
-				lc_log INFO "The next release branch was prepared successfully."
-			fi
-
-			return "${exit_code}"
+			return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 		fi
 	fi
+
+	local next_release_patch_version=$(($(get_release_patch_version) + 1))
+
+	if is_lts_release
+	then
+		next_release_patch_version="${next_release_patch_version} LTS"
+	fi
+
+	set_next_release_version_display_name "${product_group_version}" "${next_release_patch_version}"
+
+	set_next_release_date
+	
+	if [ -z "${LIFERAY_RELEASE_TEST_MODE}" ]
+	then
+		prepare_next_release_pull_request "${quarterly_release_branch}"
+	fi
+}
+
+function prepare_next_release_pull_request {
+	local issue_key="$( \
+		add_jira_issue \
+			"712020:69064438-1c54-4f6a-8740-64505ce4ebed" \
+			"Release" \
+			"Task" \
+			"LPD" \
+			"${_PRODUCT_VERSION} Patch release" \
+			"customfield_10001" \
+			"04c03e90-c5a7-4fda-82f6-65746fe08b83")"
+
+	if [[ "${issue_key}" != LPD-* ]]
+	then
+		lc_log ERROR "Unable to create a Jira issue for ${_PRODUCT_VERSION}."
+
+		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+	fi
+
+	commit_to_branch_and_send_pull_request \
+		"${_PROJECTS_DIR}/liferay-portal-ee/release.properties" \
+		"${issue_key} prep next" \
+		"${1}" \
+		"brianchandotcom/liferay-portal-ee" \
+		"${issue_key} prep next | ${1}"
+
+	local exit_code="${?}"
+
+	if [ "${exit_code}" -eq "${LIFERAY_COMMON_EXIT_CODE_BAD}" ]
+	then
+		lc_log ERROR "Unable to commit to the release branch."
+	else
+		lc_log INFO "The next release branch was prepared successfully."
+
+		add_jira_issue_comment_with_mention "Related pull request: $(get_pull_request_url brianchandotcom/liferay-portal-ee). cc " "${issue_key}"
+	fi
+
+	return "${exit_code}"
 }
 
 function print_help {
@@ -408,6 +408,23 @@ function replace_property {
 	sed --in-place "s/${search_key}/${new_key}=${new_value}/" "build-shared.properties"
 }
 
+function set_next_release_date {
+	sed \
+		--expression "s/release.info.date=.*/release.info.date=$(date -d $(echo "${LIFERAY_NEXT_RELEASE_DATE}" | sed "s/[^0-9-]//g") +"%B %-d, %Y")/" \
+		--in-place \
+		"${_PROJECTS_DIR}/liferay-portal-ee/release.properties"
+}
+
+function set_next_release_version_display_name {
+	for branch in master-private release-private
+	do
+		sed \
+			--expression "s/release.info.version.display.name\[${branch}\]=.*/release.info.version.display.name[${branch}]=${1^^}.${2}/" \
+			--in-place \
+			"${_PROJECTS_DIR}/liferay-portal-ee/release.properties"
+	done
+}
+
 function tag_release {
 	if [ -z "${LIFERAY_RELEASE_GITHUB_PAT}" ]
 	then
@@ -434,14 +451,14 @@ function tag_release {
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
 
+	local product_version_without_lts_suffix="$(get_product_version_without_lts_suffix)"
+
 	local repository=liferay-portal-ee
 
 	if is_portal_release
 	then
 		repository=liferay-portal
 	fi
-
-	local tag_name="$(get_tag_name)"
 
 	for repository_owner in brianchandotcom liferay
 	do
@@ -450,7 +467,7 @@ function tag_release {
 			{
 				"message": "",
 				"object": "${git_hash}",
-				"tag": "${tag_name}",
+				"tag": "${product_version_without_lts_suffix}",
 				"type": "commit"
 			}
 			END
@@ -458,7 +475,7 @@ function tag_release {
 
 		if [ $(invoke_github_api_post "${repository_owner}" "${repository}/git/tags" "${tag_data}") -eq "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}" ]
 		then
-			lc_log ERROR "Unable to create tag ${tag_name} in ${repository_owner}/${repository}."
+			lc_log ERROR "Unable to create tag ${product_version_without_lts_suffix} in ${repository_owner}/${repository}."
 
 			return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 		fi
@@ -467,7 +484,7 @@ function tag_release {
 			cat <<- END
 			{
 				"message": "",
-				"ref": "refs/tags/${tag_name}",
+				"ref": "refs/tags/${product_version_without_lts_suffix}",
 				"sha": "${git_hash}"
 			}
 			END
@@ -475,7 +492,7 @@ function tag_release {
 
 		if [ $(invoke_github_api_post "${repository_owner}" "${repository}/git/refs" "${ref_data}") -eq "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}" ]
 		then
-			lc_log ERROR "Unable to create tag reference for ${tag_name} in ${repository_owner}/${repository}."
+			lc_log ERROR "Unable to create tag reference for ${product_version_without_lts_suffix} in ${repository_owner}/${repository}."
 
 			return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 		fi
@@ -547,57 +564,6 @@ function test_boms {
 	if [[ "${build_result}" != *"BUILD SUCCESSFUL"* ]]
 	then
 		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
-	fi
-}
-
-function update_release_info_date {
-	if ! is_quarterly_release ||
-	   [ ! $(echo "${LIFERAY_RELEASE_PREPARE_NEXT_RELEASE_BRANCH}" | grep --ignore-case "true") ] ||
-	   [[ "$(get_release_patch_version)" -eq 0 ]] ||
-	   [[ "$(get_release_year)" -lt 2024 ]]
-	then
-		lc_log INFO "Skipping the release info update."
-
-		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
-	fi
-
-	local product_group_version="$(get_product_group_version)"
-
-	local quarterly_release_branch="release-${product_group_version}"
-
-	prepare_branch_to_commit "${_PROJECTS_DIR}/liferay-portal-ee" "liferay-portal-ee" "${quarterly_release_branch}"
-
-	if [ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_BAD}" ]
-	then
-		lc_log ERROR "Unable to update the release date."
-
-		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
-	fi
-
-	sed \
-		--expression "s/release.info.date=.*/release.info.date=$(date -d "next monday" +"%B %-d, %Y")/" \
-		--in-place \
-		release.properties
-
-	if [ -z "${LIFERAY_RELEASE_TEST_MODE}" ]
-	then
-		commit_to_branch_and_send_pull_request \
-			"${_PROJECTS_DIR}/liferay-portal-ee/release.properties" \
-			"Update the release info date for ${_PRODUCT_VERSION}" \
-			"${quarterly_release_branch}" \
-			"brianchandotcom/liferay-portal-ee" \
-			"Prep next"
-
-		local exit_code="${?}"
-
-		if [ "${exit_code}" -eq "${LIFERAY_COMMON_EXIT_CODE_BAD}" ]
-		then
-			lc_log ERROR "Unable to commit to the release branch."
-		else
-			lc_log INFO "The release date was updated successfully."
-		fi
-
-		return "${exit_code}"
 	fi
 }
 
