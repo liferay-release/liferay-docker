@@ -170,7 +170,7 @@ function main {
 
 		lc_time_run warm_up_tomcat
 
-		lc_time_run package_release
+		lc_time_run prepare_release_artifacts
 
 		lc_time_run upload_release
 
@@ -218,7 +218,7 @@ function main {
 
 		lc_time_run warm_up_tomcat
 
-		lc_time_run package_release
+		lc_time_run prepare_release_artifacts
 
 		lc_time_run package_boms
 
