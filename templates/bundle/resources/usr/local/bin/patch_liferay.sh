@@ -13,7 +13,7 @@ function apply_patch {
 			echo ""
 			echo "[LIFERAY] ${patch_file_name} cannot be applied on this container because ${installed_patch} is already installed. Remove ${patch_file_name} from the patching directory to disable this warning message."
 		fi
-	elif [ "$patch_version" -lt 7310 ] &&
+	elif [ "${patch_version}" -lt 7310 ] &&
 	     ( /opt/liferay/patching-tool/patching-tool.sh apply "${LIFERAY_PATCHING_DIR}/${patch_file_name}" )
 	then
 		echo "${patch_file_name}" > /opt/liferay/patching-tool/patch-applied
@@ -72,15 +72,15 @@ function main {
 		else
 			/opt/liferay/patching-tool/patching-tool.sh install "${LIFERAY_DOCKER_HOTFIX}"
 		fi
-	elif [ -d "${LIFERAY_PATCHING_DIR}" ] && [[ $(find "${LIFERAY_PATCHING_DIR}" -maxdepth 1 -type f -name "liferay-*.zip" 2>/dev/null) ]]
+	elif [ -d "${LIFERAY_PATCHING_DIR}" ] && [[ $(find "${LIFERAY_PATCHING_DIR}" -maxdepth 1 -type f -name "*liferay-*.zip" 2>/dev/null) ]]
 	then
-		if [ $(find "${LIFERAY_PATCHING_DIR}" -maxdepth 1 -type f -name "liferay-*.zip" | wc --lines) == 1 ]
+		if [ $(find "${LIFERAY_PATCHING_DIR}" -maxdepth 1 -type f -name "*liferay-*.zip" | wc --lines) == 1 ]
 		then
-			local patch_file_name=$(basename "${LIFERAY_PATCHING_DIR}"/liferay-*.zip)
+			local patch_file_name=$(basename "${LIFERAY_PATCHING_DIR}"/*liferay-*.zip)
 
 			apply_patch "${patch_file_name}"
 		else
-			local patch_file_name=$(basename $(find "${LIFERAY_PATCHING_DIR}" -maxdepth 1 -name "liferay-*.zip" -type f 2>/dev/null | sort | tail --lines=1))
+			local patch_file_name=$(basename $(find "${LIFERAY_PATCHING_DIR}" -maxdepth 1 -name "*liferay-*.zip" -type f 2>/dev/null | sort | tail --lines=1))
 
 			echo ""
 			echo "[LIFERAY] There were multiple hotfixes in the patching folder. As only one can be installed, applying the latest one: ${patch_file_name}."
