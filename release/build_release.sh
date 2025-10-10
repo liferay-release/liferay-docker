@@ -112,7 +112,7 @@ function main {
 
 	lc_time_run report_jenkins_url
 
-	if [ -d "${_RELEASE_ROOT_DIR}/dev/projects" ]
+	if [ "${_PROJECTS_DIR}" == "${_RELEASE_ROOT_DIR}/dev/projects" ]
 	then
 		lc_background_run clone_repository liferay-binaries-cache-2020
 		lc_background_run clone_repository liferay-portal-ee
@@ -157,9 +157,12 @@ function main {
 
 		lc_time_run add_ckeditor_license
 
-		lc_time_run deploy_opensearch
+		if [[ ! " ${@} " =~ " --integration-test " ]]
+		then
+			lc_time_run deploy_opensearch
 
-		lc_time_run upload_opensearch
+			lc_time_run upload_opensearch
+		fi
 
 		lc_background_run build_sql
 		lc_background_run copy_copyright
@@ -191,15 +194,18 @@ function main {
 
 		lc_time_run generate_release_notes
 
-		lc_time_run upload_boms xanadu
+		if [[ ! " ${@} " =~ " --integration-test " ]]
+		then
+			lc_time_run upload_boms xanadu
 
-		lc_time_run upload_release
+			lc_time_run upload_release
 
-		lc_time_run trigger_ci_test_suite
+			lc_time_run trigger_ci_test_suite
 
-		lc_time_run upload_to_docker_hub "release-candidate"
+			lc_time_run upload_to_docker_hub "release-candidate"
 
-		lc_time_run scan_release_candidate_docker_image
+			lc_time_run scan_release_candidate_docker_image
+		fi
 	else
 		lc_time_run prepare_release_dir
 
