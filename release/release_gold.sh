@@ -611,4 +611,4 @@ function update_salesforce_product_version {
 	lc_log INFO "The Salesforce product version was updated successfully."
 }
 
-main "${@}"
+main "${@}" 
