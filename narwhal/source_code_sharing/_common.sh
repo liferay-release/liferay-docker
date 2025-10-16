@@ -72,19 +72,19 @@ function run_git_maintenance {
 }
 
 function prepare_repositories {
-	lc_time_run lc_clone_repository liferay-dxp
+	lc_clone_repository liferay-dxp
 
 	lc_cd "${BASE_DIR}"
 
-	lc_time_run lc_clone_repository liferay-portal-ee
+	lc_clone_repository liferay-portal-ee
 
 	lc_cd "${BASE_DIR}"
 
-	lc_time_run fetch_repository liferay-dxp
+	fetch_repository liferay-dxp
 
 	lc_cd "${BASE_DIR}"
 
-	lc_time_run fetch_repository liferay-portal-ee
+	fetch_repository liferay-portal-ee
 
 	lc_cd "${BASE_DIR}"
 }
