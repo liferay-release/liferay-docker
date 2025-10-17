@@ -1,11 +1,15 @@
 #!/bin/bash
 
+source ./_liferay_common.sh
+
 function main {
 	export DISPLAY_SUCCESSFUL_TEST_RESULT="false"
 
 	local test_results=""
 
 	local changed_files=$(git diff --name-only upstream/master)
+
+	lc_log DEBUG "Changed files: ${changed_files}"
 
 	if [ -z "${changed_files}" ]
 	then
