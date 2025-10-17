@@ -13,10 +13,14 @@ function main {
 
 	if [ -z "${changed_files}" ]
 	then
+		lc_log DEBUG "All tests will be run since no changed files were detected."
+
 		test_results=$(_run_docker_tests && _run_release_tests)
 	else
 		if (echo "${changed_files}" | grep --extended-regexp "^[^/]+\.sh$" --quiet)
 		then
+			lc_log DEBUG "Running docker tests"
+
 			test_results=$(_run_docker_tests)
 		fi
 
@@ -26,6 +30,8 @@ function main {
 			then
 				test_results+=$'\n'
 			fi
+
+			lc_log DEBUG "Running release tests"
 
 			test_results+=$(_run_release_tests)
 		fi
