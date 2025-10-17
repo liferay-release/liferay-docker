@@ -150,7 +150,7 @@ function install_patching_tool {
 
 	lc_download https://releases.liferay.com/tools/patching-tool/patching-tool-"${latest_version}".zip patching-tool-"${latest_version}".zip
 
-	unzip -q patching-tool-"${latest_version}".zip
+	unzip -oq patching-tool-"${latest_version}".zip
 
 	rm --force patching-tool-"${latest_version}".zip
 
