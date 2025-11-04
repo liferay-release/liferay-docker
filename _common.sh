@@ -105,6 +105,7 @@ function download {
 	   [[ "${file_url}" != https://release-1* ]] &&
 	   [[ "${file_url}" != https://release.liferay.com* ]] &&
 	   [[ "${file_url}" != https://releases-cdn.liferay.com* ]] &&
+	   [[ "${file_url}" != https://releases.liferay.com* ]] &&
 	   [[ "${file_url}" != https://storage.googleapis.com/* ]]
 	then
 		if [ ! -n "${LIFERAY_DOCKER_MIRROR}" ]
