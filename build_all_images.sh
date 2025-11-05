@@ -68,12 +68,19 @@ function build_bundle_image {
 	local test_hotfix_url=$(get_string $(yq "${query}".test_hotfix_url < bundles.yml))
 	local test_installed_patch=$(get_string $( yq "${query}".test_installed_patch < bundles.yml))
 
-	if is_dxp_release && is_release_candidate
+	if is_release_candidate
 	then
-		bundle_url="releases.liferay.com/dxp/release-candidates/${version}/$(curl --fail --location --show-error --silent "https://releases.liferay.com/dxp/release-candidates/${version}/.lfrrelease-tomcat-bundle")"
-	elif is_ga_release && is_release_candidate
-	then
-		bundle_url="releases.liferay.com/portal/release-candidates/${version}/$(curl --fail --location --show-error --silent "https://releases.liferay.com/portal/release-candidates/${version}/.lfrrelease-tomcat-bundle")"
+		local product_name=""
+
+		if is_dxp_release
+		then
+			product_name="dxp"
+		elif is_ga_release
+		then
+			product_name="portal"
+		fi
+
+		bundle_url="releases.liferay.com/${product_name}/release-candidates/${version}/$(curl --fail --location --show-error --silent "https://releases.liferay.com/${product_name}/release-candidates/${version}/.lfrrelease-tomcat-bundle")"
 	fi
 
 	if is_nightly_release "${version}"
