@@ -68,7 +68,7 @@ HEALTHCHECK \
 	--interval=4s \
 	--start-period=10s \
 	--timeout=1m \
-	CMD curl -fsS "http://localhost:8080/c/portal/layout" || exit 1
+	CMD /usr/local/bin/healthcheck.sh
 
 LABEL com.liferay.patching-tool-version="${LABEL_LIFERAY_PATCHING_TOOL_VERSION}"
 LABEL com.liferay.tomcat.version="${LABEL_LIFERAY_TOMCAT_VERSION}"
