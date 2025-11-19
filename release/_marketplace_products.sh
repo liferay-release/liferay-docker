@@ -28,7 +28,7 @@ function test_marketplace_products_compatibility {
 		["stripe"]="6a02a832-083b-f08c-888a-0a59d7c09119"
 	)
 
-	_get_oauth2_token
+	_get_liferay_marketplace_oauth2_token
 
 	if [ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_BAD}" ]
 	then
@@ -128,7 +128,7 @@ function _download_product {
 
 	curl \
 		"https://marketplace-uat.liferay.com/${product_download_url}" \
-		--header "Authorization: Bearer ${MARKETPLACE_OAUTH2_TOKEN}" \
+		--header "Authorization: Bearer ${_LIFERAY_MARKETPLACE_OAUTH2_TOKEN}" \
 		--location \
 		--output "${_BUILD_DIR}/marketplace/${product_file_name}" \
 		--request GET \
@@ -206,13 +206,13 @@ function _get_latest_product_virtual_settings_file_entry_json_index {
 	echo "${latest_product_virtual_settings_file_entry_json_index}"
 }
 
-function _get_oauth2_token {
+function _get_liferay_marketplace_oauth2_token {
 	local http_status_code_file=$(mktemp)
 
-	local oauth2_token_response=$(\
+	local liferay_marketplace_oauth2_token_response=$(\
 		curl \
 			"https://marketplace-preprod.lxc.liferay.com/o/oauth2/token" \
-			--data "client_id=${MARKETPLACE_OAUTH2_CLIENT_ID}&client_secret=${MARKETPLACE_OAUTH2_CLIENT_SECRET}&grant_type=client_credentials" \
+			--data "client_id=${LIFERAY_MARKETPLACE_OAUTH2_CLIENT_ID}&client_secret=${LIFERAY_MARKETPLACE_OAUTH2_CLIENT_SECRET}&grant_type=client_credentials" \
 			--request POST \
 			--silent \
 			--write-out "%output{${http_status_code_file}}%{http_code}")
@@ -221,12 +221,12 @@ function _get_oauth2_token {
 
 	if [[ "${http_status_code}" -ge 400 ]]
 	then
-		lc_log ERROR "Unable to get Marketplace OAuth2 token. HTTP status: ${http_status_code}."
+		lc_log ERROR "Unable to get Liferay Marketplace OAuth2 token. HTTP status: ${http_status_code}."
 
 		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 	fi
 
-	MARKETPLACE_OAUTH2_TOKEN=$(echo "${oauth2_token_response}" | jq --raw-output ".access_token")
+	_LIFERAY_MARKETPLACE_OAUTH2_TOKEN=$(echo "${liferay_marketplace_oauth2_token_response}" | jq --raw-output ".access_token")
 }
 
 function _get_product_by_external_reference_code {
@@ -237,7 +237,7 @@ function _get_product_by_external_reference_code {
 	local product_response=$(\
 		curl \
 			"https://marketplace-uat.liferay.com/o/headless-commerce-admin-catalog/v1.0/products/by-externalReferenceCode/${product_external_reference_code}?nestedFields=productVirtualSettings%2Cattachments" \
-			--header "Authorization: Bearer ${MARKETPLACE_OAUTH2_TOKEN}" \
+			--header "Authorization: Bearer ${_LIFERAY_MARKETPLACE_OAUTH2_TOKEN}" \
 			--request GET \
 			--silent \
 			--write-out "%output{${http_status_code_file}}%{http_code}")
@@ -271,7 +271,7 @@ function _get_product_virtual_settings_file_entries_by_external_reference_code {
 	local product_virtual_file_entries_response=$(\
 		curl \
 			"https://marketplace-uat.liferay.com/o/headless-commerce-admin-catalog/v1.0/product-virtual-settings/${product_virtual_settings_id}/product-virtual-settings-file-entries?pageSize=20" \
-			--header "Authorization: Bearer ${MARKETPLACE_OAUTH2_TOKEN}" \
+			--header "Authorization: Bearer ${_LIFERAY_MARKETPLACE_OAUTH2_TOKEN}" \
 			--request GET \
 			--silent \
 			--write-out "%output{${http_status_code_file}}%{http_code}")
@@ -348,7 +348,7 @@ function _update_product_supported_versions {
 			curl \
 				"https://marketplace-uat.liferay.com/o/headless-commerce-admin-catalog/v1.0/product-virtual-settings-file-entries/${latest_product_virtual_file_entry_id}" \
 				--form "productVirtualSettingsFileEntry={\"version\": \"${latest_product_virtual_file_entry_version}, ${product_virtual_file_entry_target_version}\"};type=application/json" \
-				--header "Authorization: Bearer ${MARKETPLACE_OAUTH2_TOKEN}" \
+				--header "Authorization: Bearer ${_LIFERAY_MARKETPLACE_OAUTH2_TOKEN}" \
 				--output /dev/null \
 				--request PATCH \
 				--silent \
