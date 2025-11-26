@@ -7,6 +7,8 @@ source ./build_all_images.sh
 function main {
 	set_up
 
+	echo "test"
+
 	if [ "${#}" -eq 1 ]
 	then
 		"${1}"
