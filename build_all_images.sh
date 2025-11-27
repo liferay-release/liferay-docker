@@ -593,6 +593,8 @@ function get_tag_from_image {
 }
 
 function has_slim_build_criteria {
+
+	echo "test123"
 	if (is_release_candidate "${1}" || is_u_release "${1}")
 	then
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"

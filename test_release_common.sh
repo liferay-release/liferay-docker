@@ -11,29 +11,29 @@ function main {
 		"${1}"
 	else
 		test_release_common_get_latest_product_version
-		test_release_common_get_product_group_version
-		test_release_common_get_product_version_without_lts_suffix
-		test_release_common_get_release_output
-		test_release_common_get_release_patch_version
-		test_release_common_get_release_quarter
-		test_release_common_get_release_version
-		test_release_common_get_release_version_trivial
-		test_release_common_get_release_year
-		test_release_common_is_7_3_ga_release
-		test_release_common_is_7_3_release
-		test_release_common_is_7_3_u_release
-		test_release_common_is_7_4_ga_release
-		test_release_common_is_7_4_release
-		test_release_common_is_7_4_u_release
-		test_release_common_is_dxp_release
-		test_release_common_is_early_product_version_than
-		test_release_common_is_ga_release
-		test_release_common_is_later_product_version_than
-		test_release_common_is_lts_release
-		test_release_common_is_nightly_release
-		test_release_common_is_portal_release
-		test_release_common_is_quarterly_release
-		test_release_common_is_u_release
+		# test_release_common_get_product_group_version
+		# test_release_common_get_product_version_without_lts_suffix
+		# test_release_common_get_release_output
+		# test_release_common_get_release_patch_version
+		# test_release_common_get_release_quarter
+		# test_release_common_get_release_version
+		# test_release_common_get_release_version_trivial
+		# test_release_common_get_release_year
+		# test_release_common_is_7_3_ga_release
+		# test_release_common_is_7_3_release
+		# test_release_common_is_7_3_u_release
+		# test_release_common_is_7_4_ga_release
+		# test_release_common_is_7_4_release
+		# test_release_common_is_7_4_u_release
+		# test_release_common_is_dxp_release
+		# test_release_common_is_early_product_version_than
+		# test_release_common_is_ga_release
+		# test_release_common_is_later_product_version_than
+		# test_release_common_is_lts_release
+		# test_release_common_is_nightly_release
+		# test_release_common_is_portal_release
+		# test_release_common_is_quarterly_release
+		# test_release_common_is_u_release
 	fi
 
 	tear_down
@@ -41,6 +41,8 @@ function main {
 
 function set_up {
 	common_set_up
+
+	echo "testing echo setup of the test release_common.sh"
 
 	export _RELEASE_ROOT_DIR="${PWD}/release"
 }

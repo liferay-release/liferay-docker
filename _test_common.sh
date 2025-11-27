@@ -55,7 +55,7 @@ function assert_equals {
 		fi
 	done
 
-	if [ -z "${DISPLAY_SUCCESSFUL_TEST_RESULT}" ] && [ "${_TEST_RESULT}" == "true" ]
+	if [ "${DISPLAY_SUCCESSFUL_TEST_RESULT}" == "true" ] && [ "${_TEST_RESULT}" == "true" ]
 	then
 		_display_test_initial_message
 
@@ -101,9 +101,11 @@ function main {
 function _display_test_initial_message {
 	if [ -n "${BASH_SOURCE[3]}" ]
 	then
+		echo "---"
 		echo -e "\n### Running tests from $(echo ${BASH_SOURCE[3]} | sed --regexp-extended "s/\.\///g") ###\n"
 	elif [ -n "${BASH_SOURCE[2]}" ]
 	then
+		echo "---"
 		echo -e "\n### Running tests from $(echo ${BASH_SOURCE[2]} | sed --regexp-extended "s/\.\///g") ###\n"
 	fi
 }
