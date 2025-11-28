@@ -55,8 +55,8 @@ function assert_equals {
 		fi
 	done
 
-	if [["${_TEST_RESULT}" == "true" ]] &&
-	   [[ "${DISPLAY_SUCCESSFUL_TEST_RESULT}" == "true" || -z "${DISPLAY_SUCCESSFUL_TEST_RESULT}" ]]
+	if [ "${_TEST_RESULT}" == "true" ] &&
+	   [ "${DISPLAY_SUCCESSFUL_TEST_RESULT}" != "false" ]
 	then
 		_display_test_initial_message
 
