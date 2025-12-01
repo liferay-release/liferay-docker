@@ -71,9 +71,7 @@ function check_usage {
 }
 
 function handle_automated_build {
-	if [ "${BUILD_CAUSE}" != "TIMERTRIGGER" ] &&
-	   [ "${LIFERAY_RELEASE_TEST_MODE}" != "true" ] ||
-	   [ "$(get_release_output)" == "nightly" ]
+	if [ "${BUILD_CAUSE}" != "TIMERTRIGGER" ] && [ "$(get_release_output)" == "nightly" ]
 	then
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
@@ -107,7 +105,10 @@ function main {
 
 	check_usage
 
-	lc_time_run handle_automated_build
+	if [ -z "${LIFERAY_RELEASE_TEST_MODE}" ]
+	then
+		lc_time_run handle_automated_build
+	fi
 
 	print_variables
 
