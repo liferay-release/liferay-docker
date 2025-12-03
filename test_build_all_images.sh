@@ -24,8 +24,8 @@ function main {
 function set_up {
 	export _LATEST_RELEASE=$(yq eval ".quarterly | keys | .[-1]" "${PWD}/bundles.yml")
 
-	LIFERAY_DOCKER_IMAGE_FILTER="${_LATEST_RELEASE}" LIFERAY_DOCKER_SLIM="true" ./build_all_images.sh &> /dev/null
-	LIFERAY_DOCKER_IMAGE_FILTER="7.3.10-u36" ./build_all_images.sh &> /dev/null
+	LIFERAY_DOCKER_IMAGE_FILTER="${_LATEST_RELEASE}" LIFERAY_DOCKER_SLIM="true" ./build_all_images.sh
+	LIFERAY_DOCKER_IMAGE_FILTER="7.3.10-u36" ./build_all_images.sh
 }
 
 function tear_down {
