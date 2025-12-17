@@ -19,8 +19,8 @@ function generate_releases_json {
 	_add_database_schema_versions
 	_add_major_versions
 	_promote_product_versions
+	_tag_jakarta_product_versions
 	_tag_recommended_product_versions
-
 	_merge_json_snippets
 
 	_upload_releases_json
@@ -317,6 +317,30 @@ function _promote_product_versions {
 	done
 }
 
+function _tag_jakarta_product_versions {
+	local product_version_json_file
+
+	find "${_PROMOTION_DIR}" -maxdepth 1 -type f -name "*.json" | while read -r product_version_json_file
+	do
+		jq 'map(
+				(.productGroupVersion | ascii_upcase) as $current_q |
+
+				if ($current_q |
+					startswith("20")) and ($current_q >= "2025.Q3")
+				then
+					.tags = ((.tags // []) + ["jakarta"]
+					| unique
+					| sort)
+					| to_entries
+					| sort_by(.key)
+					| from_entries
+				else
+					.
+				end
+			)' "${product_version_json_file}" > "${product_version_json_file}.tmp" && mv "${product_version_json_file}.tmp" "${product_version_json_file}"
+	done
+}
+
 function _tag_recommended_product_versions {
 	for product_version in "ga" "lts"
 	do
@@ -330,12 +354,14 @@ function _tag_recommended_product_versions {
 		then
 			lc_log INFO "Tagging ${latest_product_version_json_file} as recommended."
 
-			jq "map(
-					(. + {tags: [\"recommended\"]})
+			jq 'map(
+					.tags = ((.tags // []) + ["recommended"]
+					| unique
+					| sort)
 					| to_entries
 					| sort_by(.key)
 					| from_entries
-				)" "${latest_product_version_json_file}" > "${latest_product_version_json_file}.tmp" && mv "${latest_product_version_json_file}.tmp" "${latest_product_version_json_file}"
+				)' "${latest_product_version_json_file}" > "${latest_product_version_json_file}.tmp" && mv "${latest_product_version_json_file}.tmp" "${latest_product_version_json_file}"
 		else
 			lc_log INFO "Unable to get latest product version JSON file for ${product_version}."
 		fi
