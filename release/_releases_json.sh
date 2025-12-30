@@ -325,11 +325,11 @@ function _sort_all_release_json_attributes {
 
 	find "${_PROMOTION_DIR}" -maxdepth 1 -name "*.json" -type f | while read -r release_json_file
 	do
-		jq 'map(
+		jq "map(
 				to_entries
 				| sort_by(.key)
 				| from_entries
-			)' "$release_json_file" > "$release_json_file.tmp" && mv --force "$release_json_file.tmp" "$release_json_file"
+			)" "${release_json_file}" > "${release_json_file}.tmp" && mv "${release_json_file}.tmp" "${release_json_file}"
 	done
 }
 
@@ -345,7 +345,7 @@ function _tag_jakarta_product_versions {
 				then
 					.tags = ((.tags // []) + ["jakarta"] | unique | sort)
 				end
-			)' "${product_version_json_file}" > "${product_version_json_file}.tmp" && mv --force "${product_version_json_file}.tmp" "${product_version_json_file}"
+			)' "${product_version_json_file}" > "${product_version_json_file}.tmp" && mv "${product_version_json_file}.tmp" "${product_version_json_file}"
 	done
 }
 
