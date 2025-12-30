@@ -16,6 +16,20 @@ function main {
 			-type d \
 			-exec rm --force --recursive {} \; &> /dev/null
 	done
+
+	local current_job=$(basename "${PWD}")
+
+	if [ "${current_job}" == "build-release" ] ||
+	   [ "${current_job}" == "build-release-nightly" ] ||
+	   [ "${current_job}" == "release-gold" ]
+	then
+		rm --force --recursive release/release-data
+		rm --force --recursive downloads
+	elif [ "${current_job}" == "source-code-sharing" ]
+	then
+		rm --force --recursive narwhal/source_code_sharing/cache
+		rm --force --recursive narwhal/source_code_sharing/liferay-portal-ee
+	fi
 }
 
 main
