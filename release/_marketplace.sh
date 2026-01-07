@@ -4,6 +4,10 @@ source ../_liferay_common.sh
 source ../_release_common.sh
 source ./_product.sh
 
+function a {
+	echo "a"
+}
+
 function check_liferay_marketplace_products_compatibility {
 	if ! is_first_quarterly_release
 	then

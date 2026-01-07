@@ -8,27 +8,29 @@ function main {
 
 	local test_results=""
 
-	local changed_files=$(git diff --name-only upstream/master)
+	# local changed_files=$(git diff --name-only upstream/master)
 
-	if [ -z "${changed_files}" ]
-	then
-		test_results=$((_run_docker_tests && _run_release_tests) 2>&1 | tee /dev/stderr)
-	else
-		if (echo "${changed_files}" | grep --extended-regexp "^[^/]+\.sh$" --quiet)
-		then
-			test_results=$(_run_docker_tests 2>&1 | tee /dev/stderr)
-		fi
+	# if [ -z "${changed_files}" ]
+	# then
+	# 	test_results=$((_run_docker_tests && _run_release_tests) 2>&1 | tee /dev/stderr)
+	# else
+	# 	if (echo "${changed_files}" | grep --extended-regexp "^[^/]+\.sh$" --quiet)
+	# 	then
+	# 		test_results=$(_run_docker_tests 2>&1 | tee /dev/stderr)
+	# 	fi
 
-		if (echo "${changed_files}" | grep --extended-regexp "^release/.*\.sh$|^release/test-dependencies/.*" --quiet)
-		then
-			if [ -n "${test_results}" ]
-			then
-				test_results+=$'\n'
-			fi
+	# 	if (echo "${changed_files}" | grep --extended-regexp "^release/.*\.sh$|^release/test-dependencies/.*" --quiet)
+	# 	then
+	# 		if [ -n "${test_results}" ]
+	# 		then
+	# 			test_results+=$'\n'
+	# 		fi
 
-			test_results+=$(_run_release_tests 2>&1 | tee /dev/stderr)
-		fi
-	fi
+	# 		test_results+=$(_run_release_tests 2>&1 | tee /dev/stderr)
+	# 	fi
+	# fi
+
+	test_results=$(_run_release_tests 2>&1 | tee /dev/stderr)
 
 	if [[ "${test_results}" == *"FAILED"* ]]
 	then
