@@ -60,7 +60,7 @@ function assert_equals {
 	then
 		_display_test_initial_message
 
-		if _is_test_server
+		if is_test_server
 		then
 			echo -e "${FUNCNAME[1]} SUCCESS :white_check_mark:\n"
 
@@ -72,7 +72,7 @@ function assert_equals {
 	then
 		_display_test_initial_message
 
-		if _is_test_server
+		if is_test_server
 		then
 			echo -e "${FUNCNAME[1]} FAILED :x:\n"
 		else
@@ -95,6 +95,22 @@ function common_tear_down {
 	unset LIFERAY_RELEASE_TEST_MODE
 }
 
+function is_test_server {
+	local hostname=${1}
+
+	if [ -z "${hostname}" ]
+	then
+		hostname="$(hostname)"
+	fi
+
+	if [[ "${hostname}" =~ ^test-[0-9]+-[0-9]+(-[0-9]+)? ]]
+	then
+		return 0
+	fi
+
+	return 1
+}
+
 function main {
 	_TEST_RESULT="true"
 }
@@ -107,15 +123,6 @@ function _display_test_initial_message {
 	then
 		echo -e "\n### Running tests from $(echo ${BASH_SOURCE[2]} | sed --regexp-extended "s/\.\///g") ###\n"
 	fi
-}
-
-function _is_test_server {
-	if [[ "$(hostname)" =~ ^test-[0-9]+-[0-9]+(-[0-9]+)? ]]
-	then
-		return 0
-	fi
-
-	return 1
 }
 
 main

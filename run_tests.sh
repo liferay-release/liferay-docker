@@ -39,7 +39,9 @@ function main {
 }
 
 function _run_docker_tests {
-	find . -maxdepth 1 -name "test_*.sh" ! -name "test_bundle_image.sh" -type f | sort | xargs --max-args=1 /bin/bash
+	# find . -maxdepth 1 -name "test_*.sh" ! -name "test_bundle_image.sh" -type f | sort | xargs --max-args=1 /bin/bash
+
+	./test_build_all_images.sh
 }
 
 function _run_release_tests {
