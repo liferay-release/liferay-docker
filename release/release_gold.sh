@@ -126,15 +126,7 @@ function prepare_next_release_branch {
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
 
-	local product_group_version="$(get_product_group_version)"
-
-	local latest_quarterly_product_version=$( \
-		jq --raw-output "[.[] | \
-			select(.productGroupVersion == \"${product_group_version}\" and .promoted == \"true\") | \
-			.targetPlatformVersion] | last" "${_PROMOTION_DIR}/releases.json" | \
-			tr -d '[:space:]')
-
-	if [ "$(get_product_version_without_lts_suffix)" != "${latest_quarterly_product_version}" ]
+	if ! is_latest_product_version_by_releases_json "${_PROMOTION_DIR}"
 	then
 		lc_log INFO "The ${_PRODUCT_VERSION} is not the latest quarterly release. Skipping the preparation of the next release branch."
 
@@ -143,7 +135,7 @@ function prepare_next_release_branch {
 
 	if [ -z "${LIFERAY_RELEASE_TEST_MODE}" ]
 	then
-		local quarterly_release_branch="release-${product_group_version}"
+		local quarterly_release_branch="release-$(get_product_group_version)"
 
 		prepare_branch_to_commit "${_PROJECTS_DIR}/liferay-portal-ee" "liferay-portal-ee" "${quarterly_release_branch}"
 
