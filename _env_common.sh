@@ -16,6 +16,15 @@ function is_ci_slave {
 	return 1
 }
 
+function is_local_environment {
+	if [[ "$(hostname)" =~ ^liferay-* ]]
+	then
+		return 0
+	fi
+
+	return 1
+}
+
 function is_release_slave {
 	local slave_name=${1}
 
