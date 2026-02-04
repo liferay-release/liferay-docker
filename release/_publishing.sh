@@ -215,6 +215,21 @@ function remove_old_release_candidate_tags {
 	done
 }
 
+function clear_gcs_auth {
+	if is_local_environment
+	then
+		gcloud auth revoke
+
+		lc_log INFO "GCS authentication cleared."
+
+		return "${LIFERAY_COMMON_EXIT_CODE_OK}"
+	fi
+	
+	lc_log INFO "Skipping GCS authentication cleanup."
+
+	return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
+}
+
 function upload_bom_file {
 	local nexus_repository_name="${1}"
 
