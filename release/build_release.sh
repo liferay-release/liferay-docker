@@ -26,9 +26,15 @@ function check_usage {
 		LIFERAY_RELEASE_GIT_REF=${LIFERAY_RELEASE_GIT_SHA}
 	fi
 
-	if [ -z "${LIFERAY_RELEASE_GIT_REF}" ]
+	if [ -z "${LIFERAY_RELEASE_GENERAL_AVAILABILITY_DATE}" ] && is_first_quarterly_release ||
+	   [ -z "${LIFERAY_RELEASE_GIT_REF}" ]
 	then
 		print_help
+	fi
+
+	if [ -z "${LIFERAY_RELEASE_GENERAL_AVAILABILITY_DATE}" ]
+	then
+		LIFERAY_RELEASE_GENERAL_AVAILABILITY_DATE=$(date +%Y-%m-%d)
 	fi
 
 	_BUILD_TIMESTAMP=$(date +%s)
@@ -270,6 +276,7 @@ function print_help {
 	echo "The script reads the following environment variables:"
 	echo ""
 	echo "    LIFERAY_RELEASE_GCS_TOKEN (optional): *.json file containing the token to authenticate with Google Cloud Storage"
+	echo "    LIFERAY_RELEASE_GENERAL_AVAILABILITY_DATE: General availability date of the release. Optional for non-first quarterly releases only."
 	echo "    LIFERAY_RELEASE_GIT_REF: Git SHA to build from"
 	echo "    LIFERAY_RELEASE_HOTFIX_BUILD_ID (optional): Build ID on Patcher"
 	echo "    LIFERAY_RELEASE_HOTFIX_FIXED_ISSUES (optional): Comma delimited list of fixed issues in the hotfix"
