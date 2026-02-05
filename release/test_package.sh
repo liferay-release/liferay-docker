@@ -82,6 +82,7 @@ function test_package_generate_release_properties_file {
 
 	_test_package_generate_release_properties_file "2025.q1.18-lts" "9.0.107" "2025-10-10"
 	_test_package_generate_release_properties_file "2025.q2.0" "9.0.104" "2025-05-22"
+	_test_package_generate_release_properties_file "2026.q1.0-lts" "9.0.110" "2026-03-18"
 
 	LIFERAY_RELEASE_PRODUCT_NAME="portal"
 
