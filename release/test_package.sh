@@ -26,6 +26,7 @@ function main {
 function set_up {
 	export LIFERAY_RELEASE_PRODUCT_NAME="dxp"
 	export _BUILD_TIMESTAMP="1234567890"
+	export _PRODUCT_VERSION
 	export _RELEASE_ROOT_DIR="${PWD}"
 
 	export _BUILD_DIR="${_RELEASE_ROOT_DIR}/test-dependencies"
@@ -81,6 +82,9 @@ function test_package_generate_release_properties_file {
 
 	_test_package_generate_release_properties_file "2025.q1.18-lts" "9.0.107" "2025-10-10"
 	_test_package_generate_release_properties_file "2025.q2.0" "9.0.104" "2025-05-22"
+	_test_package_generate_release_properties_file "2026.q1.0-lts" "9.0.110" "2026-03-18"
+	_test_package_generate_release_properties_file "7.4.13-u145" "10.1.48" "2025-12-20"
+	_test_package_generate_release_properties_file "7.4.13-u146" "10.1.48" "2026-02-02"
 
 	LIFERAY_RELEASE_PRODUCT_NAME="portal"
 
@@ -178,8 +182,9 @@ function _test_package_generate_release_properties_file {
 	generate_release_properties_file &> /dev/null
 
 	sed \
-		--expression "s/release.date=.*/release.date=${3}/" \
 		--in-place \
+		--regexp-extended \
+		"s/(general.availability.date|release.date)=.*/\1=${3}/" \
 		release.properties
 
 	assert_equals \

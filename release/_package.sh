@@ -22,9 +22,17 @@ function generate_checksum_files {
 }
 
 function generate_release_properties_file {
+	local date_key="release.date"
+
+	if (is_7_4_u_release && is_later_product_version_than "7.4.13-u145") ||
+	   (is_quarterly_release && ! is_early_product_version_than "2026.q1.0-lts")
+	then
+		date_key="general.availability.date"
+	fi
+
 	local tomcat_version=$(grep --extended-regexp --only-matching "Apache Tomcat Version [0-9]+\.[0-9]+\.[0-9]+" "${_BUNDLES_DIR}/tomcat/RELEASE-NOTES")
 
-	tomcat_version="${tomcat_version/Apache Tomcat Version /}"
+	tomcat_version=$(echo "${tomcat_version}" | sed "s/Apache Tomcat Version //")
 
 	if [ -z "${tomcat_version}" ]
 	then
@@ -35,7 +43,7 @@ function generate_release_properties_file {
 
 	local bundle_file_name="liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-tomcat-${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}.7z"
 
-	local product_version="${_PRODUCT_VERSION^^}"
+	local product_version=$(echo "${_PRODUCT_VERSION}" | tr "[:lower:]" "[:upper:]")
 
 	if is_dxp_release
 	then
@@ -45,9 +53,10 @@ function generate_release_properties_file {
 		product_version="Portal ${product_version}"
 	fi
 
-	product_version="${product_version/-/ }"
+	product_version=$(echo "${product_version}" | sed "s/-/ /")
 
 	(
+		echo "${date_key}=${LIFERAY_RELEASE_GENERAL_AVAILABILITY_DATE}"
 		echo "app.server.tomcat.version=${tomcat_version}"
 		echo "build.timestamp=${_BUILD_TIMESTAMP}"
 		echo "bundle.checksum.sha512=$(cat "${bundle_file_name}.sha512")"
@@ -58,9 +67,8 @@ function generate_release_properties_file {
 		echo "liferay.docker.image=liferay/${LIFERAY_RELEASE_PRODUCT_NAME}:${_PRODUCT_VERSION}"
 		echo "liferay.docker.tags=${_PRODUCT_VERSION}"
 		echo "liferay.product.version=${product_version}"
-		echo "release.date=$(date +"%Y-%m-%d")"
 		echo "target.platform.version=$(get_target_platform_version)"
-	) > release.properties
+	) | sort > release.properties
 }
 
 function install_patching_tool {
