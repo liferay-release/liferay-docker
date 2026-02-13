@@ -15,14 +15,17 @@ function main {
 		test_releases_json_add_database_schema_versions
 		test_releases_json_add_major_versions
 		test_releases_json_get_database_schema_versions
+		test_releases_json_get_general_availability_date
 		test_releases_json_get_liferay_upgrade_folder_version
 		test_releases_json_get_supported_product_group_versions
+		test_releases_json_is_supported_product_version
 		test_releases_json_merge_json_snippets
 		test_releases_json_not_process_new_product
 		test_releases_json_process_new_product
 		test_releases_json_promote_product_versions
 		test_releases_json_tag_jakarta_product_versions
 		test_releases_json_tag_recommended_product_versions
+		test_releases_json_tag_supported_product_versions
 	fi
 
 	tear_down
@@ -32,6 +35,7 @@ function set_up {
 	common_set_up
 
 	export LIFERAY_RELEASE_PRODUCT_NAME="dxp"
+	export LIFERAY_RELEASE_TEST_DATE
 	export _PRODUCT_VERSION="7.4.13-u128"
 	export _PROMOTION_DIR="${PWD}"
 	export _RELEASE_ROOT_DIR="${PWD}"
@@ -58,6 +62,7 @@ function tear_down {
 	common_tear_down
 
 	unset LIFERAY_RELEASE_PRODUCT_NAME
+	unset LIFERAY_RELEASE_TEST_DATE
 	unset _PRODUCT_VERSION
 	unset _PROJECTS_DIR
 	unset _PROMOTION_DIR
@@ -65,7 +70,7 @@ function tear_down {
 
 	rm --force --recursive ./test_release_json_dir
 	rm --force ./PortalUpgradeProcessRegistryImpl.java
-	rm ./*.json
+	rm --force ./*.json
 }
 
 function test_releases_json_add_database_schema_versions {
@@ -81,7 +86,7 @@ function test_releases_json_add_database_schema_versions {
 }
 
 function test_releases_json_add_major_versions {
-	_add_major_versions
+	_add_major_versions &> /dev/null
 
 	assert_equals \
 		"$(jq "[.[] | select(.productMajorVersion == \"DXP 2024.Q4\")] | length == 1" "$(ls "${_PROMOTION_DIR}" | grep "2024.q4.5")")" \
@@ -97,6 +102,15 @@ function test_releases_json_get_database_schema_versions {
 	_test_releases_json_get_database_schema_versions "2025.q3.0" "33.3.0"
 	_test_releases_json_get_database_schema_versions "7.4.13-u112" "29.2.1"
 	_test_releases_json_get_database_schema_versions "7.4.3.132-ga132" "31.14.0"
+}
+
+function test_releases_json_get_general_availability_date {
+	_test_releases_json_get_general_availability_date "dxp" "2025.q1.0-lts" "2025-02-19"
+	_test_releases_json_get_general_availability_date "dxp" "2025.q1.1-lts" "2025-02-24"
+	_test_releases_json_get_general_availability_date "dxp" "7.4.13-u145" "2025-12-20"
+	_test_releases_json_get_general_availability_date "dxp" "7.4.13-u146" "2026-02-02"
+	_test_releases_json_get_general_availability_date "dxp" "7.4.13-u92" "2023-09-01"
+	_test_releases_json_get_general_availability_date "portal" "7.4.3.132-ga132" "2025-02-18"
 }
 
 function test_releases_json_get_liferay_upgrade_folder_version {
@@ -117,6 +131,17 @@ function test_releases_json_get_supported_product_group_versions {
 	_PROMOTION_DIR="${_RELEASE_ROOT_DIR}"
 }
 
+function test_releases_json_is_supported_product_version {
+	_test_releases_json_is_supported_product_version "2026-02-10" "2023.q3.0" "1"
+	_test_releases_json_is_supported_product_version "2026-02-10" "2023.q4.9" "1"
+	_test_releases_json_is_supported_product_version "2027-03-12" "2024.q1.1" "0"
+	_test_releases_json_is_supported_product_version "2027-03-13" "2024.q1.1" "1"
+	_test_releases_json_is_supported_product_version "2027-08-31" "7.4.13-u92" "0"
+	_test_releases_json_is_supported_product_version "2027-09-01" "7.4.13-u92" "1"
+	_test_releases_json_is_supported_product_version "2028-02-17" "2025.q2.0" "1"
+	_test_releases_json_is_supported_product_version "2028-02-18" "2025.q1.0-lts" "0"
+}
+
 function test_releases_json_merge_json_snippets {
 	local json_files_count=$(
 		ls "${_PROMOTION_DIR}" | \
@@ -130,8 +155,6 @@ function test_releases_json_merge_json_snippets {
 	assert_equals \
 		"${json_files_count}" \
 		"$(jq length "${_PROMOTION_DIR}/releases.json")"
-
-	rm ./*dxp*.json ./*portal*.json
 }
 
 function test_releases_json_not_process_new_product {
@@ -141,25 +164,27 @@ function test_releases_json_not_process_new_product {
 }
 
 function test_releases_json_process_new_product {
-	_PRODUCT_VERSION="2024.q4.7"
+	LIFERAY_RELEASE_TEST_DATE="2026-02-10"
+	_PRODUCT_VERSION="2025.q3.0"
+	_PROMOTION_DIR="./test_releases_json_process_new_product"
 
-	_process_products &> /dev/null
+	mkdir --parents "${_PROMOTION_DIR}"
 
-	_process_new_product &> /dev/null
+	generate_releases_json "regenerate" &> /dev/null
 
-	_add_major_versions &> /dev/null
+	rm --force "${_PROMOTION_DIR}"/*dxp*.json "${_PROMOTION_DIR}"/*portal*.json
 
-	_promote_product_versions &> /dev/null
+	mv "${_PROMOTION_DIR}/releases.json" "${_PROMOTION_DIR}/0000-00-00-releases.json"
 
-	_tag_recommended_product_versions &> /dev/null
-
-	_sort_all_releases_json_attributes &> /dev/null
-
-	_merge_json_snippets &> /dev/null
+    generate_releases_json &> /dev/null
 
 	assert_equals \
 		"${_PROMOTION_DIR}/releases.json" \
 		"${_RELEASE_ROOT_DIR}/test-dependencies/expected/releases.json"
+
+	rm --force --recursive "${_PROMOTION_DIR}"
+
+	_PROMOTION_DIR="${_RELEASE_ROOT_DIR}"
 }
 
 function test_releases_json_promote_product_versions {
@@ -186,6 +211,18 @@ function test_releases_json_tag_recommended_product_versions {
 		"true" \
 		"$(jq "[.[] | select(.tags[]? == \"recommended\")] | length == 1" "$(ls "${_PROMOTION_DIR}" | grep "$(get_latest_product_version "lts")")")" \
 		"true"
+}
+
+function test_releases_json_tag_supported_product_versions {
+	LIFERAY_RELEASE_TEST_DATE="2026-02-10"
+
+	_test_releases_json_tag_supported_product_versions "2024.q1.1" "true"
+	_test_releases_json_tag_supported_product_versions "2024.q2.0" "false"
+	_test_releases_json_tag_supported_product_versions "2024.q4.23" "false"
+	_test_releases_json_tag_supported_product_versions "2025.q1.0-lts" "true"
+	_test_releases_json_tag_supported_product_versions "2025.q2.0" "true"
+	_test_releases_json_tag_supported_product_versions "7.4.13-u91" "false"
+	_test_releases_json_tag_supported_product_versions "7.4.13-u92" "true"
 }
 
 function _get_portal_upgrade_registry {
@@ -215,6 +252,12 @@ function _test_releases_json_get_database_schema_versions {
 		"${2}"
 }
 
+function _test_releases_json_get_general_availability_date {
+	assert_equals \
+		"$(_get_general_availability_date "${1}" "${2}")" \
+		"${3}"
+}
+
 function _test_releases_json_get_liferay_upgrade_folder_version {
 	assert_equals \
 		"$(_get_liferay_upgrade_folder_version "${1}")" \
@@ -229,6 +272,14 @@ function _test_releases_json_get_supported_product_group_versions {
 		"$(echo -e "${2}")"
 }
 
+function _test_releases_json_is_supported_product_version {
+	LIFERAY_RELEASE_TEST_DATE="${1}"
+
+	_is_supported_product_version "${2}"
+
+	assert_equals "${?}" "${3}"
+}
+
 function _test_releases_json_tag_jakarta_product_versions {
 	local product_group_version="${1}"
 
@@ -239,10 +290,26 @@ function _test_releases_json_tag_jakarta_product_versions {
 	_tag_jakarta_product_versions &> /dev/null
 
 	assert_equals \
-		"$(jq -r "(.[0].tags // []) | contains([\"jakarta\"])" "${product_group_version_json}")" \
+		"$(jq --raw-output "(.[0].tags // []) | contains([\"jakarta\"])" "${product_group_version_json}")" \
 		"${2}"
 
 	rm --force "${product_group_version_json}"
+}
+
+function _test_releases_json_tag_supported_product_versions {
+	local product_version="${1}"
+
+	local product_version_json_file=$(echo "${product_version}" | tr '.' '-').json
+
+	echo "[{\"url\": \"https://releases-cdn.liferay.com/dxp/${product_version}\"}]" > "${product_version_json_file}"
+
+	_tag_supported_product_versions &> /dev/null
+
+	assert_equals \
+		"$(jq --raw-output "(.[0].tags // []) | contains([\"supported\"])" "${product_version_json_file}")" \
+		"${2}"
+
+	rm --force "${product_version_json_file}"
 }
 
 main "${@}"
