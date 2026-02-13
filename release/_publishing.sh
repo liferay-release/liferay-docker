@@ -1,5 +1,6 @@
 #!/bin/bash
 
+source ../_env_common.sh
 source ../_release_common.sh
 source ./_git.sh
 source ./_releases_json.sh
@@ -150,12 +151,21 @@ function get_root_patcher_project_version_name {
 }
 
 function init_gcs {
-	if [ ! -n "${LIFERAY_RELEASE_GCS_TOKEN}" ]
+	if [ -z "${LIFERAY_RELEASE_GCS_TOKEN}" ]
 	then
+		if [ "$(get_environment_type)" == "local" ]
+		then
+			lc_log ERROR "The LIFERAY_RELEASE_GCS_TOKEN variable is required for local environments."
+
+			return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+		fi
+
 		lc_log INFO "Set the environment variable LIFERAY_RELEASE_GCS_TOKEN."
 
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
+
+	gcloud auth revoke
 
 	gcloud auth activate-service-account --key-file "${LIFERAY_RELEASE_GCS_TOKEN}"
 }
@@ -205,6 +215,21 @@ function remove_old_release_candidate_tags {
 			--request DELETE \
 			--silent
 	done
+}
+
+function clear_gcs_auth {
+	if [ "$(get_environment_type)" == "local" ]
+	then
+		gcloud auth revoke
+
+		lc_log INFO "GCS authentication cleared."
+
+		return "${LIFERAY_COMMON_EXIT_CODE_OK}"
+	fi
+	
+	lc_log INFO "Skipping GCS authentication cleanup."
+
+	return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 }
 
 function upload_bom_file {
@@ -272,35 +297,6 @@ function upload_hotfix {
 		lc_log INFO "Set the environment variable LIFERAY_RELEASE_UPLOAD to \"true\" to enable."
 
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
-	fi
-
-	if (has_ssh_connection "lrdcom-vm-1")
-	then
-		lc_log INFO "Connecting to lrdcom-vm-1."
-
-		ssh root@lrdcom-vm-1 mkdir --parents "/www/releases.liferay.com/dxp/hotfix/${_PRODUCT_VERSION}/"
-
-		#
-		# shellcheck disable=SC2029
-		#
-
-		if (ssh root@lrdcom-vm-1 ls "/www/releases.liferay.com/dxp/hotfix/${_PRODUCT_VERSION}/" | grep --quiet "${_HOTFIX_FILE_NAME}")
-		then
-			lc_log INFO "Skipping the upload of ${_HOTFIX_FILE_NAME} to lrdcom-vm-1 because it already exists."
-
-			return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
-		fi
-
-		scp "${_BUILD_DIR}/${_HOTFIX_FILE_NAME}" root@lrdcom-vm-1:"/www/releases.liferay.com/dxp/hotfix/${_PRODUCT_VERSION}/"
-
-		if [ "${?}" -ne 0 ]
-		then
-			lc_log ERROR "Unable to upload ${_HOTFIX_FILE_NAME} to lrdcom-vm-1."
-
-			return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
-		fi
-
-		lc_log INFO "${_HOTFIX_FILE_NAME} successfully uploaded to lrdcom-vm-1."
 	fi
 
 	for gcp_bucket in liferay-releases/dxp/hotfix liferay-releases-hotfix
@@ -378,41 +374,17 @@ function upload_release {
 
 	lc_cd "${_BUILD_DIR}"/release
 
-	local ssh_connection="false"
-
-	if (has_ssh_connection "lrdcom-vm-1")
-	then
-		lc_log INFO "Connecting to lrdcom-vm-1."
-
-		ssh_connection="true"
-
-		if [ "$(get_release_output)" == "nightly" ]
-		then
-			ssh root@lrdcom-vm-1 rm --recursive "/www/releases.liferay.com/${LIFERAY_RELEASE_PRODUCT_NAME}/nightly/*"
-		else
-			ssh root@lrdcom-vm-1 rm --recursive "/www/releases.liferay.com/${LIFERAY_RELEASE_PRODUCT_NAME}/release-candidates/${_PRODUCT_VERSION}-*"
-
-			ssh root@lrdcom-vm-1 mkdir --parents "/www/releases.liferay.com/${LIFERAY_RELEASE_PRODUCT_NAME}/release-candidates/${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}"
-		fi
-
-	else
-		lc_log INFO "Skipping lrdcom-vm-1."
-	fi
-
 	local destination_bucket=""
-	local destination_dir=""
 
 	if [ "$(get_release_output)" == "nightly" ]
 	then
 		gsutil rm -r "gs://liferay-releases/${LIFERAY_RELEASE_PRODUCT_NAME}/nightly/"
 
 		destination_bucket="gs://liferay-releases/${LIFERAY_RELEASE_PRODUCT_NAME}/nightly/"
-		destination_dir="/www/releases.liferay.com/${LIFERAY_RELEASE_PRODUCT_NAME}/nightly"
 	else
-		gsutil rm -r "gs://liferay-releases/${LIFERAY_RELEASE_PRODUCT_NAME}/release-candidates/${_PRODUCT_VERSION}-*"
+		gsutil rm -r "gs://liferay-releases-candidates/${_PRODUCT_VERSION}-*"
 
-		destination_bucket="gs://liferay-releases/${LIFERAY_RELEASE_PRODUCT_NAME}/release-candidates/${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}/"
-		destination_dir="/www/releases.liferay.com/${LIFERAY_RELEASE_PRODUCT_NAME}/release-candidates/${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}"
+		destination_bucket="gs://liferay-releases-candidates/${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}/"
 	fi
 
 	for file in $(ls --almost-all --ignore "*.jar*" --ignore "*.pom*")
@@ -422,11 +394,6 @@ function upload_release {
 			echo "Copying ${file}."
 
 			gsutil cp "${_BUILD_DIR}/release/${file}" "${destination_bucket}"
-
-			if [ "${ssh_connection}" == "true" ]
-			then
-				scp "${file}" root@lrdcom-vm-1:"${destination_dir}"
-			fi
 		fi
 	done
 }

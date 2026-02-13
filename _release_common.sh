@@ -6,6 +6,9 @@ function download_product_version_list_html {
 	if [ "${LIFERAY_RELEASE_TEST_MODE}" == "true" ]
 	then
 		product_version_list_html=$(cat "${_RELEASE_ROOT_DIR}/test-dependencies/actual/$(basename "${1}").html")
+	elif [ "${1}" == "dxp/release-candidates" ]
+	then
+		product_version_list_html=$(gsutil ls "gs://liferay-releases-candidates/")
 	else
 		product_version_list_html=$(lc_curl "https://releases.liferay.com/${1}/")
 	fi
@@ -65,7 +68,7 @@ function get_latest_product_version {
 	elif [ "${product_version}" == "quarterly-candidate" ]
 	then
 		product_name="dxp/release-candidates"
-		product_version_regex="${product_version_regex}${product_name}/)(\d{4}\.q[1-4]\.\d+(-lts)?)"
+		product_version_regex="\d{4}\.q[1-4]\.\d+(-lts)?"
 	fi
 
 	local product_version_list_html
@@ -182,17 +185,6 @@ function get_target_platform_version {
 	else
 		echo "${product_version}" | sed "s/-u/.u/" | cut --delimiter='-' --fields=1
 	fi	
-}
-
-function has_ssh_connection {
-	ssh "root@${1}" "exit" &> /dev/null
-
-	if [ "${?}" -eq 0 ]
-	then
-		return "${LIFERAY_COMMON_EXIT_CODE_OK}"
-	fi
-
-	return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 }
 
 function is_7_3_ga_release {
