@@ -8,6 +8,7 @@ function main {
 
 	test_promotion_prepare_poms_for_promotion
 
+
 	tear_down
 }
 
