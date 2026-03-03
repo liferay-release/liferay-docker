@@ -69,14 +69,17 @@ function main {
 			then
                 if [ "${SRE_LIFERAY_TOMCAT_THREAD_ACTIVE_COUNT_ENABLED}" == "true" ] && [ -n "${SRE_LIFERAY_TOMCAT_THREAD_ACTIVE_COUNT_THRESHOLD}" ]
                 then
-                    local tomcat_thread_active_count=$(curl -s --max-time 2 localhost:15000/metrics \
-								| grep '^catalina_executor_activecount' \
-								| cut -d' ' -f2 \
-								| cut -d'.' -f1)
+                    local tomcat_thread_active_count=$(curl \
+						"http://localhost:15000/metrics" \
+						--max-time 2 \
+						--silent \
+						| grep '^catalina_executor_activecount' \
+						| cut --delimiter=' ' --fields=2 \
+						| cut --delimiter='.' --fields=1)
 
-					lecho "The tomcat thread active count is $tomcat_thread_active_count"
+					lecho "The tomcat thread active count is ${tomcat_thread_active_count}"
 
-					if [[ "$tomcat_thread_active_count" =~ ^[0-9]+$ ]] && [ "$tomcat_thread_active_count" -ge "${SRE_LIFERAY_TOMCAT_THREAD_ACTIVE_COUNT_THRESHOLD}" ]
+					if [[ "${tomcat_thread_active_count}" =~ ^[0-9]+$ ]] && [ "${tomcat_thread_active_count}" -ge "${SRE_LIFERAY_TOMCAT_THREAD_ACTIVE_COUNT_THRESHOLD}" ]
 					then
 						lecho "Checking the JVM thread state of the Liferay service"
 

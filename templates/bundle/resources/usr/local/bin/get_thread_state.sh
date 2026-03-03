@@ -2,18 +2,18 @@
 
 PID="$(cat "${LIFERAY_PID}")"
 
-DUMP_ONE="$LIFERAY_HOME/dump_one.tdump"
-DUMP_TWO="$LIFERAY_HOME/dump_two.tdump"
-DUMP_THREE="$LIFERAY_HOME/dump_three.tdump"
+DUMP_ONE="${LIFERAY_HOME}/dump_one.tdump"
+DUMP_TWO="${LIFERAY_HOME}/dump_two.tdump"
+DUMP_THREE="${LIFERAY_HOME}/dump_three.tdump"
 
-jcmd "$PID" Thread.print > "$DUMP_ONE"
+jcmd "${PID}" Thread.print > "${DUMP_ONE}"
 sleep 5
-jcmd "$PID" Thread.print > "$DUMP_TWO"
+jcmd "${PID}" Thread.print > "${DUMP_TWO}"
 sleep 5
-jcmd "$PID" Thread.print > "$DUMP_THREE"
+jcmd "${PID}" Thread.print > "${DUMP_THREE}"
 
 filter_threads() {
-    local infile=$1
+    local infile=${1}
     awk '
     BEGIN { capture=0; stack="" }
     /^"/ {
@@ -28,11 +28,11 @@ filter_threads() {
     capture && !/^"/ { stack = stack $0 "\n" }
     capture && /^$/ { print stack; capture=0; stack="" }
     END { if (capture) print stack }
-    ' "$infile"
+    ' "${infile}"
 }
 
 parse_threads() {
-    awk -v tmpdir="$LIFERAY_HOME" '
+    awk -v tmpdir="${LIFERAY_HOME}" '
     BEGIN { RS=""; FS="\n" }
     {
         thread = $1
@@ -70,15 +70,15 @@ parse_threads() {
     }'
 }
 
-FILTERED_ONE="$LIFERAY_HOME/filtered_one.txt"
-FILTERED_TWO="$LIFERAY_HOME/filtered_two.txt"
-FILTERED_THREE="$LIFERAY_HOME/filtered_three.txt"
+FILTERED_ONE="${LIFERAY_HOME}/filtered_one.txt"
+FILTERED_TWO="${LIFERAY_HOME}/filtered_two.txt"
+FILTERED_THREE="${LIFERAY_HOME}/filtered_three.txt"
 
-filter_threads "$DUMP_ONE" | parse_threads > "$FILTERED_ONE"
-filter_threads "$DUMP_TWO" | parse_threads > "$FILTERED_TWO"
-filter_threads "$DUMP_THREE" | parse_threads > "$FILTERED_THREE"
+filter_threads "${DUMP_ONE}" | parse_threads > "${FILTERED_ONE}"
+filter_threads "${DUMP_TWO}" | parse_threads > "${FILTERED_TWO}"
+filter_threads "${DUMP_THREE}" | parse_threads > "${FILTERED_THREE}"
 
-for f in "$FILTERED_ONE" "$FILTERED_TWO" "$FILTERED_THREE"
+for f in "${FILTERED_ONE}" "${FILTERED_TWO}" "${FILTERED_THREE}"
 do
     if [[ ! -s "$f" ]]
     then
@@ -88,8 +88,8 @@ do
 done
 
 compare() {
-    local BASE=$1
-    local OTHER=$2
+    local BASE=${1}
+    local OTHER=${2}
 
     local total=0
     local match=0
@@ -97,10 +97,10 @@ compare() {
     while read -r name state hash
     do
         ((total++))
-        found=$(awk -v n="$name" -v s="$state" -v h="$hash" \
-            '$1==n && $2==s && $3==h {print}' "$OTHER")
-        [[ -n "$found" ]] && ((match++))
-    done < "$BASE"
+        found=$(awk -v n="${name}" -v s="${state}" -v h="${hash}" \
+            '$1==n && $2==s && $3==h {print}' "${OTHER}")
+        [[ -n "${found}" ]] && ((match++))
+    done < "${BASE}"
 
     if (( total == 0 ))
     then
@@ -110,21 +110,21 @@ compare() {
     fi
 }
 
-MATCH_BASE_TO_DUMP_TWO=$(compare "$FILTERED_ONE" "$FILTERED_TWO")
-MATCH_BASE_TO_DUMP_THREE=$(compare "$FILTERED_ONE" "$FILTERED_THREE")
+MATCH_BASE_TO_DUMP_TWO=$(compare "${FILTERED_ONE}" "${FILTERED_TWO}")
+MATCH_BASE_TO_DUMP_THREE=$(compare "${FILTERED_ONE}" "${FILTERED_THREE}")
 
 echo "Lifecycle monitor: Match dump_one & dump_two: ${MATCH_BASE_TO_DUMP_TWO}%"
 echo "Lifecycle monitor: Match dump_one & dump_three: ${MATCH_BASE_TO_DUMP_THREE}%"
 
-if (( MATCH_BASE_TO_DUMP_TWO == 100 && MATCH_BASE_TO_DUMP_THREE == 100 ))
+if (( "${MATCH_BASE_TO_DUMP_TWO}" == 100 && "${MATCH_BASE_TO_DUMP_THREE}" == 100 ))
 then
     echo "Lifecycle monitor: All dumps match perfectly"
     exit 2
-elif (( MATCH_BASE_TO_DUMP_TWO >= 90 && MATCH_BASE_TO_DUMP_THREE >= 90 ))
+elif (( "${MATCH_BASE_TO_DUMP_TWO}" >= 90 && "${MATCH_BASE_TO_DUMP_THREE}" >= 90 ))
 then
     echo "Lifecycle monitor: Baseline matches >=90% with both dumps"
     exit 2
-elif (( MATCH_BASE_TO_DUMP_TWO >= 90 || MATCH_BASE_TO_DUMP_THREE >= 90 ))
+elif (( "${MATCH_BASE_TO_DUMP_TWO}" >= 90 || "${MATCH_BASE_TO_DUMP_THREE}" >= 90 ))
 then
     echo "Lifecycle monitor: Only one comparison met >=90% threshold"
     exit 1
