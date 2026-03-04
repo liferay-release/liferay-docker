@@ -1,4 +1,4 @@
-#!/bin/bash
+asdf#!/bin/bash
 
 source ./_common.sh
 
