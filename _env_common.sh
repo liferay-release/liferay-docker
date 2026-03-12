@@ -1,33 +1,23 @@
 #!/bin/bash
 
-function is_ci_slave {
-	local slave_name=${1}
+function get_environment_type {
+	local host=${1}
 
-	if [ -z "${slave_name}" ]
+	if [ -z "${host}" ]
 	then
-		slave_name=$(hostname)
+		host=$(hostname)
 	fi
 
-	if [[ "${slave_name}" =~ ^test-[0-9]+-[0-9]+-[0-9]+$ ]]
+	if [[ "${host}" =~ ^test-[0-9]+-[0-9]+-[0-9]+$ ]]
 	then
-		return 0
-	fi
-
-	return 1
-}
-
-function is_release_slave {
-	local slave_name=${1}
-
-	if [ -z "${slave_name}" ]
+		echo "ci_slave"
+	elif [[ "${host}" =~ ^release-slave-[1-2]$ ]]
 	then
-		slave_name=$(hostname)
-	fi
-
-	if [[ "${slave_name}" =~ ^release-slave-[1-4]$ ]]
+		echo "release_slave"
+	elif [[ "${host}" =~ ^liferay-* ]]
 	then
-		return 0
+		echo "local"
+	else
+		echo ""
 	fi
-
-	return 1
 }
