@@ -214,10 +214,9 @@ function upload_bom_file {
 
 	local file_path="${2}"
 
-	local file_name="${file_path##*/}"
+	local file_name=$(basename "${file_path}")
 
-	local component_name="${file_name/%-*}"
-
+	local component_name=$(echo "${file_name}" | cut --delimiter='-' --fields=1)
 
 	if [ "${nexus_repository_name}" == "liferay-public-releases" ]
 	then
@@ -267,6 +266,11 @@ function upload_boms {
 }
 
 function upload_hotfix {
+	if [ "${LIFERAY_RELEASE_TEST_MODE}" == "true" ]
+	then
+		return
+	fi
+
 	if [ "${LIFERAY_RELEASE_UPLOAD}" != "true" ]
 	then
 		lc_log INFO "Set the environment variable LIFERAY_RELEASE_UPLOAD to \"true\" to enable."
