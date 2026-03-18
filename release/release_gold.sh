@@ -112,8 +112,6 @@ function main {
 
 	lc_time_run reference_new_releases
 
-	lc_time_run test_boms
-
 	lc_time_run update_salesforce_product_version
 
 	if [ -d "${_RELEASE_ROOT_DIR}/dev/projects" ]
@@ -130,6 +128,8 @@ function main {
 	lc_time_run add_patcher_project_version
 
 	lc_time_run upload_to_docker_hub
+
+	lc_time_run test_boms
 }
 
 function prepare_next_release_branch {
@@ -533,13 +533,25 @@ function test_boms {
 
 	if is_quarterly_release
 	then
-		blade init -v "${LIFERAY_RELEASE_PRODUCT_NAME}-${_PRODUCT_VERSION}"
+		blade init \
+			--liferay-version "${LIFERAY_RELEASE_PRODUCT_NAME}-${_PRODUCT_VERSION}" \
+			--refresh-releases
 	else
 		local product_group_version="$(get_product_group_version)"
 		local product_version_suffix=$(echo "${_PRODUCT_VERSION}" | cut --delimiter='-' --fields=2)
 
-		blade init -v "${LIFERAY_RELEASE_PRODUCT_NAME}-${product_group_version}-${product_version_suffix}"
+		blade init \
+			--liferay-version "${LIFERAY_RELEASE_PRODUCT_NAME}-${product_group_version}-${product_version_suffix}" \
+			--refresh-releases
 	fi
+
+	lc_log DEBUG "Searching for ${_PRODUCT_VERSION} in .liferay-common-cache/releases.liferay.com/releases.json."
+
+	grep "${_PRODUCT_VERSION}" "${HOME}/.liferay-common-cache/releases.liferay.com/releases.json"
+
+	lc_log DEBUG "Searching for ${_PRODUCT_VERSION} in .liferay/workspace/releases.json"
+
+	grep "${_PRODUCT_VERSION}" "${HOME}/.liferay/workspace/releases.json"
 
 	for module in api mvc-portlet
 	do

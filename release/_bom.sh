@@ -369,6 +369,13 @@ function generate_pom_release_bom_compile_only {
 }
 
 function generate_pom_release_bom_test {
+	if ! is_quarterly_release
+	then
+		lc_log INFO "The test BOM should be generated only for quarterly releases."
+
+		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
+	fi
+
 	local pom_file_name="release.${LIFERAY_RELEASE_PRODUCT_NAME}.bom.test-${_ARTIFACT_RC_VERSION}.pom"
 
 	lc_log DEBUG "Generating ${pom_file_name}."
@@ -384,7 +391,8 @@ function generate_pom_release_bom_test {
 	echo "" >> "${pom_file_name}"
 
 	local dependencies_list=(
-		biz.aQute.bnd:biz.aQute.bndlib
+		biz.aQute.bnd:biz.aQute.bnd:3.5.0
+		biz.aQute.bnd:biz.aQute.bndlib:3.5.0
 		com.liferay.portal:com.liferay.portal.test
 		com.liferay.portal:com.liferay.portal.test.integration:6.0.36
 		com.liferay:com.liferay.arquillian.extension.junit.bridge

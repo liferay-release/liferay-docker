@@ -718,6 +718,7 @@
     7.4.13-u144:
     7.4.13-u145:
     7.4.13-u146:
+    7.4.13-u147:
     7.4.13.nightly:
         bundle_url: releases-cdn.liferay.com/dxp/nightly/liferay-dxp-tomcat-7.4.13.nightly.7z
 quarterly:
@@ -865,6 +866,8 @@ quarterly:
     2025.q4.8:
     2025.q4.9:
     2025.q4.10:
+    2025.q4.11:
+    2025.q4.12:
         latest: true
 snapshot:
     snapshot-master:

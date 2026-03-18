@@ -2146,3 +2146,59 @@ docker.image.git.id-10.0.10=b150aacc45f50303103c871188507b9e537dd34a
 
 docker.image.change.log-10.0.11=LPD-80685 LPD-80942
 docker.image.git.id-10.0.11=93fe61281307dc55f305ede59546fd663876996b
+
+#
+# Liferay Docker Image Version 10.0.12
+#
+
+docker.image.change.log-10.0.12=LPD-79887
+docker.image.git.id-10.0.12=70f40e3429f3c08b50af34cb0da0b78666dc386b
+
+#
+# Liferay Docker Image Version 10.0.13
+#
+
+docker.image.change.log-10.0.13=LPD-80548 LPD-81062 LPD-80548 LPD-81356 LPD-81579
+docker.image.git.id-10.0.13=1a1181c5605509ee299413bde9024805e2eb0ad4
+
+#
+# Liferay Docker Image Version 10.0.14
+#
+
+docker.image.change.log-10.0.14=LPD-80470
+docker.image.git.id-10.0.14=bba26b7bd0209c98dafca936953f33f4464fc471
+
+#
+# Liferay Docker Image Version 10.0.15
+#
+
+docker.image.change.log-10.0.15=LPD-80685
+docker.image.git.id-10.0.15=fd5afcd3e70839c04e77871ab8a729668068ab79
+
+#
+# Liferay Docker Image Version 10.0.16
+#
+
+docker.image.change.log-10.0.16=LPD-80685
+docker.image.git.id-10.0.16=e8a889895de6557efd8b89e80a407f6f3418cc4d
+
+#
+# Liferay Docker Image Version 10.0.17
+#
+
+docker.image.change.log-10.0.17=LPD-82312
+docker.image.git.id-10.0.17=81a6b06a1a1572351a16acf21f7724d9e871bdc0
+
+#
+# Liferay Docker Image Version 10.0.18
+#
+
+docker.image.change.log-10.0.18=LPD-81045
+docker.image.git.id-10.0.18=bd85e917f6e047d0687e81a92ced4e5a6306e5ef
+
+#
+# Liferay Docker Image Version 10.0.19
+#
+
+docker.image.change.log-10.0.19=LPD-82864
+docker.image.git.id-10.0.19=f1048d7a203856b1c6099c2c23dbea05beed358a

@@ -22,6 +22,7 @@ function generate_releases_json {
 	_tag_jakarta_product_versions
 	_tag_recommended_product_versions
 	_tag_supported_product_versions
+	_tag_test_bom_product_versions
 
 	_sort_all_releases_json_attributes
 
@@ -430,7 +431,11 @@ function _sort_all_releases_json_attributes {
 	while read -r json_file
 	do
 		jq "map(
-				to_entries
+				if .tags
+				then
+					.tags |= unique
+				end
+				| to_entries
 				| sort_by(.key)
 				| from_entries
 			)" "${json_file}" > "${json_file}.tmp" && mv "${json_file}.tmp" "${json_file}"
@@ -447,7 +452,7 @@ function _tag_jakarta_product_versions {
 		jq "map(
 				if (.productGroupVersion? | (contains(\"q\") and . >= \"2025.q3\"))
 				then
-					.tags = ((.tags // []) + [\"jakarta\"] | unique)
+					.tags = ((.tags // []) + [\"jakarta\"])
 				end
 			)" "${json_file}" > "${json_file}.tmp" && mv "${json_file}.tmp" "${json_file}"
 	done < <(find "${_PROMOTION_DIR}" -maxdepth 1 -name "*.json" -type f)
@@ -466,7 +471,7 @@ function _tag_recommended_product_versions {
 		jq "map(
 				if (.url? | (endswith(\"${latest_ga_product_version}\") or endswith(\"${latest_lts_product_version}\")))
 				then
-					.tags = ((.tags // []) + [\"recommended\"] | unique)
+					.tags = ((.tags // []) + [\"recommended\"])
 				end
 			)" "${json_file}" > "${json_file}.tmp" && mv "${json_file}.tmp" "${json_file}"
 	done < <(find "${_PROMOTION_DIR}" -maxdepth 1 -name "*.json" -type f)
@@ -489,11 +494,27 @@ function _tag_supported_product_versions {
 				jq "map(
 						if (.url? | (endswith(\"${product_version}\")))
 						then
-							.tags = ((.tags // []) + [\"supported\"] | unique)
+							.tags = ((.tags // []) + [\"supported\"])
 						end
 					)" "${json_file}" > "${json_file}.tmp" && mv "${json_file}.tmp" "${json_file}"
 			fi
 		done < <(jq --raw-output ".[].url" "${json_file}")
+	done < <(find "${_PROMOTION_DIR}" -maxdepth 1 -name "*.json" -type f)
+}
+
+function _tag_test_bom_product_versions {
+	lc_log INFO "Tagging product versions with test BOM support."
+
+	local json_file
+
+	while read -r json_file
+	do
+		jq "map(
+				if .productGroupVersion? | contains(\"q\")
+				then
+					.tags = ((.tags // []) + [\"testBom\"])
+				end
+			)" "${json_file}" > "${json_file}.tmp" && mv "${json_file}.tmp" "${json_file}"
 	done < <(find "${_PROMOTION_DIR}" -maxdepth 1 -name "*.json" -type f)
 }
 
