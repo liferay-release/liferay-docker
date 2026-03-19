@@ -68,15 +68,9 @@ function main {
 		then
 			if [ "${started}" == "true" ]
 			then
-<<<<<<< HEAD
-                if [ "${SRE_LIFERAY_TOMCAT_THREAD_ACTIVE_COUNT_ENABLED}" == "true" ] && [ -n "${SRE_LIFERAY_TOMCAT_THREAD_ACTIVE_COUNT_THRESHOLD}" ]
-                then
-                    local tomcat_thread_active_count=$(curl \
-=======
 				if [ "${SRE_LIFERAY_TOMCAT_THREAD_ACTIVE_COUNT_ENABLED}" == "true" ] && [ -n "${SRE_LIFERAY_TOMCAT_THREAD_ACTIVE_COUNT_THRESHOLD}" ]
 				then
 					local tomcat_thread_active_count=$(curl \
->>>>>>> origin/master
 						"http://localhost:15000/metrics" \
 						--max-time 2 \
 						--silent \
@@ -92,11 +86,7 @@ function main {
 
 						(/usr/local/bin/get_thread_state.sh)
 
-<<<<<<< HEAD
-						local thread_state_exit_code=${?}
-=======
 						thread_state_exit_code=${?}
->>>>>>> origin/master
 
 						if [ ${thread_state_exit_code} -gt 1 ]
 						then
