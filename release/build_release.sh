@@ -26,7 +26,10 @@ function check_usage {
 		LIFERAY_RELEASE_GIT_REF=${LIFERAY_RELEASE_GIT_SHA}
 	fi
 
-	if [ -z "${LIFERAY_RELEASE_GIT_REF}" ]
+	if [ -z "${LIFERAY_RELEASE_GIT_REF}" ] ||
+	   ([ -z "${LIFERAY_RELEASE_GCS_TOKEN}" ] &&
+	   [ "$(get_environment_type)" == "local" ] &&
+	   [ "${LIFERAY_RELEASE_UPLOAD}" == "true" ])
 	then
 		print_help
 	fi
@@ -258,6 +261,8 @@ function main {
 
 		lc_time_run report_patcher_status
 	fi
+
+	lc_time_run clear_gcs_auth
 
 	local end_time=$(date +%s)
 
