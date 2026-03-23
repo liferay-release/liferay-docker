@@ -4,15 +4,15 @@ function _compare {
 	local total=0
 	local match=0
 
-	while read -r name state hash
+	while read -r hash name state
 	do
 		((total++))
 
 		found=$(awk \
+			-v h="${hash}" \
 			-v n="${name}" \
 			-v s="${state}" \
-			-v h="${hash}" \
-			'$1==n && $2==s && $3==h {print}' \
+			'$1==h && $2==n && $3==s {print}' \
 			"${2}")
 
 		if [ -n "${found}" ]
@@ -21,11 +21,11 @@ function _compare {
 		fi
 	done < "${1}"
 
-	if (( total == 0 ))
+	if (( "${total}" == 0 ))
 	then
 		echo 0
 	else
-		echo $(( match * 100 / total ))
+		echo $(("${match}" * 100 / "${total}"))
 	fi
 }
 
