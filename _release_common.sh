@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source "$(dirname "${BASH_SOURCE[0]}")/_env_common.sh"
+
 function download_product_version_list_html {
 	local product_version_list_html=""
 
@@ -8,6 +10,11 @@ function download_product_version_list_html {
 		product_version_list_html=$(cat "${_RELEASE_ROOT_DIR}/test-dependencies/actual/$(basename "${1}").html")
 	elif [ "${1}" == "dxp/release-candidates" ]
 	then
+		if [ "$(get_environment_type)" != "release_slave" ]
+		then
+			return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+		fi
+
 		product_version_list_html=$(gsutil ls "gs://liferay-releases-candidates/")
 	else
 		product_version_list_html=$(lc_curl "https://releases.liferay.com/${1}/")
@@ -336,6 +343,20 @@ function is_release_candidate {
 
 function is_u_release {
 	if [[ "$(_get_product_version "${1}")" == *-u* ]]
+	then
+		return 0
+	fi
+
+	return 1
+}
+
+function is_upload_enabled {
+	if [ "${LIFERAY_RELEASE_UPLOAD}" != "true" ]
+	then
+		return 1
+	fi
+
+	if [ "$(get_environment_type)" == "release_slave" ]
 	then
 		return 0
 	fi

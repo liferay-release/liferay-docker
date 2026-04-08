@@ -47,6 +47,11 @@ function check_usage {
 		LIFERAY_RELEASE_UPLOAD="true"
 	fi
 
+	if ! is_upload_enabled
+	then
+		print_help
+	fi
+
 	set_product_version "${LIFERAY_RELEASE_VERSION}" "${LIFERAY_RELEASE_RC_BUILD_TIMESTAMP}"
 
 	lc_cd "$(dirname "$(readlink /proc/$$/fd/255 2>/dev/null)")"
@@ -97,8 +102,6 @@ function main {
 	check_usage
 
 	lc_time_run check_supported_versions
-
-	init_gcs
 
 	lc_time_run set_jdk_version_and_parameters
 
@@ -225,7 +228,6 @@ function print_help {
 	echo ""
 	echo "The script reads the following environment variables:"
 	echo ""
-	echo "    LIFERAY_RELEASE_GCS_TOKEN (optional): *.json file containing the token to authenticate with Google Cloud Storage"
 	echo "    LIFERAY_RELEASE_GITHUB_PAT (optional): GitHub personal access token used to tag releases"
 	echo "    LIFERAY_RELEASE_NEXUS_REPOSITORY_PASSWORD (optional): Nexus user's password"
 	echo "    LIFERAY_RELEASE_NEXUS_REPOSITORY_USER (optional): Nexus user with the right to upload BOM files"

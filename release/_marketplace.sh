@@ -373,7 +373,7 @@ function _set_liferay_marketplace_oauth2_token {
 }
 
 function _update_product_supported_versions {
-	if [ "${LIFERAY_RELEASE_UPLOAD}" != "true" ]
+	if ! is_upload_enabled
 	then
 		lc_log INFO "Set the environment variable LIFERAY_RELEASE_UPLOAD to \"true\" to enable."
 

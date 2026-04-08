@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source "$(dirname "${BASH_SOURCE[0]}")/_env_common.sh"
+
 if [ -z "${LIFERAY_DOCKER_REPOSITORY}" ]
 then
 	LIFERAY_DOCKER_REPOSITORY=liferay
@@ -124,6 +126,13 @@ function download {
 
 	if [[ "${file_url}" == gs://* ]]
 	then
+		if [ "$(get_environment_type)" != "release_slave" ]
+		then
+			echo "Unable to download ${file_url} because GCS is not accessible from this environment."
+
+			exit 2
+		fi
+
 		gsutil cp "${file_url}" "${file_name}"
 
 		if [ "${?}" -ne 0 ]

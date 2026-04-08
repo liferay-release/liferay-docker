@@ -114,22 +114,6 @@ function check_url {
 	fi
 }
 
-function clear_gcs_auth {
-	if [ "$(get_environment_type)" == "local" ] &&
-	   [ "${LIFERAY_RELEASE_UPLOAD}" == "true" ]
-	then
-		gcloud auth revoke
-
-		lc_log INFO "GCS authentication cleared."
-
-		return "${LIFERAY_COMMON_EXIT_CODE_OK}"
-	fi
-
-	lc_log INFO "Skipping GCS authentication cleanup."
-
-	return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
-}
-
 function get_patcher_product_version_label {
 	if is_7_3_release
 	then
@@ -164,27 +148,6 @@ function get_root_patcher_project_version_name {
 	else
 		echo ""
 	fi
-}
-
-function init_gcs {
-	if [ -z "${LIFERAY_RELEASE_GCS_TOKEN}" ]
-	then
-		if [ "$(get_environment_type)" == "local" ] &&
-		   [ "${LIFERAY_RELEASE_UPLOAD}" == "true" ]
-		then
-			lc_log ERROR "The LIFERAY_RELEASE_GCS_TOKEN variable is required for local environments."
-
-			return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
-		fi
-
-		lc_log INFO "Set the environment variable LIFERAY_RELEASE_GCS_TOKEN."
-
-		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
-	fi
-
-	gcloud auth revoke
-
-	gcloud auth activate-service-account --key-file "${LIFERAY_RELEASE_GCS_TOKEN}"
 }
 
 function remove_old_release_candidate_tags {
@@ -265,7 +228,7 @@ function upload_boms {
 
 	local nexus_repository_name="${1}"
 
-	if [ "${LIFERAY_RELEASE_UPLOAD}" != "true" ] && [ "${nexus_repository_name}" == "xanadu" ]
+	if ! is_upload_enabled
 	then
 		lc_log INFO "Set the environment variable LIFERAY_RELEASE_UPLOAD to \"true\" to enable."
 
@@ -298,7 +261,7 @@ function upload_hotfix {
 		return
 	fi
 
-	if [ "${LIFERAY_RELEASE_UPLOAD}" != "true" ]
+	if ! is_upload_enabled
 	then
 		lc_log INFO "Set the environment variable LIFERAY_RELEASE_UPLOAD to \"true\" to enable."
 
@@ -328,7 +291,7 @@ function upload_hotfix {
 }
 
 function upload_opensearch {
-	if [ "${LIFERAY_RELEASE_UPLOAD}" != "true" ]
+	if ! is_upload_enabled
 	then
 		lc_log INFO "Set the environment variable LIFERAY_RELEASE_UPLOAD to \"true\" to enable."
 
@@ -378,7 +341,7 @@ function upload_release {
 		return
 	fi
 
-	if [ "${LIFERAY_RELEASE_UPLOAD}" != "true" ]
+	if ! is_upload_enabled
 	then
 		lc_log INFO "Set the environment variable LIFERAY_RELEASE_UPLOAD to \"true\" to enable."
 
@@ -417,7 +380,7 @@ function upload_to_docker_hub {
 		return
 	fi
 
-	if [ "${LIFERAY_RELEASE_UPLOAD}" != "true" ]
+	if ! is_upload_enabled
 	then
 		lc_log INFO "Set the environment variable LIFERAY_RELEASE_UPLOAD to \"true\" to enable."
 

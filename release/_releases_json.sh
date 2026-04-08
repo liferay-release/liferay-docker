@@ -524,6 +524,13 @@ function _upload_releases_json {
 		return
 	fi
 
+	if ! is_upload_enabled
+	then
+		lc_log INFO "Set the environment variable LIFERAY_RELEASE_UPLOAD to \"true\" to enable."
+
+		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
+	fi
+
 	lc_log INFO "Backing up to gs://liferay-releases/releases.json.BACKUP."
 
 	gsutil cp "gs://liferay-releases/releases.json" "gs://liferay-releases/releases.json.BACKUP"

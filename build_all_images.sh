@@ -71,14 +71,21 @@ function build_bundle_image {
 
 	if is_release_candidate
 	then
-		local product_name="dxp"
-
-		if is_ga_release "${version}"
+		if [ "$(get_environment_type)" == "release_slave" ]
 		then
-			product_name="portal"
-		fi
+			local product_name="dxp"
 
-		bundle_url="gs://liferay-releases-candidates/${version}/$(gsutil cat "gs://liferay-releases-candidates/${version}/.lfrrelease-tomcat-bundle")"
+			if is_ga_release "${version}"
+			then
+				product_name="portal"
+			fi
+
+			bundle_url="gs://liferay-releases-candidates/${version}/$(gsutil cat "gs://liferay-releases-candidates/${version}/.lfrrelease-tomcat-bundle")"
+		else
+			echo "Unable to build release candidate bundle image because GCS is not accessible from this environment."
+
+			exit 1
+		fi
 	fi
 
 	if is_nightly_release "${version}"

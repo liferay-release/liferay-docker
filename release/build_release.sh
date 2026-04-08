@@ -26,10 +26,7 @@ function check_usage {
 		LIFERAY_RELEASE_GIT_REF=${LIFERAY_RELEASE_GIT_SHA}
 	fi
 
-	if [ -z "${LIFERAY_RELEASE_GIT_REF}" ] ||
-	   ([ -z "${LIFERAY_RELEASE_GCS_TOKEN}" ] &&
-	   [ "$(get_environment_type)" == "local" ] &&
-	   [ "${LIFERAY_RELEASE_UPLOAD}" == "true" ])
+	if [ -z "${LIFERAY_RELEASE_GIT_REF}" ]
 	then
 		print_help
 	fi
@@ -130,7 +127,6 @@ function main {
 
 	lc_time_run clean_portal_repository
 
-	lc_background_run init_gcs
 	lc_background_run update_portal_repository
 
 	lc_wait
@@ -261,8 +257,6 @@ function main {
 		lc_time_run report_patcher_status
 	fi
 
-	lc_time_run clear_gcs_auth
-
 	local end_time=$(date +%s)
 
 	local seconds=$((end_time - _BUILD_TIMESTAMP))
@@ -275,7 +269,6 @@ function print_help {
 	echo ""
 	echo "The script reads the following environment variables:"
 	echo ""
-	echo "    LIFERAY_RELEASE_GCS_TOKEN (optional): *.json file containing the token to authenticate with Google Cloud Storage"
 	echo "    LIFERAY_RELEASE_GENERAL_AVAILABILITY_DATE (optional): General availability date"
 	echo "    LIFERAY_RELEASE_GIT_REF: Git SHA to build from"
 	echo "    LIFERAY_RELEASE_HOTFIX_BUILD_ID (optional): Build ID on Patcher"
@@ -300,7 +293,6 @@ function print_variables {
 	echo "To reproduce this build locally, execute the following command in liferay-docker/release:"
 
 	local environment=$(set | \
-		grep --invert-match "LIFERAY_RELEASE_GCS_TOKEN" | \
 		grep --invert-match "LIFERAY_RELEASE_HOTFIX_SIGNATURE" | \
 		grep --invert-match "LIFERAY_RELEASE_PATCHER_REQUEST_KEY" | \
 		grep --invert-match "LIFERAY_RELEASE_UPLOAD" | \
