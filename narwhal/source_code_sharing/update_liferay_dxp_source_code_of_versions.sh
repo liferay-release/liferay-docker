@@ -211,6 +211,13 @@ function main {
 
 		echo "Processing: ${tag_name}"
 
+		if [ ! -d "${REPO_PATH_EE}" ]
+		then
+			lc_time_run clone_repository liferay-portal-ee
+
+			lc_time_run fetch_repository "${REPO_PATH_EE}"
+		fi
+
 		lc_time_run prepare_branch_in_portal_ee "${tag_name}"
 
 		lc_time_run prepare_branch_in_dxp "${tag_name}"
@@ -218,12 +225,10 @@ function main {
 		if [ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}" ]
 		then
 			echo "Could not prepare branch in liferay-dxp for ${tag_name}"
-
-			continue
 		fi
-	done
 
-	rm -fr "${REPO_PATH_EE}"
+		rm -fr "${REPO_PATH_EE}"
+	done
 }
 
 function prepare_branch_in_dxp {
@@ -256,10 +261,18 @@ function prepare_branch_in_dxp {
 	else
 		delete_if_exists "7.4.13"
 
-		git checkout -b 7.4.13 upstream/7.4.13
+		git fetch upstream "refs/heads/7.4.13:refs/heads/7.4.13" --no-tags
+
+		git checkout 7.4.13
 	fi
 
-	rsync -avz --exclude='.git/' --exclude='.github/' "${REPO_PATH_EE}/" "${REPO_PATH_DXP}"
+	rsync \
+		--archive \
+		--delete \
+		--exclude='.git/' \
+		--exclude='.github/' \
+		--verbose \
+		"${REPO_PATH_EE}/" "${REPO_PATH_DXP}/"
 
 	git add . --force
 
