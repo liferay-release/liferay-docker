@@ -473,10 +473,19 @@ function process_argument_version {
 		if [ "${?}" -eq 0 ]
 		then
 			valid_versions+=("${release_version}")
+		else
+			lc_log DEBUG "Unable to list hotfixes for the version '${release_version}', skipping it."
 		fi
 	done
 
 	VERSION_LIST=("${valid_versions[@]}")
+
+	if [ "${#VERSION_LIST[@]}" -eq 0 ]
+	then
+		lc_log ERROR "Unable to find valid versions."
+
+		exit "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+	fi
 }
 
 function process_version_list {
