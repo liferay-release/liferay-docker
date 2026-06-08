@@ -1,10 +1,6 @@
 #!/bin/bash
 
 function main {
-	if [ -z "${DISPLAY_SUCCESSFUL_TEST_RESULT}" ]
-	then
-		export DISPLAY_SUCCESSFUL_TEST_RESULT="false"
-	fi
 
 	local test_results=""
 
@@ -23,8 +19,6 @@ function main {
 
 		test_results+=$(_run_release_tests "${changed_files}" 2>&1 | tee /dev/stderr)
 	fi
-
-	unset DISPLAY_SUCCESSFUL_TEST_RESULT
 
 	if [[ "${test_results}" == *"FAILED"* ]]
 	then
