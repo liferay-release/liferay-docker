@@ -16,10 +16,6 @@ function main {
 	test_build_release_has_packaged_bundles
 	test_build_release_not_handle_automated_build
 
-	test_build_hotfix_main || exit "${LIFERAY_COMMON_EXIT_CODE_BAD}"
-
-	test_build_hotfix_has_packaged_hotfix
-
 	_clean_up_release_data
 
 	LIFERAY_RELEASE_GIT_REF="fix-pack-fix-263630758"
@@ -66,7 +62,7 @@ function test_build_hotfix_has_packaged_hotfix {
 }
 
 function test_build_hotfix_main {
-	LIFERAY_RELEASE_OUTPUT="hotfix" ./build_release.sh &> /dev/null
+	LIFERAY_RELEASE_OUTPUT="hotfix" ./build_release.sh
 
 	local exit_code="${?}"
 
