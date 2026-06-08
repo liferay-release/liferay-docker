@@ -73,6 +73,12 @@ function test_jdk_get_current_jdk_arch {
 	_test_jdk_get_current_jdk_arch "amd64" "x64"
 	_test_jdk_get_current_jdk_arch "arm64" "aarch64"
 	_test_jdk_get_current_jdk_arch "x86_64" "x64"
+
+	unset LIFERAY_RELEASE_TEST_MACHINE
+
+	_get_current_jdk_arch > /dev/null
+
+	assert_equals "${?}" "${LIFERAY_COMMON_EXIT_CODE_OK}"
 }
 
 function test_jdk_get_jdk_download_url {
@@ -103,6 +109,15 @@ function test_jdk_resolve_jdk_install {
 	_test_jdk_resolve_jdk_install "zulu-17.0.18+8" "${_TEST_JDK_DIR}/alternative_jdk/zulu-17.0.18+8"
 
 	mkdir "${_TEST_JDK_DIR}/default_jdk/zulu-17.0.18+8"
+
+	unset LIFERAY_RELEASE_TEST_ALTERNATIVE_PATH
+	unset LIFERAY_RELEASE_TEST_DEFAULT_PATH
+
+	mkdir --parents "${HOME}/.liferay/java/liferay-docker-test-jdk"
+
+	_test_jdk_resolve_jdk_install "liferay-docker-test-jdk" "${HOME}/.liferay/java/liferay-docker-test-jdk"
+
+	rm --force --recursive "${HOME}/.liferay/java/liferay-docker-test-jdk"
 }
 
 function test_jdk_set_jdk_version_and_parameters {

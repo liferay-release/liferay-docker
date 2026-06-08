@@ -152,7 +152,7 @@ function _download_jdk {
 function _get_current_jdk_arch {
 	local machine=$(uname --machine)
 
-	if [ "${LIFERAY_RELEASE_TEST_MODE}" == "true" ]
+	if [ "${LIFERAY_RELEASE_TEST_MODE}" == "true" ] && [ -n "${LIFERAY_RELEASE_TEST_MACHINE}" ]
 	then
 		machine="${LIFERAY_RELEASE_TEST_MACHINE}"
 	fi
@@ -203,7 +203,9 @@ function _resolve_jdk_install {
 	local alternative_path="${HOME}/.liferay/java/${jdk_version}"
 	local default_path="/opt/java/${jdk_version}"
 
-	if [ "${LIFERAY_RELEASE_TEST_MODE}" == "true" ]
+	if [ "${LIFERAY_RELEASE_TEST_MODE}" == "true" ] &&
+	   [ -n "${LIFERAY_RELEASE_TEST_ALTERNATIVE_PATH}" ] &&
+	   [ -n "${LIFERAY_RELEASE_TEST_DEFAULT_PATH}" ]
 	then
 		alternative_path="${LIFERAY_RELEASE_TEST_ALTERNATIVE_PATH}/${jdk_version}"
 		default_path="${LIFERAY_RELEASE_TEST_DEFAULT_PATH}/${jdk_version}"
