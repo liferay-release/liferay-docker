@@ -36,10 +36,9 @@ targets instead.
 
 ### Files
 
-Files which intend to be used only by other files, e.g. internal
-usage, should be named starting with `_`, like `_file.sh`. On the other hand,
-the files built to be executed by the end users do not need the leading `_` on
-their names and should be named as `file.sh`.
+Files intended to be used only by other files (i.e. for internal use) should be
+named starting with `_`, like `_file.sh`. Files meant to be executed by end
+users do not need the leading `_` and should be named like `file.sh`.
 
 Additionally, every file must follow the same top-to-bottom layout:
 
@@ -81,17 +80,17 @@ main
 
 ### Functions
 
-- Should be declared with the name `function` followed by the function name only
+- Declare functions with the keyword `function` followed by the name only,
 without `()`.
-- Its body is wrapped by `{}`
-- Its name should be in `snake_case`
-- Should use verb-prefixed names that describe the action:
-	- `get_*` for functions that echo a value
-	- `is_*` for boolean predicates
+- Wrap the function body in `{}`.
+- Name functions in `snake_case`.
+- Use verb-prefixed names that describe the action:
+	- `get_*` for functions that echo a value.
+	- `is_*` for boolean predicates.
 	- `set_*`, `add_*`, `update_*`, `clean_*`, `build_*`, etc.
-- Local functions should be named starting with `_`, like `_function_local`.
-- Global functions, invoked by other files, should be named without the
-leading `_`, e.g `function_global`.
+- Name local functions with a leading `_`, like `_function_local`.
+- Name global functions, which are invoked by other files, without the leading
+`_`, like `function_global`.
 
 ```bash
 function function_global {
@@ -105,18 +104,17 @@ function _function_local {
 
 ### Test file
 
-Should observe the same exact structure from the Files and Functions, but
-with a few additions:
+Test files follow the same structure as the Files and Functions sections, with
+a few additions:
 
 - Add `source _test_common.sh` to import the test utils `assert_equals`,
 `common_set_up` and `common_tear_down`.
-- Add `source` associated to the file which will be tested.
-- Declare functions `set_up` and `tear_down` to create and to destroy the test
+- Add a `source` for the file being tested.
+- Declare functions `set_up` and `tear_down` to create and destroy the test
 dependencies, respectively.
-- Test files and test functions should always be prefixed with `test_`. For
-a file named `file_a.sh`, a test file should be created as `test_file_a.sh` and
-its test functions should be named as `test_file_a_function_1`,
-`test_file_a_function_2`, etc.
+- Prefix test files and test functions with `test_`: for a file named
+`file_a.sh`, create `test_file_a.sh` and name its test functions
+`test_file_a_function_1`, `test_file_a_function_2`, etc.
 
 ```bash
 #!/bin/bash
@@ -159,12 +157,18 @@ main
 
 ### Variables
 
-- Environment and global variables should be named using upper snake case
-(e.g. `ENVIRONMENT_VARIABLE`).
-- Local variables are always declared with `local` and should be named using lower snake case (e.g. `local_variable`). However, if the local variable is shared across local functions then it should use upper snake case  with a leading underscore (e.g. `_LOCAL_SHARED_VARIABLE`).
-- Declare each local variable close to its first use rather than batching all declarations at the top of the function. For local variables with the same first use location, declare them together and apply [Sorting](#sorting).
-- No spaces around `=` in assignments.
-- Always wrap variable references in braces and quote them: `"${variable}"`. This applies to positional and special parameters too: `"${1}"`, `"${@}"`, `"${#}"`, `"${?}"`.
+- Name environment and global variables in upper snake case (e.g.
+`ENVIRONMENT_VARIABLE`).
+- Declare local variables with `local` and name them in lower snake case (e.g.
+`local_variable`); if a local variable is shared across local functions, name it
+in upper snake case with a leading underscore (e.g. `_LOCAL_SHARED_VARIABLE`).
+- Declare each local variable close to its first use rather than batching all
+declarations at the top of the function. For local variables that share the same
+first-use location, declare them together and apply [Sorting](#sorting).
+- Do not put spaces around `=` in assignments.
+- Always wrap variable references in braces and quote them: `"${variable}"`. This
+applies to positional and special parameters too: `"${1}"`, `"${@}"`, `"${#}"`,
+`"${?}"`.
 
 ```bash
 function function_1 {
@@ -193,13 +197,15 @@ function main {
 main
 ```
 
-- When a variable reference is adjacent to literal text, quote the entire parameter, not just the variable.
+- When a variable reference is adjacent to literal text, quote the entire
+parameter, not just the variable.
 
 ```bash
 echo "${variable} text"
 ```
 
-- Avoid Bash-specific parameter expansions like `${1##*/}`; prefer legible alternatives, like `basename`.
+- Avoid Bash-specific parameter expansions like `${1##*/}`; prefer legible
+alternatives like `basename`.
 
 ```bash
 file_name=$(basename "${1}")
@@ -220,7 +226,8 @@ local architecture=$(dpkg --print-architecture)
 
 ## Sorting
 
-Sort alphabetically considering case sensitive. You can do this selecting the lines you want to sort and using the instructions below:
+Sort alphabetically, case-sensitive. You can do this by selecting the lines to
+sort and using the instructions below:
 
 - Sublime
 	- Click on `Edit` > `Sort Lines (Case Sensitive)`
@@ -232,7 +239,7 @@ For specific rules of each structure, see next sections.
 
 ### `source`
 
-List parent-directory sources (`../`) before current-directory sources (`./`)
+List parent-directory sources (`../`) before current-directory sources (`./`).
 
 ```bash
 source ../_file_a.sh
@@ -243,8 +250,7 @@ source ./file_d.sh
 
 ### `function`
 
-Function with global scope should be declared before the functions with local
-scope.
+Declare functions with global scope before functions with local scope.
 
 ```bash
 function function_global_a {
@@ -352,7 +358,8 @@ fi
 
 - Indent with **tabs**, never spaces.
 - Separate logical statements within a function with a single blank line.
-- Do not put a blank line immediately after the opening `{` of a function or immediately before the closing `}`.
+- Do not put a blank line immediately after the opening `{` of a function or
+immediately before the closing `}`.
 
 ```bash
 function function_name {
@@ -376,7 +383,7 @@ git log "tags/${ga_version}..HEAD" --pretty="%s %H" | \
 	paste --delimiters=',' --serial > "${_BUILD_DIR}/release/release-notes.txt"
 ```
 
-- Multi-flag commands (e.g. `curl`) are also broken one argument per line, sorted
+- Break multi-flag commands (e.g. `curl`) one argument per line, sorted
 alphabetically, with the continuation indented:
 
 ```bash
@@ -390,7 +397,8 @@ curl \
 	--user "${LIFERAY_RELEASE_NEXUS_REPOSITORY_USER}:${LIFERAY_RELEASE_NEXUS_REPOSITORY_PASSWORD}"
 ```
 
-- Long pipelines should be broken inside `$( ... )`. A space should be added after `$(` for readability:
+- Break long pipelines inside `$( ... )` as well, adding a space after `$(` for
+readability:
 
 ```bash
 local http_response=$( \
@@ -419,8 +427,8 @@ return "${LIFERAY_COMMON_EXIT_CODE_OK}"
 
 ## Shared helpers
 
-If `_liferay_common.sh` is available on the repository then `source` it and use
-the `lc_*` helper functions over reimplementing common behavior:
+If `_liferay_common.sh` is available in the repository, `source` it and use the
+`lc_*` helper functions instead of reimplementing common behavior:
 
 - `lc_cd`: change directory.
 - `lc_background_run` / `lc_wait`: run functions concurrently and join them.
