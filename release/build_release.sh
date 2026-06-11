@@ -17,7 +17,6 @@ source ./_releases_json.sh
 source ./scan_docker_image.sh
 
 function check_usage {
-
 	#
 	# TODO Remove once all systems are using LIFERAY_RELEASE_GIT_REF instead of LIFERAY_RELEASE_GIT_SHA
 	#

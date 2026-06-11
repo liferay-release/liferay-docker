@@ -321,40 +321,6 @@ function _process_new_product {
 	_process_product_version "${LIFERAY_RELEASE_PRODUCT_NAME}" "${_PRODUCT_VERSION}"
 }
 
-function _process_products {
-	for product_name in "dxp" "portal"
-	do
-		local product_version_list_html
-
-		product_version_list_html=$(download_product_version_list_html "${product_name}")
-
-		if [ "${?}" -ne 0 ]
-		then
-			lc_log ERROR "Unable to download the product version list."
-
-			return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
-		fi
-
-		for product_version in $(echo -en "${product_version_list_html}" | \
-			grep \
-				--extended-regexp \
-				--only-matching \
-				"(20[0-9]+\.q[0-9]\.[0-9]+(-lts)?|7\.[0-9]+\.[0-9]+[a-z0-9\.-]+)" | \
-			tr --delete '/' | \
-			uniq)
-		do
-			if [ "${product_name}" == "dxp" ] &&
-			   [[ $(echo "${product_version}" | grep "7.4.13-u") ]] &&
-			   [[ $(get_release_version_trivial "${product_version}") -gt 112 ]]
-			then
-				continue
-			fi
-
-			_process_product_version "${product_name}" "${product_version}"
-		done
-	done
-}
-
 function _process_product_version {
 	local product_name=${1}
 	local product_version=${2}
@@ -401,6 +367,40 @@ function _process_product_version {
 	    }
 	]
 	END
+}
+
+function _process_products {
+	for product_name in "dxp" "portal"
+	do
+		local product_version_list_html
+
+		product_version_list_html=$(download_product_version_list_html "${product_name}")
+
+		if [ "${?}" -ne 0 ]
+		then
+			lc_log ERROR "Unable to download the product version list."
+
+			return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+		fi
+
+		for product_version in $(echo -en "${product_version_list_html}" | \
+			grep \
+				--extended-regexp \
+				--only-matching \
+				"(20[0-9]+\.q[0-9]\.[0-9]+(-lts)?|7\.[0-9]+\.[0-9]+[a-z0-9\.-]+)" | \
+			tr --delete '/' | \
+			uniq)
+		do
+			if [ "${product_name}" == "dxp" ] &&
+			   [[ $(echo "${product_version}" | grep "7.4.13-u") ]] &&
+			   [[ $(get_release_version_trivial "${product_version}") -gt 112 ]]
+			then
+				continue
+			fi
+
+			_process_product_version "${product_name}" "${product_version}"
+		done
+	done
 }
 
 function _promote_product_versions {

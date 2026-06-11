@@ -18,6 +18,36 @@ function copy_file {
 	cp --archive "${1}" "${2}/${dir}"
 }
 
+function copy_tld {
+	local arguments=""
+
+	local tlds=("${@:2}")
+
+	for tld in "${tlds[@]}"
+	do
+		if [ -n "${arguments}" ]
+		then
+			arguments+=" -o "
+		fi
+
+		arguments+="-name \"${tld}\""
+	done
+
+	for file in $(eval find "${_PROJECTS_DIR}/${LIFERAY_PORTAL_REPOSITORY_NAME}" \
+		"${arguments}" -type f | \
+			grep \
+				--extended-regexp "(/build/|/classes/|/gradleTest/|/sdk/|/test/|/testIntegration/)" \
+				--invert-match | \
+			awk -F "/" '{print $NF, $0}' | \
+			sort --key 1,1 --unique | \
+			awk '{print $2}')
+	do
+		lc_log INFO "Copying file ${file} to ${1}."
+
+		cp "${file}" "${1}"
+	done
+}
+
 function generate_api_jars {
 	mkdir --parents "${_BUILD_DIR}/boms"
 
@@ -149,7 +179,7 @@ function generate_api_jars {
 
 	for file in $(ls api-jar/META-INF --almost-all | grep --extended-regexp --invert-match '^(alloy-util.tld|alloy.tld|c.tld|liferay.tld)$')
 	do
-		if [[ "$file" == *.tld ]]
+		if [[ "${file}" == *.tld ]]
 		then
 			rm "api-jar/META-INF/${file}"
 		fi
@@ -593,7 +623,7 @@ function generate_pom_release_bom_test {
 		"${_PROJECTS_DIR}/${LIFERAY_PORTAL_REPOSITORY_NAME}/modules/.releng/third-party/org-apache-logging-log4j-core/artifact.properties" \
 		"${_PROJECTS_DIR}/${LIFERAY_PORTAL_REPOSITORY_NAME}/modules/.releng/third-party/org-apache-logging-log4j/artifact.properties"
 	do
-		artifact_urls+=$(awk -F= '/^artifact.url=/ { print $2 }' "$file")
+		artifact_urls+=$(awk -F= '/^artifact.url=/ { print $2 }' "${file}")
 		artifact_urls+=$'\n'
 	done
 
@@ -717,51 +747,6 @@ function generate_poms {
 	lc_time_run generate_pom_release_distro
 }
 
-function _copy_source_package {
-
-	#
-	# TODO Exclude what is not packaged
-	#
-
-	local new_dir_name=$(echo "${1}" | sed --expression "s#.*/com/liferay/#com/liferay/#")
-
-	new_dir_name="${_BUILD_DIR}"/boms/api-sources-jar/$(dirname "${new_dir_name}")
-
-	mkdir --parents "${new_dir_name}"
-
-	cp --archive "${1}" "${new_dir_name}"
-}
-
-function copy_tld {
-	local arguments=""
-
-	local tlds=("${@:2}")
-
-	for tld in "${tlds[@]}"
-	do
-		if [ -n "${arguments}" ]
-		then
-			arguments+=" -o "
-		fi
-
-		arguments+="-name \"${tld}\""
-	done
-
-	for file in $(eval find "${_PROJECTS_DIR}/${LIFERAY_PORTAL_REPOSITORY_NAME}" \
-		"${arguments}" -type f | \
-			grep \
-				--extended-regexp "(/build/|/classes/|/gradleTest/|/sdk/|/test/|/testIntegration/)" \
-				--invert-match | \
-			awk -F "/" '{print $NF, $0}' | \
-			sort --key 1,1 --unique | \
-			awk '{print $2}')
-	do
-		lc_log INFO "Copying file ${file} to ${1}."
-
-		cp "${file}" "${1}"
-	done
-}
-
 function manage_bom_jar {
 	lc_log DEBUG "Processing ${1} for api jar."
 
@@ -838,4 +823,18 @@ function manage_bom_jar {
 	fi
 
 	rm --force --recursive temp_dir_manage_bom_jar
+}
+
+function _copy_source_package {
+	#
+	# TODO Exclude what is not packaged
+	#
+
+	local new_dir_name=$(echo "${1}" | sed --expression "s#.*/com/liferay/#com/liferay/#")
+
+	new_dir_name="${_BUILD_DIR}"/boms/api-sources-jar/$(dirname "${new_dir_name}")
+
+	mkdir --parents "${new_dir_name}"
+
+	cp --archive "${1}" "${new_dir_name}"
 }

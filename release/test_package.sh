@@ -159,7 +159,7 @@ function _test_package_generate_javadocs {
 	_generate_javadocs &> /dev/null
 
 	assert_equals "${?}" "${LIFERAY_COMMON_EXIT_CODE_OK}"
- }
+}
 
 function _test_package_generate_release_properties_file {
 	_BUILDER_SHA="test1234"

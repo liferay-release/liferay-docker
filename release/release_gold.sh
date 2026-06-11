@@ -77,7 +77,7 @@ function is_latest_product_version_by_releases_json {
 		jq --raw-output "[.[] | \
 			select(.product == \"${LIFERAY_RELEASE_PRODUCT_NAME}\" and .productGroupVersion == \"$(get_product_group_version)\" and .promoted == \"true\") | \
 			.targetPlatformVersion] | last" "${1}/releases.json" | \
-		tr -d '[:space:]')
+		tr --delete '[:space:]')
 
 	if [ "$(get_target_platform_version)" == "${latest_product_version}" ]
 	then
@@ -301,7 +301,7 @@ function reference_new_releases {
 	local previous_product_version="$( \
 		grep "portal.latest.bundle.version\[${product_group_version}" \
 			"build-shared.properties" | \
-			tail -1 | \
+			tail --lines=1 | \
 			cut --delimiter='=' --fields=2)"
 
 	if [ -z "${previous_product_version}" ]
@@ -360,7 +360,7 @@ function reference_new_releases {
 	local previous_quarterly_release_branch="$( \
 		grep "portal.latest.bundle.version" \
 			"build-shared.properties" | \
-			tail -1 | \
+			tail --lines=1 | \
 			cut --delimiter='[' --fields=2 | \
 			cut --delimiter=']' --fields=1)"
 
@@ -437,7 +437,7 @@ function replace_property {
 
 function set_next_release_date {
 	sed \
-		--expression "s/release.info.date=.*/release.info.date=$(date -d $(echo "${LIFERAY_NEXT_RELEASE_DATE}" | sed "s/[^0-9-]//g") +"%B %-d, %Y")/" \
+		--expression "s/release.info.date=.*/release.info.date=$(date --date $(echo "${LIFERAY_NEXT_RELEASE_DATE}" | sed "s/[^0-9-]//g") +"%B %-d, %Y")/" \
 		--in-place \
 		"${_PROJECTS_DIR}/liferay-portal-ee/release.properties"
 }
