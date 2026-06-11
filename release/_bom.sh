@@ -838,4 +838,3 @@ function _copy_source_package {
 
 	cp --archive "${1}" "${new_dir_name}"
 }
-
