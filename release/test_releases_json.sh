@@ -177,7 +177,7 @@ function test_releases_json_process_new_product {
 
 	mv "${_PROMOTION_DIR}/releases.json" "${_PROMOTION_DIR}/0000-00-00-releases.json"
 
-    generate_releases_json &> /dev/null
+	generate_releases_json &> /dev/null
 
 	assert_equals \
 		"${_PROMOTION_DIR}/releases.json" \

@@ -149,7 +149,7 @@ function generate_api_jars {
 
 	for file in $(ls api-jar/META-INF --almost-all | grep --extended-regexp --invert-match '^(alloy-util.tld|alloy.tld|c.tld|liferay.tld)$')
 	do
-		if [[ "$file" == *.tld ]]
+		if [[ "${file}" == *.tld ]]
 		then
 			rm "api-jar/META-INF/${file}"
 		fi
@@ -593,7 +593,7 @@ function generate_pom_release_bom_test {
 		"${_PROJECTS_DIR}/${LIFERAY_PORTAL_REPOSITORY_NAME}/modules/.releng/third-party/org-apache-logging-log4j-core/artifact.properties" \
 		"${_PROJECTS_DIR}/${LIFERAY_PORTAL_REPOSITORY_NAME}/modules/.releng/third-party/org-apache-logging-log4j/artifact.properties"
 	do
-		artifact_urls+=$(awk -F= '/^artifact.url=/ { print $2 }' "$file")
+		artifact_urls+=$(awk -F= '/^artifact.url=/ { print $2 }' "${file}")
 		artifact_urls+=$'\n'
 	done
 
@@ -718,7 +718,6 @@ function generate_poms {
 }
 
 function _copy_source_package {
-
 	#
 	# TODO Exclude what is not packaged
 	#
