@@ -435,6 +435,7 @@ function _update_product_supported_versions {
 		http_code=$( \
 			curl \
 				"https://marketplace.liferay.com/o/headless-commerce-admin-catalog/v1.0/products/by-externalReferenceCode/${product_external_reference_code}/product-specifications" \
+				--data "${data}" \
 				--header "Authorization: Bearer ${_LIFERAY_MARKETPLACE_OAUTH2_TOKEN}" \
 				--header "Content-Type: application/json" \
 				--header "accept: application/json" \
@@ -444,7 +445,6 @@ function _update_product_supported_versions {
 				--retry 3 \
 				--retry-delay 10 \
 				--silent \
-				--data "${data}" \
 				--write-out "%{http_code}")
 
 		if [[ "${http_code}" -ge 400 ]]

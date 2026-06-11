@@ -142,7 +142,7 @@ function _verify_checksum {
 		sed --null-data "s/\n$//" "${file}.sha512"
 
 		echo "  ${file}"
-	) | sha512sum -c - --status
+	) | sha512sum --check - --status
 
 	if [ "${?}" != "0" ]
 	then
