@@ -3,7 +3,7 @@
 source ../_release_common.sh
 
 function generate_checksum_files {
-	lc_cd "${_BUILD_DIR}"/release
+	lc_cd "${_BUILD_DIR}/release"
 
 	for file in *
 	do
@@ -32,7 +32,7 @@ function generate_release_properties_file {
 
 	local tomcat_version=$(grep --extended-regexp --only-matching "Apache Tomcat Version [0-9]+\.[0-9]+\.[0-9]+" "${_BUNDLES_DIR}/tomcat/RELEASE-NOTES")
 
-	tomcat_version=$(echo "${tomcat_version}" | sed "s/Apache Tomcat Version //")
+	tomcat_version=$(echo "${tomcat_version}" | sed --expression "s/Apache Tomcat Version //")
 
 	if [ -z "${tomcat_version}" ]
 	then
@@ -45,7 +45,7 @@ function generate_release_properties_file {
 
 	local product_version=$(echo "${_PRODUCT_VERSION}" | tr "[:lower:]" "[:upper:]")
 
-	product_version=$(echo "DXP ${product_version}" | sed "s/-/ /")
+	product_version=$(echo "DXP ${product_version}" | sed --expression "s/-/ /")
 
 	(
 		echo "${date_key}=${LIFERAY_RELEASE_GENERAL_AVAILABILITY_DATE}"
@@ -77,13 +77,13 @@ function install_patching_tool {
 
 	local latest_version=$(lc_curl https://releases.liferay.com/tools/patching-tool/LATEST-4.0.txt)
 
-	lc_log info "Installing Patching Tool ${latest_version}."
+	lc_log INFO "Installing Patching Tool ${latest_version}."
 
-	lc_download https://releases.liferay.com/tools/patching-tool/patching-tool-"${latest_version}".zip patching-tool-"${latest_version}".zip
+	lc_download "https://releases.liferay.com/tools/patching-tool/patching-tool-${latest_version}.zip" "patching-tool-${latest_version}.zip"
 
-	unzip -q patching-tool-"${latest_version}".zip
+	unzip -q "patching-tool-${latest_version}.zip"
 
-	rm --force patching-tool-"${latest_version}".zip
+	rm --force "patching-tool-${latest_version}.zip"
 
 	lc_cd patching-tool
 
@@ -116,10 +116,10 @@ function package_release {
 
 	cp --archive "${_BUNDLES_DIR}"/* "${package_dir}"
 
-	echo "${_GIT_SHA}" > "${package_dir}"/.githash
-	echo "${_PRODUCT_VERSION}" > "${package_dir}"/.liferay-version
+	echo "${_GIT_SHA}" > "${package_dir}/.githash"
+	echo "${_PRODUCT_VERSION}" > "${package_dir}/.liferay-version"
 
-	touch "${package_dir}"/.liferay-home
+	touch "${package_dir}/.liferay-home"
 
 	lc_cd "${_BUILD_DIR}/release"
 
@@ -171,7 +171,7 @@ function _generate_javadocs {
 			-Dtstamp.value="${_BUILD_TIMESTAMP}" \
 			-file "${_PROJECTS_DIR}/liferay-release-tool-ee/build-service-pack.xml" patch-doc
 
-		if [ "${?}" -ne 0 ]
+		if [[ "${?}" -ne 0 ]]
 		then
 			lc_log ERROR "Unable to generate javadocs."
 
@@ -181,9 +181,9 @@ function _generate_javadocs {
 }
 
 function _package_common_release {
-	7z a "${_BUILD_DIR}/release/liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-tomcat-${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}.7z" liferay-${LIFERAY_RELEASE_PRODUCT_NAME}
+	7z a "${_BUILD_DIR}/release/liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-tomcat-${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}.7z" "liferay-${LIFERAY_RELEASE_PRODUCT_NAME}"
 
-	echo "liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-tomcat-${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}.7z" > "${_BUILD_DIR}"/release/.lfrrelease-tomcat-bundle
+	echo "liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-tomcat-${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}.7z" > "${_BUILD_DIR}/release/.lfrrelease-tomcat-bundle"
 
 	tar \
 		--create \
@@ -212,7 +212,7 @@ function _package_common_release {
 
 	lc_cd "${_PROJECTS_DIR}/${LIFERAY_PORTAL_REPOSITORY_NAME}"
 
-	cp --archive sql liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-sql
+	cp --archive sql "liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-sql"
 
 	zip -qr "${_BUILD_DIR}/release/liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-sql-${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}.zip" "liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-sql" -i "*.sql"
 
@@ -227,7 +227,7 @@ function _package_nightly_release {
 	7z a "${_BUILD_DIR}/release/liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-tomcat-7.4.13.nightly-${_BUILD_TIMESTAMP}.7z" \
 		"liferay-${LIFERAY_RELEASE_PRODUCT_NAME}"
 
-	echo "liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-tomcat-7.4.13.nightly-${_BUILD_TIMESTAMP}.7z" > "${_BUILD_DIR}"/release/.lfrrelease-tomcat-bundle
+	echo "liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-tomcat-7.4.13.nightly-${_BUILD_TIMESTAMP}.7z" > "${_BUILD_DIR}/release/.lfrrelease-tomcat-bundle"
 
 	tar \
 		--create \
@@ -306,7 +306,7 @@ function _package_portal_dependencies {
 			portal-kernel.jar \
 			portlet.jar
 		do
-			cp "${_BUILD_DIR}"/release/liferay-"${LIFERAY_RELEASE_PRODUCT_NAME}"/tomcat/lib/ext/"${jar}" "liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-dependencies-${_PRODUCT_VERSION}"
+			cp "${_BUILD_DIR}/release/liferay-${LIFERAY_RELEASE_PRODUCT_NAME}/tomcat/lib/ext/${jar}" "liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-dependencies-${_PRODUCT_VERSION}"
 		done
 
 		zip -qr "${_BUILD_DIR}/release/liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-dependencies-${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}.zip" "liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-dependencies-${_PRODUCT_VERSION}"

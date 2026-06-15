@@ -8,7 +8,7 @@ source ./_releases_json.sh
 function main {
 	set_up
 
-	if [ "${#}" -eq 1 ]
+	if [[ "${#}" -eq 1 ]]
 	then
 		"${1}"
 	else
@@ -41,7 +41,7 @@ function set_up {
 	export _PROMOTION_DIR="${PWD}"
 	export _RELEASE_ROOT_DIR="${PWD}"
 
-	export _PROJECTS_DIR="${_RELEASE_ROOT_DIR}"/../..
+	export _PROJECTS_DIR="${_RELEASE_ROOT_DIR}/../.."
 
 	mkdir --parents "./test_release_json_dir"
 
@@ -144,7 +144,7 @@ function test_releases_json_is_supported_product_version {
 }
 
 function test_releases_json_merge_json_snippets {
-	local json_files_count=$(
+	local json_files_count=$( \
 		ls "${_PROMOTION_DIR}" | \
 		grep \
 			--extended-regexp \
@@ -177,7 +177,7 @@ function test_releases_json_process_new_product {
 
 	mv "${_PROMOTION_DIR}/releases.json" "${_PROMOTION_DIR}/0000-00-00-releases.json"
 
-    generate_releases_json &> /dev/null
+	generate_releases_json &> /dev/null
 
 	assert_equals \
 		"${_PROMOTION_DIR}/releases.json" \
@@ -193,7 +193,7 @@ function test_releases_json_promote_product_versions {
 
 	assert_equals \
 		"$(jq "[.[] | select(.promoted == \"true\")] | length == 1" "$(ls "${_PROMOTION_DIR}" | grep "2025.q1.8-lts")")" \
-		"true"
+		"true" \
 		"$(jq "[.[] | select(.promoted == \"true\")] | length == 1" "$(ls "${_PROMOTION_DIR}" | grep "7.4.3.132-ga132")")" \
 		"true"
 }

@@ -5,8 +5,8 @@ source ../_release_common.sh
 function clean_portal_repository {
 	lc_cd "${_PROJECTS_DIR}/${LIFERAY_PORTAL_REPOSITORY_NAME}"
 
-	if [ -e "${_BUILD_DIR}"/built.sha ] &&
-	   [ $(cat "${_BUILD_DIR}"/built.sha) == "${LIFERAY_RELEASE_GIT_REF}${LIFERAY_RELEASE_HOTFIX_TEST_SHA}" ]
+	if [ -e "${_BUILD_DIR}/built.sha" ] &&
+	   [ "$(cat "${_BUILD_DIR}/built.sha")" == "${LIFERAY_RELEASE_GIT_REF}${LIFERAY_RELEASE_HOTFIX_TEST_SHA}" ]
 	then
 		lc_log INFO "${LIFERAY_RELEASE_GIT_REF} was already built in ${_BUILD_DIR}."
 
@@ -42,14 +42,14 @@ function clone_repository {
 
 	lc_cd "${1}"
 
-	if (git remote get-url upstream &>/dev/null)
+	if git remote get-url upstream &>/dev/null
 	then
 		git remote set-url upstream git@github.com:liferay/"${1}".git
 	else
 		git remote add upstream git@github.com:liferay/"${1}".git
 	fi
 
-	if (! git remote get-url brianchandotcom &>/dev/null)
+	if ! git remote get-url brianchandotcom &>/dev/null
 	then
 		git remote add brianchandotcom git@github.com:brianchandotcom/"${1}".git
 	fi
@@ -80,7 +80,7 @@ function generate_release_notes {
 
 	if ! is_quarterly_release
 	then
-		ga_version=${_PRODUCT_VERSION%%-u*}-ga1
+		ga_version="${_PRODUCT_VERSION%%-u*}-ga1"
 	fi
 
 	lc_cd "${_PROJECTS_DIR}/${LIFERAY_PORTAL_REPOSITORY_NAME}"
@@ -128,8 +128,8 @@ function prepare_branch_to_commit {
 }
 
 function push_branch_to_liferay_release_fork {
-	local branch_name=${1}
-	local repository_name=${2}
+	local branch_name="${1}"
+	local repository_name="${2}"
 
 	if ! git remote get-url liferay-release &> /dev/null
 	then
@@ -138,7 +138,7 @@ function push_branch_to_liferay_release_fork {
 
 	git push --force "liferay-release" "${branch_name}"
 
-	if [ "${?}" -ne 0 ]
+	if [[ "${?}" -ne 0 ]]
 	then
 		lc_log ERROR "Unable to push branch ${branch_name} to liferay-release/${repository_name}."
 
@@ -161,19 +161,19 @@ function update_portal_repository {
 	local checkout_ref="${LIFERAY_RELEASE_GIT_REF}"
 
 	if [ -e "${_BUILD_DIR}/${LIFERAY_PORTAL_REPOSITORY_NAME}.sha" ] &&
-	   [ $(cat "${_BUILD_DIR}/${LIFERAY_PORTAL_REPOSITORY_NAME}.sha") == "${LIFERAY_RELEASE_GIT_REF}" ]
+	   [ "$(cat "${_BUILD_DIR}/${LIFERAY_PORTAL_REPOSITORY_NAME}.sha")" == "${LIFERAY_RELEASE_GIT_REF}" ]
 	then
 		lc_log INFO "${LIFERAY_RELEASE_GIT_REF} was already checked out in ${_PROJECTS_DIR}/${LIFERAY_PORTAL_REPOSITORY_NAME}."
 
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
 
-	if (echo "${LIFERAY_RELEASE_GIT_REF}" | grep --extended-regexp --quiet "^[[:alnum:]\.-]+/[0-9a-z]{40}$")
+	if echo "${LIFERAY_RELEASE_GIT_REF}" | grep --extended-regexp --quiet "^[[:alnum:]\.-]+/[0-9a-z]{40}$"
 	then
 		checkout_ref="${LIFERAY_RELEASE_GIT_REF#*/}"
 
 		LIFERAY_RELEASE_GIT_REF="${LIFERAY_RELEASE_GIT_REF%/*}"
-	elif (echo "${LIFERAY_RELEASE_GIT_REF}" | grep --extended-regexp --quiet "^[0-9a-f]{40}$")
+	elif echo "${LIFERAY_RELEASE_GIT_REF}" | grep --extended-regexp --quiet "^[0-9a-f]{40}$"
 	then
 		lc_log INFO "Looking for a tag that matches Git SHA ${LIFERAY_RELEASE_GIT_REF}."
 
@@ -189,22 +189,22 @@ function update_portal_repository {
 		fi
 	fi
 
-	if (! git remote get-url "${LIFERAY_PORTAL_REPOSITORY_OWNER}" &>/dev/null)
+	if ! git remote get-url "${LIFERAY_PORTAL_REPOSITORY_OWNER}" &>/dev/null
 	then
 		git remote add "${LIFERAY_PORTAL_REPOSITORY_OWNER}" "git@github.com:${LIFERAY_PORTAL_REPOSITORY_OWNER}/${LIFERAY_PORTAL_REPOSITORY_NAME}.git"
 	fi
 
-	if ! is_ai_hub_release && [ -n "$(git ls-remote upstream refs/tags/"${LIFERAY_RELEASE_GIT_REF}")" ]
+	if ! is_ai_hub_release && [ -n "$(git ls-remote upstream "refs/tags/${LIFERAY_RELEASE_GIT_REF}")" ]
 	then
 		lc_log INFO "${LIFERAY_RELEASE_GIT_REF} tag exists on remote."
 
 		git fetch --force upstream tag "${LIFERAY_RELEASE_GIT_REF}"
-	elif ! is_ai_hub_release && [ -n "$(git ls-remote upstream refs/heads/"${LIFERAY_RELEASE_GIT_REF}")" ]
+	elif ! is_ai_hub_release && [ -n "$(git ls-remote upstream "refs/heads/${LIFERAY_RELEASE_GIT_REF}")" ]
 	then
 		echo "${LIFERAY_RELEASE_GIT_REF} branch exists on remote."
 
 		git fetch --force --update-head-ok upstream "${LIFERAY_RELEASE_GIT_REF}:${LIFERAY_RELEASE_GIT_REF}"
-	elif [ -n "$(git ls-remote "${LIFERAY_PORTAL_REPOSITORY_OWNER}" refs/heads/"${LIFERAY_RELEASE_GIT_REF}")" ]
+	elif [ -n "$(git ls-remote "${LIFERAY_PORTAL_REPOSITORY_OWNER}" "refs/heads/${LIFERAY_RELEASE_GIT_REF}")" ]
 	then
 		echo "${LIFERAY_RELEASE_GIT_REF} branch exists on ${LIFERAY_PORTAL_REPOSITORY_OWNER}'s remote."
 
@@ -227,7 +227,7 @@ function update_portal_repository {
 function update_release_tool_repository {
 	trap 'return ${LIFERAY_COMMON_EXIT_CODE_BAD}' ERR
 
-	lc_cd "${_PROJECTS_DIR}"/liferay-release-tool-ee
+	lc_cd "${_PROJECTS_DIR}/liferay-release-tool-ee"
 
 	git reset --hard && git clean -dfx
 
@@ -237,11 +237,11 @@ function update_release_tool_repository {
 	then
 		lc_log ERROR "The property \"release.tool.sha\" is missing from ${LIFERAY_PORTAL_REPOSITORY_NAME}/release.properties."
 
-		return 1
+		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 	fi
 
-	if [ -e "${_BUILD_DIR}"/liferay-release-tool-ee.sha ] &&
-	   [ $(cat "${_BUILD_DIR}"/liferay-release-tool-ee.sha) == "${release_tool_sha}" ]
+	if [ -e "${_BUILD_DIR}/liferay-release-tool-ee.sha" ] &&
+	   [ "$(cat "${_BUILD_DIR}/liferay-release-tool-ee.sha")" == "${release_tool_sha}" ]
 	then
 		lc_log INFO "${release_tool_sha} was already checked out in ${_PROJECTS_DIR}/liferay-release-tool-ee."
 
@@ -258,5 +258,5 @@ function update_release_tool_repository {
 
 	git checkout "${release_tool_sha}"
 
-	echo "${release_tool_sha}" > "${_BUILD_DIR}"/liferay-release-tool-ee.sha
+	echo "${release_tool_sha}" > "${_BUILD_DIR}/liferay-release-tool-ee.sha"
 }

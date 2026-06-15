@@ -7,12 +7,12 @@ source ./_git.sh
 function main {
 	set_up
 
-	if [ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}" ]
+	if [[ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}" ]]
 	then
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
 
-	if [ "${#}" -eq 1 ]
+	if [[ "${#}" -eq 1 ]]
 	then
 		"${1}"
 	else
@@ -29,18 +29,18 @@ function set_up {
 
 	export _RELEASE_ROOT_DIR="${PWD}"
 
-	export _PROJECTS_DIR="${_RELEASE_ROOT_DIR}"/../..
+	export _PROJECTS_DIR="${_RELEASE_ROOT_DIR}/../.."
 
 	if [ ! -d "${_PROJECTS_DIR}/liferay-portal-ee" ]
 	then
-		echo "The directory ${_PROJECTS_DIR}/liferay-portal-ee does not exist."
+		lc_log INFO "The directory ${_PROJECTS_DIR}/liferay-portal-ee does not exist."
 
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
 
 	export _BUILD_DIR="${_PROJECTS_DIR}/liferay-portal-ee"
 
-	lc_cd "${_PROJECTS_DIR}"/liferay-portal-ee
+	lc_cd "${_PROJECTS_DIR}/liferay-portal-ee"
 
 	git restore .
 
@@ -69,9 +69,9 @@ function test_git_generate_release_notes {
 	generate_release_notes
 
 	assert_equals \
-		$(grep --quiet "\-," "${_PROJECTS_DIR}/liferay-portal-ee/release/release-notes.txt"; echo "${?}") \
+		"$(grep --quiet "\-," "${_PROJECTS_DIR}/liferay-portal-ee/release/release-notes.txt"; echo "${?}")" \
 		"${LIFERAY_COMMON_EXIT_CODE_BAD}" \
-		$(grep --quiet "LPD-27038" "${_PROJECTS_DIR}/liferay-portal-ee/release/release-notes.txt"; echo "${?}") \
+		"$(grep --quiet "LPD-27038" "${_PROJECTS_DIR}/liferay-portal-ee/release/release-notes.txt"; echo "${?}")" \
 		"${LIFERAY_COMMON_EXIT_CODE_OK}"
 }
 

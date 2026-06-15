@@ -34,8 +34,8 @@ function add_ckeditor_license {
 }
 
 function add_licensing {
-	if [ -e "${_BUILD_DIR}"/built.sha ] &&
-	   [ $(cat "${_BUILD_DIR}"/built.sha) == "${LIFERAY_RELEASE_GIT_REF}${LIFERAY_RELEASE_HOTFIX_TEST_SHA}" ]
+	if [ -e "${_BUILD_DIR}/built.sha" ] &&
+	   [ "$(cat "${_BUILD_DIR}/built.sha")" == "${LIFERAY_RELEASE_GIT_REF}${LIFERAY_RELEASE_HOTFIX_TEST_SHA}" ]
 	then
 		lc_log INFO "${LIFERAY_RELEASE_GIT_REF} was already built in ${_BUILD_DIR}."
 
@@ -46,7 +46,7 @@ function add_licensing {
 
 	echo "liferay-release-tool-ee version:"
 
-	git log -1
+	git log --max-count=1
 
 	lc_cd "$(lc_get_property "${_PROJECTS_DIR}/${LIFERAY_PORTAL_REPOSITORY_NAME}/release.properties" "release.tool.dir")"
 
@@ -62,8 +62,8 @@ function add_licensing {
 function build_product {
 	trap 'return ${LIFERAY_COMMON_EXIT_CODE_BAD}' ERR
 
-	if [ -e "${_BUILD_DIR}"/built.sha ] &&
-	   [ $(cat "${_BUILD_DIR}"/built.sha) == "${LIFERAY_RELEASE_GIT_REF}${LIFERAY_RELEASE_HOTFIX_TEST_SHA}" ]
+	if [ -e "${_BUILD_DIR}/built.sha" ] &&
+	   [ "$(cat "${_BUILD_DIR}/built.sha")" == "${LIFERAY_RELEASE_GIT_REF}${LIFERAY_RELEASE_HOTFIX_TEST_SHA}" ]
 	then
 		lc_log INFO "${LIFERAY_RELEASE_GIT_REF} was already built in ${_BUILD_DIR}."
 
@@ -108,7 +108,7 @@ function build_product {
 
 	rm --force tomcat/webapps/ROOT/WEB-INF/shielded-container-lib/mysql.jar
 
-	echo "${LIFERAY_RELEASE_GIT_REF}${LIFERAY_RELEASE_HOTFIX_TEST_SHA}" > "${_BUILD_DIR}"/built.sha
+	echo "${LIFERAY_RELEASE_GIT_REF}${LIFERAY_RELEASE_HOTFIX_TEST_SHA}" > "${_BUILD_DIR}/built.sha"
 }
 
 function build_sql {
@@ -134,7 +134,7 @@ function clean_up_ignored_dxp_modules {
 	do
 		local dxp_dir=""
 
-		if (echo "${ignored_dir}" | grep --extended-regexp --quiet "^apps/")
+		if echo "${ignored_dir}" | grep --extended-regexp --quiet "^apps/"
 		then
 			dxp_dir=$(echo "${ignored_dir}" | sed --expression "s#apps/#dxp/apps/#")
 
@@ -194,8 +194,8 @@ function clean_up_ignored_dxp_plugins {
 }
 
 function compile_product {
-	if [ -e "${_BUILD_DIR}"/built.sha ] &&
-	   [ $(cat "${_BUILD_DIR}"/built.sha) == "${LIFERAY_RELEASE_GIT_REF}${LIFERAY_RELEASE_HOTFIX_TEST_SHA}" ]
+	if [ -e "${_BUILD_DIR}/built.sha" ] &&
+	   [ "$(cat "${_BUILD_DIR}/built.sha")" == "${LIFERAY_RELEASE_GIT_REF}${LIFERAY_RELEASE_HOTFIX_TEST_SHA}" ]
 	then
 		lc_log INFO "${LIFERAY_RELEASE_GIT_REF} was already built in ${_BUILD_DIR}."
 
@@ -226,8 +226,8 @@ function copy_copyright {
 }
 
 function decrement_module_versions {
-	if [ -e "${_BUILD_DIR}"/built.sha ] &&
-	   [ $(cat "${_BUILD_DIR}"/built.sha) == "${LIFERAY_RELEASE_GIT_REF}${LIFERAY_RELEASE_HOTFIX_TEST_SHA}" ]
+	if [ -e "${_BUILD_DIR}/built.sha" ] &&
+	   [ "$(cat "${_BUILD_DIR}/built.sha")" == "${LIFERAY_RELEASE_GIT_REF}${LIFERAY_RELEASE_HOTFIX_TEST_SHA}" ]
 	then
 		lc_log INFO "${LIFERAY_RELEASE_GIT_REF} was already built in ${_BUILD_DIR}."
 
@@ -238,25 +238,26 @@ function decrement_module_versions {
 
 	find . -name bnd.bnd -type f -print0 | while IFS= read -r -d '' bnd_bnd_file
 	do
-		if (echo "${bnd_bnd_file}" | grep --quiet archetype-resources) || (echo "${bnd_bnd_file}" | grep --quiet modules/third-party)
+		if echo "${bnd_bnd_file}" | grep --quiet archetype-resources ||
+		   echo "${bnd_bnd_file}" | grep --quiet modules/third-party
 		then
 			continue
 		fi
 
 		local bundle_version=$(lc_get_property "${bnd_bnd_file}" "Bundle-Version")
 
-		local major_minor_version=${bundle_version%.*}
+		local major_minor_version="${bundle_version%.*}"
 
-		local micro_version=${bundle_version##*.}
+		local micro_version="${bundle_version##*.}"
 
 		if ! [[ "${micro_version}" =~ ^[0-9]+$ ]]
 		then
-		    echo "There is an incorrect version in ${bnd_bnd_file}."
+			echo "There is an incorrect version in ${bnd_bnd_file}."
 
-		    continue
+			continue
 		fi
 
-		if [ "${micro_version}" -eq "0" ]
+		if [[ "${micro_version}" -eq "0" ]]
 		then
 			continue
 		fi
@@ -282,7 +283,7 @@ function deploy_elasticsearch_sidecar {
 	then
 		lc_cd "${_PROJECTS_DIR}/${LIFERAY_PORTAL_REPOSITORY_NAME}/modules/apps/portal-search-elasticsearch7/portal-search-elasticsearch7-impl"
 
-		if ("${_PROJECTS_DIR}/${LIFERAY_PORTAL_REPOSITORY_NAME}/gradlew" tasks | grep --quiet deploySidecar)
+		if "${_PROJECTS_DIR}/${LIFERAY_PORTAL_REPOSITORY_NAME}/gradlew" tasks | grep --quiet deploySidecar
 		then
 			"${_PROJECTS_DIR}/${LIFERAY_PORTAL_REPOSITORY_NAME}/gradlew" deploySidecar
 		else
@@ -328,20 +329,20 @@ function deploy_opensearch {
 }
 
 function get_java_specification_version {
-	if (echo "${JAVA_HOME}" | grep --extended-regexp "jdk8|zulu8" &> /dev/null)
+	if echo "${JAVA_HOME}" | grep --extended-regexp "jdk8|zulu8" &> /dev/null
 	then
 		echo "1.8"
 	fi
 
-	if (echo "${JAVA_HOME}" | grep --extended-regexp "open-jdk-17|zulu-17" &> /dev/null)
+	if echo "${JAVA_HOME}" | grep --extended-regexp "open-jdk-17|zulu-17" &> /dev/null
 	then
 		echo "17"
 	fi
 }
 
 function obfuscate_licensing {
-	if [ -e "${_BUILD_DIR}"/built.sha ] &&
-	   [ $(cat "${_BUILD_DIR}"/built.sha) == "${LIFERAY_RELEASE_GIT_REF}${LIFERAY_RELEASE_HOTFIX_TEST_SHA}" ]
+	if [ -e "${_BUILD_DIR}/built.sha" ] &&
+	   [ "$(cat "${_BUILD_DIR}/built.sha")" == "${LIFERAY_RELEASE_GIT_REF}${LIFERAY_RELEASE_HOTFIX_TEST_SHA}" ]
 	then
 		lc_log INFO "${LIFERAY_RELEASE_GIT_REF} was already built in ${_BUILD_DIR}."
 
@@ -370,14 +371,14 @@ function set_artifact_versions {
 
 	if is_quarterly_release
 	then
-		_ARTIFACT_VERSION=$(echo "${_ARTIFACT_VERSION}" | sed "s/-lts//g")
+		_ARTIFACT_VERSION=$(echo "${_ARTIFACT_VERSION}" | sed --expression "s/-lts//g")
 	fi
 
 	_ARTIFACT_RC_VERSION="${_ARTIFACT_VERSION}-${2}"
 }
 
 function set_product_version {
-	if [ "${#@}" -eq 0 ]
+	if [[ "${#@}" -eq 0 ]]
 	then
 		lc_cd "${_PROJECTS_DIR}/${LIFERAY_PORTAL_REPOSITORY_NAME}"
 
@@ -393,9 +394,9 @@ function set_product_version {
 
 		local version_display_name=$(lc_get_property release.properties "release.info.version.display.name[${branch}-private]")
 
-		if (echo "${version_display_name}" | grep --ignore-case --quiet "q")
+		if echo "${version_display_name}" | grep --ignore-case --quiet "q"
 		then
-			_PRODUCT_VERSION=$(echo "${version_display_name}" | tr "[:upper:]" "[:lower:]" | sed "s/ lts/-lts/g")
+			_PRODUCT_VERSION=$(echo "${version_display_name}" | tr "[:upper:]" "[:lower:]" | sed --expression "s/ lts/-lts/g")
 
 			_add_lts_suffix_to_product_version
 		else
@@ -423,8 +424,8 @@ function set_product_version {
 function set_up_profile {
 	lc_cd "${_PROJECTS_DIR}/${LIFERAY_PORTAL_REPOSITORY_NAME}"
 
-	if [ -e "${_BUILD_DIR}"/built.sha ] &&
-	   [ $(cat "${_BUILD_DIR}"/built.sha) == "${LIFERAY_RELEASE_GIT_REF}${LIFERAY_RELEASE_HOTFIX_TEST_SHA}" ]
+	if [ -e "${_BUILD_DIR}/built.sha" ] &&
+	   [ "$(cat "${_BUILD_DIR}/built.sha")" == "${LIFERAY_RELEASE_GIT_REF}${LIFERAY_RELEASE_HOTFIX_TEST_SHA}" ]
 	then
 		lc_log INFO "${LIFERAY_RELEASE_GIT_REF} was already built in ${_BUILD_DIR}."
 
@@ -451,7 +452,12 @@ function start_tomcat {
 
 	for count in {0..30}
 	do
-		if (curl --fail --max-time 3 --output /dev/null --silent http://localhost:8080)
+		if curl \
+				http://localhost:8080 \
+				--fail \
+				--max-time 3 \
+				--output /dev/null \
+				--silent
 		then
 			lc_log INFO "Startup was successful."
 
@@ -466,7 +472,12 @@ function start_tomcat {
 		cat ../logs/catalina.out
 	fi
 
-	if (! curl --fail --max-time 3 --output /dev/null --silent http://localhost:8080)
+	if ! curl \
+			http://localhost:8080 \
+			--fail \
+			--max-time 3 \
+			--output /dev/null \
+			--silent
 	then
 		lc_log ERROR "Unable to start Tomcat in 90 seconds."
 
@@ -475,7 +486,7 @@ function start_tomcat {
 		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 	fi
 
-	if (echo "${_PRODUCT_VERSION}" | grep --extended-regexp --quiet "^7.[0123]")
+	if echo "${_PRODUCT_VERSION}" | grep --extended-regexp --quiet "^7.[0123]"
 	then
 		lc_log INFO "Sleep for 20 seconds before shutting down."
 
@@ -503,7 +514,7 @@ function stop_tomcat {
 
 	for count in {0..30}
 	do
-		if (! pkill -0 --full "${tomcat_dir_regex}" &> /dev/null)
+		if ! pkill --full --signal 0 "${tomcat_dir_regex}" &> /dev/null
 		then
 			break
 		fi
@@ -511,7 +522,7 @@ function stop_tomcat {
 		sleep 1
 	done
 
-	if (pkill -0 --full "${tomcat_dir_regex}" &> /dev/null)
+	if pkill --full --signal 0 "${tomcat_dir_regex}" &> /dev/null
 	then
 		lc_log ERROR "Unable to kill Tomcat after 30 seconds."
 
@@ -552,14 +563,14 @@ function warm_up_tomcat {
 		start_tomcat
 	fi
 
-	if [ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_BAD}" ]
+	if [[ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_BAD}" ]]
 	then
 		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 	fi
 
 	stop_tomcat
 
-	if [ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_BAD}" ]
+	if [[ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_BAD}" ]]
 	then
 		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 	fi
@@ -585,7 +596,7 @@ function _add_lts_suffix_to_product_version {
 function _is_free_tier_ignored_version {
 	local free_tier_ignored_versions=$(lc_get_property "${_PROJECTS_DIR}/${LIFERAY_PORTAL_REPOSITORY_NAME}/release.properties" "free.tier.ignored.versions")
 
-	if (echo "${free_tier_ignored_versions}" | grep --quiet "${_PRODUCT_VERSION}")
+	if echo "${free_tier_ignored_versions}" | grep --quiet "${_PRODUCT_VERSION}"
 	then
 		echo "true"
 	else

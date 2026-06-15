@@ -3,9 +3,9 @@
 source ../_liferay_common.sh
 
 function check_usage {
-	if [ -z "$LIFERAY_TRACK_RELEASE_BLOCKERS_JIRA_TOKEN" ] ||
-	   [ -z "$LIFERAY_TRACK_RELEASE_BLOCKERS_JIRA_USER" ] ||
-       [ -z "$LIFERAY_TRACK_RELEASE_BLOCKERS_SLACK_URL" ]
+	if [ -z "${LIFERAY_TRACK_RELEASE_BLOCKERS_JIRA_TOKEN}" ] ||
+	   [ -z "${LIFERAY_TRACK_RELEASE_BLOCKERS_JIRA_USER}" ] ||
+	   [ -z "${LIFERAY_TRACK_RELEASE_BLOCKERS_SLACK_URL}" ]
 	then
 		echo "Usage: ${0}"
 		echo ""
@@ -17,7 +17,7 @@ function check_usage {
 		echo ""
 		echo "Example: LIFERAY_TRACK_RELEASE_BLOCKERS_JIRA_TOKEN=123456789 LIFERAY_TRACK_RELEASE_BLOCKERS_JIRA_USER=joe.bloggs@liferay.com ${0}"
 
-		exit 1
+		exit "${LIFERAY_COMMON_EXIT_CODE_HELP}"
 	fi
 }
 
@@ -46,7 +46,7 @@ function main {
 			--silent \
 			--user "${JIRA_USER}:${JIRA_TOKEN}")
 
-	if [ "${?}" -ne 0 ]
+	if [[ "${?}" -ne 0 ]]
 	then
 		lc_log ERROR "Unable to get a list of blockers from Jira."
 
@@ -77,17 +77,17 @@ function main {
 		slack_message="These blockers are not merged: ${unmerged_issue_keys}."
 	fi
 
-	if (curl \
-			"${LIFERAY_TRACK_RELEASE_BLOCKERS_SLACK_URL}" \
-			--data-raw '{
+	if curl \
+		"${LIFERAY_TRACK_RELEASE_BLOCKERS_SLACK_URL}" \
+		--data-raw '{
 				"text": "'"${slack_message}"'"
 			}' \
-			--fail \
-			--header "Content-type: application/json" \
-			--max-time 10 \
-			--request POST \
-			--retry 3 \
-			--silent)
+		--fail \
+		--header "Content-type: application/json" \
+		--max-time 10 \
+		--request POST \
+		--retry 3 \
+		--silent
 	then
 		lc_log INFO "Sent Slack message."
 	else

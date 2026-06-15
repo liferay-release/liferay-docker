@@ -7,12 +7,12 @@ source ./_jdk.sh
 function main {
 	set_up
 
-	if [ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}" ]
+	if [[ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}" ]]
 	then
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
 
-	if [ "${#}" -eq 1 ]
+	if [[ "${#}" -eq 1 ]]
 	then
 		"${1}"
 	else
@@ -36,7 +36,7 @@ function set_up {
 	export _CURRENT_JAVA_HOME="${JAVA_HOME}"
 	export _CURRENT_JAVA_OPTS="${JAVA_OPTS}"
 	export _CURRENT_PATH="${PATH}"
-	export _JDK_PARAMETERS_17=$(echo "${JAVA_OPTS}" | sed "s/-XX:MaxPermSize=[^ ]*//g")
+	export _JDK_PARAMETERS_17=$(echo "${JAVA_OPTS}" | sed --expression "s/-XX:MaxPermSize=[^ ]*//g")
 	export _JDK_PARAMETERS_8="${JAVA_OPTS}"
 	export _TEST_JDK_DIR="test-dependencies/test_jdk"
 

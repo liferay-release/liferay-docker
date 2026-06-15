@@ -9,7 +9,7 @@ function main {
 
 	trap tear_down EXIT
 
-	if [ "${#}" -eq 1 ]
+	if [[ "${#}" -eq 1 ]]
 	then
 		if [ "${1}" == "test_product_warm_up_tomcat_already_warmed" ]
 		then
@@ -155,9 +155,9 @@ function test_product_warm_up_tomcat {
 	warm_up_tomcat 1> /dev/null
 
 	assert_equals \
-		"$(ls -1 ${_BUILD_DIR}/warm-up-tomcat | wc --lines)" "1" \
-		"$(ls -1 ${_BUNDLES_DIR}/logs | wc --lines)" "0" \
-		"$(ls -1 ${_BUNDLES_DIR}/tomcat/logs | wc --lines)" "0"
+		"$(ls -1 "${_BUILD_DIR}/warm-up-tomcat" | wc --lines)" "1" \
+		"$(ls -1 "${_BUNDLES_DIR}/logs" | wc --lines)" "0" \
+		"$(ls -1 "${_BUNDLES_DIR}/tomcat/logs" | wc --lines)" "0"
 }
 
 function test_product_warm_up_tomcat_already_warmed {
@@ -172,7 +172,7 @@ function _test_product_add_ckeditor_license {
 	add_ckeditor_license &> /dev/null
 
 	assert_equals \
-		"$(cat ${_BUNDLES_DIR}/osgi/configs/com.liferay.frontend.editor.ckeditor.web.internal.configuration.CKEditor5Configuration.config)" \
+		"$(cat "${_BUNDLES_DIR}/osgi/configs/com.liferay.frontend.editor.ckeditor.web.internal.configuration.CKEditor5Configuration.config")" \
 		"licenseKey=\"${LIFERAY_CKEDITOR_LICENSE_KEY}\""
 
 	rm --force "${_BUNDLES_DIR}/osgi/configs/com.liferay.frontend.editor.ckeditor.web.internal.configuration.CKEditor5Configuration.config"
@@ -194,7 +194,7 @@ function _test_product_clean_up_ignored_dxp_plugins {
 	clean_up_ignored_dxp_plugins &> /dev/null
 
 	assert_equals \
-		"$(ls -1 ${_BUNDLES_DIR}/osgi/portal-war | wc --lines)" "${2}"
+		"$(ls -1 "${_BUNDLES_DIR}/osgi/portal-war" | wc --lines)" "${2}"
 }
 
 function _test_product_get_java_specification_version {

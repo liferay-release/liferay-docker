@@ -7,7 +7,7 @@ source ./release_gold.sh
 function main {
 	set_up
 
-	if [ "${#}" -eq 1 ]
+	if [[ "${#}" -eq 1 ]]
 	then
 		"${1}"
 	else
@@ -36,7 +36,7 @@ function set_up {
 	export _CURRENT_JAVA_HOME="${JAVA_HOME}"
 	export _CURRENT_JAVA_OPTS="${JAVA_OPTS}"
 	export _CURRENT_PATH="${PATH}"
-	export _PROJECTS_DIR="${PWD}"/../..
+	export _PROJECTS_DIR="${PWD}/../.."
 	export _PROMOTION_DIR="${PWD}/test-dependencies/expected"
 
 	cp test-dependencies/actual/releases.json .
@@ -57,7 +57,9 @@ function tear_down {
 
 	git checkout master &> /dev/null
 
-	git branch --list | grep --extended-regexp 'temp-branch-[0-9]{14}' | xargs --no-run-if-empty git branch -D &> /dev/null
+	git branch --list | \
+		grep --extended-regexp 'temp-branch-[0-9]{14}' | \
+		xargs --no-run-if-empty git branch --delete --force &> /dev/null
 
 	unset LIFERAY_RELEASE_PRODUCT_NAME
 	unset LIFERAY_RELEASE_RC_BUILD_TIMESTAMP
@@ -97,7 +99,7 @@ function test_release_gold_not_prepare_next_release_branch {
 	_test_release_gold_prepare_next_release_branch "7.4.13-u101" "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 
 	LIFERAY_RELEASE_PREPARE_NEXT_RELEASE_BRANCH="true"
-	_PROMOTION_DIR="${PWD}"/test-dependencies/expected
+	_PROMOTION_DIR="${PWD}/test-dependencies/expected"
 
 	_test_release_gold_prepare_next_release_branch "2024.q1.12" "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 }
@@ -132,7 +134,7 @@ function test_release_gold_set_next_release_date {
 	lc_cd "${_PROJECTS_DIR}/liferay-docker/release"
 
 	assert_equals \
-		"$(lc_get_property "${_PROJECTS_DIR}"/liferay-portal-ee/release.properties "release.info.date")" \
+		"$(lc_get_property "${_PROJECTS_DIR}/liferay-portal-ee/release.properties" "release.info.date")" \
 		"October 11, 2025"
 }
 
@@ -207,9 +209,9 @@ function _test_release_gold_set_next_release_version_display_name {
 	set_next_release_version_display_name "${1}" "${2}" &> /dev/null
 
 	assert_equals \
-		"$(lc_get_property "${_PROJECTS_DIR}"/liferay-portal-ee/release.properties "release.info.version.display.name[master-private]")" \
+		"$(lc_get_property "${_PROJECTS_DIR}/liferay-portal-ee/release.properties" "release.info.version.display.name[master-private]")" \
 		"${3}" \
-		"$(lc_get_property "${_PROJECTS_DIR}"/liferay-portal-ee/release.properties "release.info.version.display.name[release-private]")" \
+		"$(lc_get_property "${_PROJECTS_DIR}/liferay-portal-ee/release.properties" "release.info.version.display.name[release-private]")" \
 		"${3}"
 
 	lc_cd "${current_dir}"

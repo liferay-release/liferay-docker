@@ -8,7 +8,7 @@ source ./_package.sh
 function main {
 	set_up
 
-	if [ "${#}" -eq 1 ]
+	if [[ "${#}" -eq 1 ]]
 	then
 		"${1}"
 	else
@@ -31,7 +31,7 @@ function set_up {
 	export _RELEASE_ROOT_DIR="${PWD}"
 
 	export _BUILD_DIR="${_RELEASE_ROOT_DIR}/test-dependencies"
-	export _PROJECTS_DIR="${_RELEASE_ROOT_DIR}"/../..
+	export _PROJECTS_DIR="${_RELEASE_ROOT_DIR}/../.."
 
 	common_set_up
 
@@ -90,11 +90,17 @@ function test_package_package_wars {
 
 	lc_cd "${_PROJECTS_DIR}/liferay-portal-ee"
 
-	git fetch upstream master --no-tags --quiet
+	git fetch upstream master \
+		--no-tags \
+		--quiet
 
-	git checkout master --force --quiet
+	git checkout master \
+		--force \
+		--quiet
 
-	git reset --hard FETCH_HEAD --quiet
+	git reset FETCH_HEAD \
+		--hard \
+		--quiet
 
 	lc_download \
 		https://releases.liferay.com/dxp/2025.q3.0/liferay-dxp-tomcat-2025.q3.0-1756231955.zip \
@@ -143,10 +149,10 @@ function test_package_portal_dependencies {
 	unzip -oq "liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-dependencies-${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}.zip"
 
 	assert_equals \
-		"$(ls -1 liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-client-${_PRODUCT_VERSION})" \
-		"$(cat ${_BUILD_DIR}/expected/test_publishing_liferay-dxp-client-7.3.10-u36.txt)" \
-		"$(ls -1 liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-dependencies-${_PRODUCT_VERSION})" \
-		"$(cat ${_BUILD_DIR}/expected/test_publishing_liferay-dxp-dependencies-7.3.10-u36.txt)"
+		"$(ls -1 "liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-client-${_PRODUCT_VERSION}")" \
+		"$(cat "${_BUILD_DIR}/expected/test_publishing_liferay-dxp-client-7.3.10-u36.txt")" \
+		"$(ls -1 "liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-dependencies-${_PRODUCT_VERSION}")" \
+		"$(cat "${_BUILD_DIR}/expected/test_publishing_liferay-dxp-dependencies-7.3.10-u36.txt")"
 
 	rm --force "${_BUILD_DIR}/release/liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-client-${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}.zip"
 	rm --force "${_BUILD_DIR}/release/liferay-${LIFERAY_RELEASE_PRODUCT_NAME}-dependencies-${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}.zip"
@@ -159,7 +165,7 @@ function _test_package_generate_javadocs {
 	_generate_javadocs &> /dev/null
 
 	assert_equals "${?}" "${LIFERAY_COMMON_EXIT_CODE_OK}"
- }
+}
 
 function _test_package_generate_release_properties_file {
 	_BUILDER_SHA="test1234"

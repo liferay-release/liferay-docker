@@ -30,18 +30,18 @@ function check_usage {
 
 	_RELEASE_ROOT_DIR="${PWD}"
 
-	_BUILD_DIR="${_RELEASE_ROOT_DIR}"/build
+	_BUILD_DIR="${_RELEASE_ROOT_DIR}/build"
 
 	LIFERAY_COMMON_LOG_DIR="${_BUILD_DIR}"
-	_PROMOTION_DIR="${_BUILD_DIR}"/release
+	_PROMOTION_DIR="${_BUILD_DIR}/release"
 
-	_PROJECTS_DIR="${_RELEASE_ROOT_DIR}"/dev/projects
+	_PROJECTS_DIR="${_RELEASE_ROOT_DIR}/dev/projects"
 
-	_BUNDLES_DIR="${_PROJECTS_DIR}"/bundles
+	_BUNDLES_DIR="${_PROJECTS_DIR}/bundles"
 }
 
 function checkout_product_version {
-	lc_cd "${_PROJECTS_DIR}"/liferay-portal-ee
+	lc_cd "${_PROJECTS_DIR}/liferay-portal-ee"
 
 	git clean -d --force -x
 
@@ -58,7 +58,7 @@ function checkout_product_version {
 
 	git checkout "${product_version_tag}"
 
-	if [ "${?}" -ne 0 ]
+	if [[ "${?}" -ne 0 ]]
 	then
 		lc_log ERROR "Unable to checkout to ${product_version_tag}."
 

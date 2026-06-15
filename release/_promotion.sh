@@ -5,14 +5,15 @@ source ./_publishing.sh
 function prepare_jars_for_promotion {
 	trap 'return ${LIFERAY_COMMON_EXIT_CODE_BAD}' ERR
 
-	if [ -n "${nexus_repository_name}" ] && ([ -z "${LIFERAY_RELEASE_NEXUS_REPOSITORY_PASSWORD}" || -z "${LIFERAY_RELEASE_NEXUS_REPOSITORY_USER}" ])
+	local nexus_repository_name="${1}"
+
+	if [ -n "${nexus_repository_name}" ] && ([ -z "${LIFERAY_RELEASE_NEXUS_REPOSITORY_PASSWORD}" ] || [ -z "${LIFERAY_RELEASE_NEXUS_REPOSITORY_USER}" ])
 	then
 		lc_log ERROR "Either \${LIFERAY_RELEASE_NEXUS_REPOSITORY_PASSWORD} or \${LIFERAY_RELEASE_NEXUS_REPOSITORY_USER} is undefined."
 
 		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 	fi
 
-	local nexus_repository_name="${1}"
 	local nexus_repository_url="https://repository.liferay.com/nexus/service/local/repositories"
 
 	for jar_rc_name in "release.${LIFERAY_RELEASE_PRODUCT_NAME}.api-${_ARTIFACT_RC_VERSION}.jar" "release.${LIFERAY_RELEASE_PRODUCT_NAME}.api-${_ARTIFACT_RC_VERSION}-sources.jar" "release.${LIFERAY_RELEASE_PRODUCT_NAME}.distro-${_ARTIFACT_RC_VERSION}.jar"
@@ -21,7 +22,7 @@ function prepare_jars_for_promotion {
 
 		if [ -n "${nexus_repository_name}" ]
 		then
-			_download_bom_file "${nexus_repository_url}/${nexus_repository_name}/content/com/liferay/portal/$(echo ${jar_rc_name} | cut --delimiter='-' --fields=1)/${_ARTIFACT_RC_VERSION}/${jar_rc_name}" "${_PROMOTION_DIR}/${jar_release_name}"
+			_download_bom_file "${nexus_repository_url}/${nexus_repository_name}/content/com/liferay/portal/$(echo "${jar_rc_name}" | cut --delimiter='-' --fields=1)/${_ARTIFACT_RC_VERSION}/${jar_rc_name}" "${_PROMOTION_DIR}/${jar_release_name}"
 		else
 			mv "${_PROMOTION_DIR}/${jar_rc_name}" "${_PROMOTION_DIR}/${jar_release_name}"
 			mv "${_PROMOTION_DIR}/${jar_rc_name}.MD5" "${_PROMOTION_DIR}/${jar_release_name}.MD5"
@@ -38,14 +39,15 @@ function prepare_jars_for_promotion {
 function prepare_poms_for_promotion {
 	trap 'return ${LIFERAY_COMMON_EXIT_CODE_BAD}' ERR
 
-	if [ -n "${nexus_repository_name}" ] && ([ -z "${LIFERAY_RELEASE_NEXUS_REPOSITORY_PASSWORD}" || -z "${LIFERAY_RELEASE_NEXUS_REPOSITORY_USER}" ])
+	local nexus_repository_name="${1}"
+
+	if [ -n "${nexus_repository_name}" ] && ([ -z "${LIFERAY_RELEASE_NEXUS_REPOSITORY_PASSWORD}" ] || [ -z "${LIFERAY_RELEASE_NEXUS_REPOSITORY_USER}" ])
 	then
 		lc_log ERROR "Either \${LIFERAY_RELEASE_NEXUS_REPOSITORY_PASSWORD} or \${LIFERAY_RELEASE_NEXUS_REPOSITORY_USER} is undefined."
 
 		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 	fi
 
-	local nexus_repository_name="${1}"
 	local nexus_repository_url="https://repository.liferay.com/nexus/service/local/repositories"
 
 	for pom_name in \
@@ -79,18 +81,18 @@ function prepare_poms_for_promotion {
 		fi
 	done
 
-	sed --in-place "s#<version>${_ARTIFACT_RC_VERSION}</version>#<version>${_ARTIFACT_VERSION}</version>#" "${_PROMOTION_DIR}"/*.pom
+	sed --expression "s#<version>${_ARTIFACT_RC_VERSION}</version>#<version>${_ARTIFACT_VERSION}</version>#" --in-place "${_PROMOTION_DIR}"/*.pom
 }
 
 function promote_boms {
-	lc_time_run prepare_jars_for_promotion ${1}
-	lc_time_run prepare_poms_for_promotion ${1}
+	lc_time_run prepare_jars_for_promotion "${1}"
+	lc_time_run prepare_poms_for_promotion "${1}"
 
 	lc_time_run upload_boms liferay-public-releases
 }
 
 function promote_packages {
-	if (gsutil ls "gs://liferay-releases/${LIFERAY_RELEASE_PRODUCT_NAME}" | grep "${_PRODUCT_VERSION}")
+	if gsutil ls "gs://liferay-releases/${LIFERAY_RELEASE_PRODUCT_NAME}" | grep "${_PRODUCT_VERSION}"
 	then
 		lc_log INFO "Skipping the upload of ${_PRODUCT_VERSION} to GCP because it already exists."
 
@@ -112,22 +114,22 @@ function _download_bom_file {
 }
 
 function _download_from_nexus {
-	local file_url="${1}"
 	local file_name="${2}"
+	local file_url="${1}"
 
 	lc_log DEBUG "Downloading ${file_url} to ${file_name}."
 
 	curl \
+		"${file_url}" \
 		--fail \
 		--max-time 300 \
 		--output "${file_name}" \
 		--retry 3 \
 		--retry-delay 10 \
 		--silent \
-		--user "${LIFERAY_RELEASE_NEXUS_REPOSITORY_USER}:${LIFERAY_RELEASE_NEXUS_REPOSITORY_PASSWORD}" \
-		"${file_url}"
+		--user "${LIFERAY_RELEASE_NEXUS_REPOSITORY_USER}:${LIFERAY_RELEASE_NEXUS_REPOSITORY_PASSWORD}"
 
-	if [ "${?}" -ne 0 ]
+	if [[ "${?}" -ne 0 ]]
 	then
 		lc_log ERROR "Unable to download ${file_url} to ${file_name}."
 
@@ -136,15 +138,15 @@ function _download_from_nexus {
 }
 
 function _verify_checksum {
-	file="${1}"
+	local file="${1}"
 
 	(
-		sed --null-data "s/\n$//" "${file}.sha512"
+		sed --expression "s/\n$//" --null-data "${file}.sha512"
 
 		echo "  ${file}"
-	) | sha512sum -c - --status
+	) | sha512sum --check - --status
 
-	if [ "${?}" != "0" ]
+	if [[ "${?}" -ne 0 ]]
 	then
 		lc_log ERROR "Unable to verify the checksum of ${file}."
 

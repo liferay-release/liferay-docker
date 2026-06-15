@@ -23,7 +23,7 @@ function check_liferay_marketplace_products_compatibility {
 	then
 		_set_liferay_marketplace_oauth2_token
 
-		if [ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_BAD}" ]
+		if [[ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_BAD}" ]]
 		then
 			return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 		fi
@@ -51,7 +51,7 @@ function check_liferay_marketplace_products_compatibility {
 
 			_download_product_by_external_reference_code "${LIFERAY_MARKETPLACE_PRODUCTS[${liferay_marketplace_product_name}]}" "${liferay_marketplace_product_name}"
 
-			if [ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_BAD}" ]
+			if [[ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_BAD}" ]]
 			then
 				return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 			fi
@@ -61,7 +61,7 @@ function check_liferay_marketplace_products_compatibility {
 
 		_deploy_liferay_marketplace_product_zip_file "${_BUILD_DIR}/marketplace/${liferay_marketplace_product_name}.zip"
 
-		if [ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_BAD}" ]
+		if [[ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_BAD}" ]]
 		then
 			return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 		fi
@@ -81,7 +81,7 @@ function check_liferay_marketplace_products_compatibility {
 	do
 		_check_liferay_marketplace_product_compatibility "${LIFERAY_MARKETPLACE_PRODUCTS[${liferay_marketplace_product_name}]}" "${liferay_marketplace_product_name}"
 
-		if [ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_BAD}" ]
+		if [[ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_BAD}" ]]
 		then
 			stop_tomcat &> /dev/null
 
@@ -93,8 +93,8 @@ function check_liferay_marketplace_products_compatibility {
 }
 
 function _check_liferay_marketplace_product_compatibility {
-	local product_external_reference_code=${1}
-	local product_name=${2}
+	local product_external_reference_code="${1}"
+	local product_name="${2}"
 
 	lc_log INFO "Checking the compatibility of Liferay Marketplace product ${product_name} with ${_PRODUCT_VERSION} release."
 
@@ -114,7 +114,7 @@ function _check_liferay_marketplace_product_compatibility {
 		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 	fi
 
-	if (echo "${modules_info}" | grep --extended-regexp --invert-match "Active|Resolved" &> /dev/null)
+	if echo "${modules_info}" | grep --extended-regexp --invert-match "Active|Resolved" &> /dev/null
 	then
 		lc_log ERROR "One or more modules of Liferay Marketplace product ${product_name} are not compatible with release ${_PRODUCT_VERSION}:"
 
@@ -132,7 +132,7 @@ function _check_liferay_marketplace_product_compatibility {
 
 			lc_log INFO "OSGI diagnostics: $(blade sh diag "${module_id}" | tail --lines=+3 | xargs)"
 
-			if (grep --quiet "${module_name}" "${_LIFERAY_MARKETPLACE_PRODUCTS_DEPLOYMENT_LOG_FILE}")
+			if grep --quiet "${module_name}" "${_LIFERAY_MARKETPLACE_PRODUCTS_DEPLOYMENT_LOG_FILE}"
 			then
 				lc_log INFO "Deployment logs for ${module_name}:"
 
@@ -154,7 +154,7 @@ function _check_liferay_marketplace_product_compatibility {
 }
 
 function _deploy_liferay_marketplace_product_zip_file {
-	local liferay_marketplace_product_zip_file_path=${1}
+	local liferay_marketplace_product_zip_file_path="${1}"
 
 	if [ ! -f "${liferay_marketplace_product_zip_file_path}" ]
 	then
@@ -163,10 +163,10 @@ function _deploy_liferay_marketplace_product_zip_file {
 		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 	fi
 
-	if (unzip -l "${liferay_marketplace_product_zip_file_path}" | grep "client-extension" &> /dev/null)
+	if unzip -l "${liferay_marketplace_product_zip_file_path}" | grep "client-extension" &> /dev/null
 	then
 		cp "${liferay_marketplace_product_zip_file_path}" "${_BUNDLES_DIR}/deploy"
-	elif (unzip -l "${liferay_marketplace_product_zip_file_path}" | grep "\.lpkg$" &> /dev/null)
+	elif unzip -l "${liferay_marketplace_product_zip_file_path}" | grep "\.lpkg$" &> /dev/null
 	then
 		unzip \
 			-d "${_BUNDLES_DIR}/deploy" \
@@ -175,7 +175,7 @@ function _deploy_liferay_marketplace_product_zip_file {
 			-q \
 			"${liferay_marketplace_product_zip_file_path}" "*.lpkg" \
 			-x "*/*" 2> /dev/null
-	elif (unzip -l "${liferay_marketplace_product_zip_file_path}" | grep "\.zip$" &> /dev/null)
+	elif unzip -l "${liferay_marketplace_product_zip_file_path}" | grep "\.zip$" &> /dev/null
 	then
 		unzip \
 			-d "${_BUNDLES_DIR}/deploy" \
@@ -186,7 +186,7 @@ function _deploy_liferay_marketplace_product_zip_file {
 			-x "*/*" 2> /dev/null
 	fi
 
-	if [ "${?}" -ne 0 ]
+	if [[ "${?}" -ne 0 ]]
 	then
 		lc_log ERROR "Unable to deploy $(basename "${liferay_marketplace_product_zip_file_path}") to ${_BUNDLES_DIR}/deploy."
 
@@ -195,8 +195,8 @@ function _deploy_liferay_marketplace_product_zip_file {
 }
 
 function _download_product {
-	local product_download_url=${1}
-	local product_file_name=${2}
+	local product_download_url="${1}"
+	local product_file_name="${2}"
 
 	local http_code=$( \
 		curl \
@@ -219,8 +219,8 @@ function _download_product {
 }
 
 function _download_product_by_external_reference_code {
-	local product_external_reference_code=${1}
-	local product_file_name=${2}
+	local product_external_reference_code="${1}"
+	local product_file_name="${2}"
 
 	local product_virtual_settings_file_entries=$(_get_product_virtual_settings_file_entries_by_external_reference_code "${product_external_reference_code}")
 
@@ -240,18 +240,18 @@ function _download_product_by_external_reference_code {
 		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 	fi
 
-	local product_download_url="$(echo "${product_virtual_settings_file_entries}" | jq --raw-output ".items[${latest_product_virtual_settings_file_entry_json_index}].src" | sed "s|^/||")"
+	local product_download_url=$(echo "${product_virtual_settings_file_entries}" | jq --raw-output ".items[${latest_product_virtual_settings_file_entry_json_index}].src" | sed "s|^/||")
 
 	_download_product "${product_download_url}" "${product_file_name}.zip"
 
-	if [ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_BAD}" ]
+	if [[ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_BAD}" ]]
 	then
 		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 	fi
 }
 
 function _get_latest_product_virtual_settings_file_entry_json_index {
-	local product_virtual_settings_file_entries=${1}
+	local product_virtual_settings_file_entries="${1}"
 
 	local latest_product_virtual_settings_file_entry_json_index=$( \
 		echo "${product_virtual_settings_file_entries}" | \
@@ -280,7 +280,7 @@ function _get_latest_product_virtual_settings_file_entry_json_index {
 }
 
 function _get_product_by_external_reference_code {
-	local product_external_reference_code=${1}
+	local product_external_reference_code="${1}"
 
 	local http_code_file=$(mktemp)
 
@@ -311,7 +311,7 @@ function _get_product_by_external_reference_code {
 }
 
 function _get_product_virtual_settings_file_entries_by_external_reference_code {
-	local product_external_reference_code=${1}
+	local product_external_reference_code="${1}"
 
 	local product=$(_get_product_by_external_reference_code "${product_external_reference_code}")
 
@@ -387,8 +387,8 @@ function _update_product_supported_versions {
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
 
-	local product_external_reference_code=${1}
-	local product_name=${2}
+	local product_external_reference_code="${1}"
+	local product_name="${2}"
 
 	local product_virtual_settings_file_entries=$(_get_product_virtual_settings_file_entries_by_external_reference_code "${product_external_reference_code}")
 
@@ -435,6 +435,7 @@ function _update_product_supported_versions {
 		http_code=$( \
 			curl \
 				"https://marketplace.liferay.com/o/headless-commerce-admin-catalog/v1.0/products/by-externalReferenceCode/${product_external_reference_code}/product-specifications" \
+				--data "${data}" \
 				--header "Authorization: Bearer ${_LIFERAY_MARKETPLACE_OAUTH2_TOKEN}" \
 				--header "Content-Type: application/json" \
 				--header "accept: application/json" \
@@ -444,7 +445,6 @@ function _update_product_supported_versions {
 				--retry 3 \
 				--retry-delay 10 \
 				--silent \
-				--data "${data}" \
 				--write-out "%{http_code}")
 
 		if [[ "${http_code}" -ge 400 ]]

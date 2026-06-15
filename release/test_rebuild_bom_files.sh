@@ -9,7 +9,7 @@ function main {
 
 	if [ -d "${_PROJECTS_DIR}/liferay-portal-ee" ]
 	then
-		if [ "${#}" -eq 1 ]
+		if [[ "${#}" -eq 1 ]]
 		then
 			"${1}"
 		else
@@ -25,7 +25,7 @@ function main {
 function set_up {
 	export _RELEASE_ROOT_DIR="${PWD}"
 
-	export _PROJECTS_DIR="${_RELEASE_ROOT_DIR}"/../..
+	export _PROJECTS_DIR="${_RELEASE_ROOT_DIR}/../.."
 }
 
 function tear_down {
