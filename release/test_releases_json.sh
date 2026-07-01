@@ -8,7 +8,7 @@ source ./_releases_json.sh
 function main {
 	set_up
 
-	if [ "${#}" -eq 1 ]
+	if [[ "${#}" -eq 1 ]]
 	then
 		"${1}"
 	else
@@ -41,7 +41,7 @@ function set_up {
 	export _PROMOTION_DIR="${PWD}"
 	export _RELEASE_ROOT_DIR="${PWD}"
 
-	export _PROJECTS_DIR="${_RELEASE_ROOT_DIR}"/../..
+	export _PROJECTS_DIR="${_RELEASE_ROOT_DIR}/../.."
 
 	mkdir --parents "./test_release_json_dir"
 
@@ -129,7 +129,7 @@ function test_releases_json_get_supported_product_group_versions {
 	_test_releases_json_get_supported_product_group_versions "2022-05-17-dxp-7.2.10.6.json" "2025.q1\n2026.q3\n2026.q4\n2027.q1\n7.4"
 	_test_releases_json_get_supported_product_group_versions "2026-12-08-dxp-2026.q4.0.json" "2025.q1\n2026.q3\n2026.q4\n7.4"
 
-	_PROMOTION_DIR="${_RELEASE_ROOT_DIR}"
+	_PROMOTION_DIR=${_RELEASE_ROOT_DIR}
 }
 
 function test_releases_json_is_supported_product_version {
@@ -146,9 +146,7 @@ function test_releases_json_is_supported_product_version {
 function test_releases_json_merge_json_snippets {
 	local json_files_count=$(
 		ls "${_PROMOTION_DIR}" | \
-		grep \
-			--extended-regexp \
-			"(20.*(dxp|portal).*\.json)" 2> /dev/null | \
+		grep --extended-regexp "(20.*(dxp|portal).*\.json)" 2> /dev/null | \
 		wc --lines)
 
 	_merge_json_snippets &> /dev/null
@@ -177,7 +175,7 @@ function test_releases_json_process_new_product {
 
 	mv "${_PROMOTION_DIR}/releases.json" "${_PROMOTION_DIR}/0000-00-00-releases.json"
 
-    generate_releases_json &> /dev/null
+	generate_releases_json &> /dev/null
 
 	assert_equals \
 		"${_PROMOTION_DIR}/releases.json" \
@@ -185,7 +183,7 @@ function test_releases_json_process_new_product {
 
 	rm --force --recursive "${_PROMOTION_DIR}"
 
-	_PROMOTION_DIR="${_RELEASE_ROOT_DIR}"
+	_PROMOTION_DIR=${_RELEASE_ROOT_DIR}
 }
 
 function test_releases_json_promote_product_versions {
@@ -234,7 +232,7 @@ function test_releases_json_tag_test_bom_product_versions {
 }
 
 function _get_portal_upgrade_registry {
-	local current_dir="${PWD}"
+	local current_dir=${PWD}
 
 	lc_cd "${_PROJECTS_DIR}/liferay-portal-ee"
 
@@ -281,7 +279,7 @@ function _test_releases_json_get_supported_product_group_versions {
 }
 
 function _test_releases_json_is_supported_product_version {
-	LIFERAY_RELEASE_TEST_DATE="${1}"
+	LIFERAY_RELEASE_TEST_DATE=${1}
 
 	_is_supported_product_version "${2}"
 
@@ -289,9 +287,9 @@ function _test_releases_json_is_supported_product_version {
 }
 
 function _test_releases_json_tag_jakarta_product_versions {
-	local product_group_version="${1}"
+	local product_group_version=${1}
 
-	local product_group_version_json=$(echo "${product_group_version}" | tr '.' '-').json
+	local product_group_version_json="$(echo "${product_group_version}" | tr '.' '-').json"
 
 	echo "[{\"productGroupVersion\": \"${product_group_version}\"}]" > "${product_group_version_json}"
 
@@ -305,9 +303,9 @@ function _test_releases_json_tag_jakarta_product_versions {
 }
 
 function _test_releases_json_tag_supported_product_versions {
-	local product_version="${1}"
+	local product_version=${1}
 
-	local product_version_json_file=$(echo "${product_version}" | tr '.' '-').json
+	local product_version_json_file="$(echo "${product_version}" | tr '.' '-').json"
 
 	echo "[{\"url\": \"https://releases-cdn.liferay.com/dxp/${product_version}\"}]" > "${product_version_json_file}"
 
@@ -321,9 +319,9 @@ function _test_releases_json_tag_supported_product_versions {
 }
 
 function _test_releases_json_tag_test_bom_product_versions {
-	local product_group_version="${1}"
+	local product_group_version=${1}
 
-	local product_group_version_json=$(echo "${product_group_version}" | tr '.' '-').json
+	local product_group_version_json="$(echo "${product_group_version}" | tr '.' '-').json"
 
 	echo "[{\"productGroupVersion\": \"${product_group_version}\"}]" > "${product_group_version_json}"
 

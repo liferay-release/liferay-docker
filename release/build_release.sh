@@ -17,7 +17,6 @@ source ./_releases_json.sh
 source ./scan_docker_image.sh
 
 function check_usage {
-
 	#
 	# TODO Remove once all systems are using LIFERAY_RELEASE_GIT_REF instead of LIFERAY_RELEASE_GIT_SHA
 	#
@@ -48,9 +47,9 @@ function check_usage {
 		LIFERAY_RELEASE_HOTFIX_ID=${_BUILD_TIMESTAMP}
 	fi
 
-	_RELEASE_TOOL_DIR=$(dirname "$(readlink /proc/$$/fd/255 2>/dev/null)")
+	_RELEASE_TOOL_DIR=$(dirname "$(readlink /proc/$$/fd/255 2> /dev/null)")
 
-	_BASE_DIR="$(dirname "${_RELEASE_TOOL_DIR}")"
+	_BASE_DIR=$(dirname "${_RELEASE_TOOL_DIR}")
 
 	lc_cd "${_RELEASE_TOOL_DIR}"
 
@@ -58,7 +57,7 @@ function check_usage {
 
 	lc_cd release-data
 
-	_RELEASE_ROOT_DIR="${PWD}"
+	_RELEASE_ROOT_DIR=${PWD}
 
 	_BUILD_DIR="${_RELEASE_ROOT_DIR}/build"
 	_BUILDER_SHA=$(git rev-parse HEAD)
@@ -73,7 +72,7 @@ function check_usage {
 		_PROJECTS_DIR="${_RELEASE_ROOT_DIR}/dev/projects"
 	fi
 
-	LIFERAY_COMMON_LOG_DIR="${_BUILD_DIR}"
+	LIFERAY_COMMON_LOG_DIR=${_BUILD_DIR}
 
 	LIFERAY_PORTAL_REPOSITORY_NAME="liferay-portal-ee"
 	LIFERAY_PORTAL_REPOSITORY_OWNER="brianchandotcom"
@@ -275,7 +274,7 @@ function main {
 
 	local seconds=$((end_time - _BUILD_TIMESTAMP))
 
-	lc_log INFO "Completed ${LIFERAY_RELEASE_OUTPUT} building in $(lc_echo_time ${seconds}) on $(date)."
+	lc_log INFO "Completed ${LIFERAY_RELEASE_OUTPUT} building in $(lc_echo_time "${seconds}") on $(date)."
 }
 
 function print_help {
@@ -325,7 +324,7 @@ function set_general_availability_date {
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
 
-	LIFERAY_RELEASE_GENERAL_AVAILABILITY_DATE=$(echo "${LIFERAY_RELEASE_GENERAL_AVAILABILITY_DATE}" | sed "s/[^0-9-]//g")
+	LIFERAY_RELEASE_GENERAL_AVAILABILITY_DATE=$(echo "${LIFERAY_RELEASE_GENERAL_AVAILABILITY_DATE}" | sed --expression "s/[^0-9-]//g")
 
 	if [ -z "${LIFERAY_RELEASE_GENERAL_AVAILABILITY_DATE}" ] && is_first_quarterly_release
 	then

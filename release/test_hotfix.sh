@@ -13,7 +13,7 @@ function main {
 }
 
 function set_up {
-	export _BUILD_DIR=$(mktemp --directory)
+	export _BUILD_DIR="$(mktemp --directory)"
 	export _BUNDLES_DIR="${_BUILD_DIR}/bundles"
 	export _RELEASE_DIR="${_BUILD_DIR}/release"
 

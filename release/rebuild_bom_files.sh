@@ -16,11 +16,11 @@ function check_usage {
 	LIFERAY_RELEASE_UPLOAD="true"
 	_BUILD_TIMESTAMP=$(date +%s)
 
-	LIFERAY_RELEASE_RC_BUILD_TIMESTAMP="${_BUILD_TIMESTAMP}"
+	LIFERAY_RELEASE_RC_BUILD_TIMESTAMP=${_BUILD_TIMESTAMP}
 
 	set_product_version "${LIFERAY_RELEASE_VERSION}" "${_BUILD_TIMESTAMP}"
 
-	_RELEASE_TOOL_DIR=$(dirname "$(readlink /proc/$$/fd/255 2>/dev/null)")
+	_RELEASE_TOOL_DIR=$(dirname "$(readlink /proc/$$/fd/255 2> /dev/null)")
 
 	lc_cd "${_RELEASE_TOOL_DIR}"
 
@@ -28,20 +28,20 @@ function check_usage {
 
 	lc_cd release-data
 
-	_RELEASE_ROOT_DIR="${PWD}"
+	_RELEASE_ROOT_DIR=${PWD}
 
-	_BUILD_DIR="${_RELEASE_ROOT_DIR}"/build
+	_BUILD_DIR="${_RELEASE_ROOT_DIR}/build"
 
-	LIFERAY_COMMON_LOG_DIR="${_BUILD_DIR}"
-	_PROMOTION_DIR="${_BUILD_DIR}"/release
+	LIFERAY_COMMON_LOG_DIR=${_BUILD_DIR}
+	_PROMOTION_DIR="${_BUILD_DIR}/release"
 
-	_PROJECTS_DIR="${_RELEASE_ROOT_DIR}"/dev/projects
+	_PROJECTS_DIR="${_RELEASE_ROOT_DIR}/dev/projects"
 
-	_BUNDLES_DIR="${_PROJECTS_DIR}"/bundles
+	_BUNDLES_DIR="${_PROJECTS_DIR}/bundles"
 }
 
 function checkout_product_version {
-	lc_cd "${_PROJECTS_DIR}"/liferay-portal-ee
+	lc_cd "${_PROJECTS_DIR}/liferay-portal-ee"
 
 	git clean -d --force -x
 
@@ -49,7 +49,7 @@ function checkout_product_version {
 
 	git checkout master
 
-	local product_version_tag=$(echo "${_PRODUCT_VERSION}" | sed --regexp-extended "s/-lts//g")
+	local product_version_tag=$(echo "${_PRODUCT_VERSION}" | sed --regexp-extended --expression "s/-lts//g")
 
 	git branch --delete "${product_version_tag}" 2> /dev/null
 	git tag --delete "${product_version_tag}" 2> /dev/null
@@ -58,7 +58,7 @@ function checkout_product_version {
 
 	git checkout "${product_version_tag}"
 
-	if [ "${?}" -ne 0 ]
+	if [[ "${?}" -ne 0 ]]
 	then
 		lc_log ERROR "Unable to checkout to ${product_version_tag}."
 

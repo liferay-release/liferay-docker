@@ -12,16 +12,16 @@ function prepare_jars_for_promotion {
 		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 	fi
 
-	local nexus_repository_name="${1}"
+	local nexus_repository_name=${1}
 	local nexus_repository_url="https://repository.liferay.com/nexus/service/local/repositories"
 
 	for jar_rc_name in "release.${LIFERAY_RELEASE_PRODUCT_NAME}.api-${_ARTIFACT_RC_VERSION}.jar" "release.${LIFERAY_RELEASE_PRODUCT_NAME}.api-${_ARTIFACT_RC_VERSION}-sources.jar" "release.${LIFERAY_RELEASE_PRODUCT_NAME}.distro-${_ARTIFACT_RC_VERSION}.jar"
 	do
-		local jar_release_name="${jar_rc_name/-${LIFERAY_RELEASE_RC_BUILD_TIMESTAMP}/}"
+		local jar_release_name=$(echo "${jar_rc_name}" | sed --expression "s/-${LIFERAY_RELEASE_RC_BUILD_TIMESTAMP}//")
 
 		if [ -n "${nexus_repository_name}" ]
 		then
-			_download_bom_file "${nexus_repository_url}/${nexus_repository_name}/content/com/liferay/portal/$(echo ${jar_rc_name} | cut --delimiter='-' --fields=1)/${_ARTIFACT_RC_VERSION}/${jar_rc_name}" "${_PROMOTION_DIR}/${jar_release_name}"
+			_download_bom_file "${nexus_repository_url}/${nexus_repository_name}/content/com/liferay/portal/$(echo "${jar_rc_name}" | cut --delimiter='-' --fields=1)/${_ARTIFACT_RC_VERSION}/${jar_rc_name}" "${_PROMOTION_DIR}/${jar_release_name}"
 		else
 			mv "${_PROMOTION_DIR}/${jar_rc_name}" "${_PROMOTION_DIR}/${jar_release_name}"
 			mv "${_PROMOTION_DIR}/${jar_rc_name}.MD5" "${_PROMOTION_DIR}/${jar_release_name}.MD5"
@@ -45,7 +45,7 @@ function prepare_poms_for_promotion {
 		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 	fi
 
-	local nexus_repository_name="${1}"
+	local nexus_repository_name=${1}
 	local nexus_repository_url="https://repository.liferay.com/nexus/service/local/repositories"
 
 	for pom_name in \
@@ -79,18 +79,18 @@ function prepare_poms_for_promotion {
 		fi
 	done
 
-	sed --in-place "s#<version>${_ARTIFACT_RC_VERSION}</version>#<version>${_ARTIFACT_VERSION}</version>#" "${_PROMOTION_DIR}"/*.pom
+	sed --expression "s#<version>${_ARTIFACT_RC_VERSION}</version>#<version>${_ARTIFACT_VERSION}</version>#" --in-place "${_PROMOTION_DIR}"/*.pom
 }
 
 function promote_boms {
-	lc_time_run prepare_jars_for_promotion ${1}
-	lc_time_run prepare_poms_for_promotion ${1}
+	lc_time_run prepare_jars_for_promotion "${1}"
+	lc_time_run prepare_poms_for_promotion "${1}"
 
 	lc_time_run upload_boms liferay-public-releases
 }
 
 function promote_packages {
-	if (gsutil ls "gs://liferay-releases/${LIFERAY_RELEASE_PRODUCT_NAME}" | grep "${_PRODUCT_VERSION}")
+	if gsutil ls "gs://liferay-releases/${LIFERAY_RELEASE_PRODUCT_NAME}" | grep "${_PRODUCT_VERSION}"
 	then
 		lc_log INFO "Skipping the upload of ${_PRODUCT_VERSION} to GCP because it already exists."
 
@@ -101,8 +101,8 @@ function promote_packages {
 }
 
 function _download_bom_file {
-	local file_name="${2}"
-	local file_url="${1}"
+	local file_name=${2}
+	local file_url=${1}
 
 	_download_from_nexus "${file_url}" "${file_name}" || return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 	_download_from_nexus "${file_url}.md5" "${file_name}.MD5" || return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
@@ -112,8 +112,8 @@ function _download_bom_file {
 }
 
 function _download_from_nexus {
-	local file_url="${1}"
-	local file_name="${2}"
+	local file_name=${2}
+	local file_url=${1}
 
 	lc_log DEBUG "Downloading ${file_url} to ${file_name}."
 
@@ -127,7 +127,7 @@ function _download_from_nexus {
 		--user "${LIFERAY_RELEASE_NEXUS_REPOSITORY_USER}:${LIFERAY_RELEASE_NEXUS_REPOSITORY_PASSWORD}" \
 		"${file_url}"
 
-	if [ "${?}" -ne 0 ]
+	if [[ "${?}" -ne 0 ]]
 	then
 		lc_log ERROR "Unable to download ${file_url} to ${file_name}."
 
@@ -136,13 +136,13 @@ function _download_from_nexus {
 }
 
 function _verify_checksum {
-	file="${1}"
+	file=${1}
 
 	(
-		sed --null-data "s/\n$//" "${file}.sha512"
+		sed --expression "s/\n$//" --null-data "${file}.sha512"
 
 		echo "  ${file}"
-	) | sha512sum -c - --status
+	) | sha512sum --check - --status
 
 	if [ "${?}" != "0" ]
 	then

@@ -7,7 +7,7 @@ source ./_publishing.sh
 function main {
 	set_up
 
-	if [ "${#}" -eq 1 ]
+	if [[ "${#}" -eq 1 ]]
 	then
 		"${1}"
 	else
@@ -75,26 +75,26 @@ function test_publishing_upload_opensearch {
 }
 
 function _run_update_bundles_yml {
-	_PRODUCT_VERSION="${1}"
+	_PRODUCT_VERSION=${1}
 
 	_update_bundles_yml &> /dev/null
 }
 
 function _test_publishing_get_patcher_product_version_label {
-	_PRODUCT_VERSION="${1}"
+	_PRODUCT_VERSION=${1}
 
 	assert_equals "$(get_patcher_product_version_label)" "${2}"
 }
 
 function _test_publishing_get_patcher_project_version {
-	_PRODUCT_VERSION="${1}"
-	_ARTIFACT_VERSION="${1}"
+	_PRODUCT_VERSION=${1}
+	_ARTIFACT_VERSION=${1}
 
 	assert_equals "$(get_patcher_project_version)" "${2}"
 }
 
 function _test_publishing_get_root_patcher_project_version_name {
-	_PRODUCT_VERSION="${1}"
+	_PRODUCT_VERSION=${1}
 
 	assert_equals "$(get_root_patcher_project_version_name)" "${2}"
 }

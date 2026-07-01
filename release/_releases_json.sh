@@ -4,13 +4,13 @@ source ../_github.sh
 source ../_release_common.sh
 
 function generate_releases_json {
-	if [ "${1}" = "regenerate" ]
+	if [ "${1}" == "regenerate" ]
 	then
 		_process_products
 	else
 		_process_new_product
 
-		if [ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}" ]
+		if [[ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}" ]]
 		then
 			return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 		fi
@@ -79,7 +79,7 @@ function _add_major_versions {
 			return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 		fi
 
-		local product_major_version=$(jq --raw-output ".[].productVersion" "${quarterly_release_json_file}" | sed "s/\.[0-9]\+//");
+		local product_major_version=$(jq --raw-output ".[].productVersion" "${quarterly_release_json_file}" | sed --expression "s/\.[0-9]\+//")
 
 		jq "map(
 				. + {productMajorVersion: \"${product_major_version}\"}
@@ -101,7 +101,7 @@ function _get_database_schema_version {
 			"$(get_product_version_without_lts_suffix "${product_version}")" \
 			"${repository}" &> /dev/null
 
-		if [ "${?}" -ne 0 ]
+		if [[ "${?}" -ne 0 ]]
 		then
 			rm --force "${_PROMOTION_DIR}/PortalUpgradeProcessRegistryImpl.java"
 
@@ -142,7 +142,7 @@ function _get_general_availability_date {
 
 	release_properties_file=$(lc_download "https://releases.liferay.com/${product_name}/${product_version}/release.properties")
 
-	if [ "${?}" -ne 0 ]
+	if [[ "${?}" -ne 0 ]]
 	then
 		echo ""
 
@@ -199,7 +199,7 @@ function _get_supported_product_group_versions {
 	local quarter=$(get_release_quarter "${latest_product_version}")
 	local year=$(get_release_year "${latest_product_version}")
 
-	if [ "${quarter}" -lt 4 ]
+	if [[ "${quarter}" -lt 4 ]]
 	then
 		quarter=$((quarter + 1))
 	else
@@ -255,7 +255,7 @@ function _is_supported_product_version {
 
 	if [ "${LIFERAY_RELEASE_TEST_MODE}" == "true" ]
 	then
-		today="${LIFERAY_RELEASE_TEST_DATE}"
+		today=${LIFERAY_RELEASE_TEST_DATE}
 	fi
 
 	if [[ "${today}" > "${end_of_premium_support_date}" ]]
@@ -267,7 +267,7 @@ function _is_supported_product_version {
 }
 
 function _merge_json_snippets {
-	if (! jq --slurp add $(ls "${_PROMOTION_DIR}"/*.json | sort --reverse) > "${_PROMOTION_DIR}/releases.json")
+	if ! jq --slurp add $(ls "${_PROMOTION_DIR}"/*.json | sort --reverse) > "${_PROMOTION_DIR}/releases.json"
 	then
 		lc_log ERROR "Detected invalid JSON."
 
@@ -298,14 +298,14 @@ function _process_new_product {
 		fi
 	fi
 
-	if (grep "${_PRODUCT_VERSION}" "${releases_json}")
+	if grep "${_PRODUCT_VERSION}" "${releases_json}"
 	then
 		lc_log INFO "The version ${_PRODUCT_VERSION} is already in releases.json."
 
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
 
-	local product_group_version="$(get_product_group_version)"
+	local product_group_version=$(get_product_group_version)
 
 	jq "map(
 			if .product == \"${LIFERAY_RELEASE_PRODUCT_NAME}\" and .productGroupVersion == \"${product_group_version}\"
@@ -319,40 +319,6 @@ function _process_new_product {
 		)" "${releases_json}" > "${releases_json}.tmp" && mv "${releases_json}.tmp" "${releases_json}"
 
 	_process_product_version "${LIFERAY_RELEASE_PRODUCT_NAME}" "${_PRODUCT_VERSION}"
-}
-
-function _process_products {
-	for product_name in "dxp" "portal"
-	do
-		local product_version_list_html
-
-		product_version_list_html=$(download_product_version_list_html "${product_name}")
-
-		if [ "${?}" -ne 0 ]
-		then
-			lc_log ERROR "Unable to download the product version list."
-
-			return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
-		fi
-
-		for product_version in $(echo -en "${product_version_list_html}" | \
-			grep \
-				--extended-regexp \
-				--only-matching \
-				"(20[0-9]+\.q[0-9]\.[0-9]+(-lts)?|7\.[0-9]+\.[0-9]+[a-z0-9\.-]+)" | \
-			tr --delete '/' | \
-			uniq)
-		do
-			if [ "${product_name}" == "dxp" ] &&
-			   [[ $(echo "${product_version}" | grep "7.4.13-u") ]] &&
-			   [[ $(get_release_version_trivial "${product_version}") -gt 112 ]]
-			then
-				continue
-			fi
-
-			_process_product_version "${product_name}" "${product_version}"
-		done
-	done
 }
 
 function _process_product_version {
@@ -392,15 +358,49 @@ function _process_product_version {
 	[
 	    {
 	        "product": "${product_name}",
-	        "productGroupVersion": "$(echo "${product_version}" | sed --regexp-extended "s@(^[0-9]+\.[0-9a-z]+)\..*@\1@")",
+	        "productGroupVersion": "$(echo "${product_version}" | sed --regexp-extended --expression "s@(^[0-9]+\.[0-9a-z]+)\..*@\1@")",
 	        "productVersion": "$(lc_get_property "${release_properties_file}" liferay.product.version)",
 	        "promoted": "false",
-	        "releaseKey": "$(echo "${product_name}-${product_version}" | sed "s/\([0-9]\+\)\.\([0-9]\+\)\.[0-9]\+\(-\|[^0-9]\)/\1.\2\3/g" | sed --expression "s/portal-7\.4\.[0-9]*-ga/portal-7.4-ga/")",
+	        "releaseKey": "$(echo "${product_name}-${product_version}" | sed --expression "s/\([0-9]\+\)\.\([0-9]\+\)\.[0-9]\+\(-\|[^0-9]\)/\1.\2\3/g" | sed --expression "s/portal-7\.4\.[0-9]*-ga/portal-7.4-ga/")",
 	        "targetPlatformVersion": "$(lc_get_property "${release_properties_file}" target.platform.version)",
 	        "url": "https://releases-cdn.liferay.com/${product_name}/${product_version}"
 	    }
 	]
 	END
+}
+
+function _process_products {
+	for product_name in "dxp" "portal"
+	do
+		local product_version_list_html
+
+		product_version_list_html=$(download_product_version_list_html "${product_name}")
+
+		if [[ "${?}" -ne 0 ]]
+		then
+			lc_log ERROR "Unable to download the product version list."
+
+			return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+		fi
+
+		for product_version in $(echo -en "${product_version_list_html}" | \
+			grep \
+				--extended-regexp \
+				--only-matching \
+				"(20[0-9]+\.q[0-9]\.[0-9]+(-lts)?|7\.[0-9]+\.[0-9]+[a-z0-9\.-]+)" | \
+			tr --delete '/' | \
+			uniq)
+		do
+			if [ "${product_name}" == "dxp" ] &&
+			   [[ $(echo "${product_version}" | grep "7.4.13-u") ]] &&
+			   [[ $(get_release_version_trivial "${product_version}") -gt 112 ]]
+			then
+				continue
+			fi
+
+			_process_product_version "${product_name}" "${product_version}"
+		done
+	done
 }
 
 function _promote_product_versions {
@@ -409,13 +409,16 @@ function _promote_product_versions {
 		while read -r group_version || [ -n "${group_version}" ]
 		do
 			# shellcheck disable=SC2010
-			last_version=$(ls "${_PROMOTION_DIR}" | grep "${product_name}-${group_version}" | tail --lines=1 2>/dev/null)
+			last_version=$( \
+				ls "${_PROMOTION_DIR}" | \
+				grep "${product_name}-${group_version}" | \
+				tail --lines=1 2> /dev/null)
 
 			if [ -n "${last_version}" ]
 			then
 				lc_log INFO "Promoting ${last_version}."
 
-				sed --in-place 's/"promoted": "false"/"promoted": "true"/' "${_PROMOTION_DIR}/${last_version}"
+				sed --expression "s/\"promoted\": \"false\"/\"promoted\": \"true\"/" --in-place "${_PROMOTION_DIR}/${last_version}"
 			else
 				lc_log INFO "No product version found to promote for ${product_name}-${group_version}."
 			fi

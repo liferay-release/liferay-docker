@@ -3,7 +3,7 @@
 source ./_liferay_common.sh
 
 function main {
-	local workspace_dir="${PWD}"
+	local workspace_dir=${PWD}
 
 	local current_job=$(basename "${PWD}")
 
@@ -76,7 +76,7 @@ function main {
 	local liferay_common_cache_dir="${HOME}/.liferay-common-cache"
 
 	if [ -d "${liferay_common_cache_dir}" ] &&
-	   [ $(du --bytes --summarize "${liferay_common_cache_dir}" | cut --fields=1) -gt 10737418240 ]
+	   [[ "$(du --bytes --summarize "${liferay_common_cache_dir}" | cut --fields=1)" -gt 10737418240 ]]
 	then
 		find "${liferay_common_cache_dir}" \
 			-mindepth 1 \

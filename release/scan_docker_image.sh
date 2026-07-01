@@ -22,19 +22,6 @@ function main {
 	lc_time_run _scan_docker_image
 }
 
-function set_liferay_docker_image_name {
-	export LIFERAY_DOCKER_IMAGE_NAME="liferay/release-candidates:${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}"
-
-	if [ "$(get_release_output)" == "nightly" ]
-	then
-		LIFERAY_DOCKER_IMAGE_NAME="liferay/dxp:7.4.13.nightly"
-	fi
-
-	lc_log INFO "Setting Liferay Docker image name to ${LIFERAY_DOCKER_IMAGE_NAME}"
-
-	echo "LIFERAY_DOCKER_IMAGE_NAME=${LIFERAY_DOCKER_IMAGE_NAME}" > "/tmp/liferay_docker_image_name.properties"
-}
-
 function print_help {
 	echo "Usage: LIFERAY_DOCKER_IMAGE_NAME=<<liferay_docker_image_name>> ${0}"
 	echo ""
@@ -47,6 +34,19 @@ function print_help {
 	echo "Example: LIFERAY_DOCKER_IMAGE_NAME=liferay/release-candidates:2025.q1.12-123456789 ${0}"
 
 	exit "${LIFERAY_COMMON_EXIT_CODE_HELP}"
+}
+
+function set_liferay_docker_image_name {
+	export LIFERAY_DOCKER_IMAGE_NAME="liferay/release-candidates:${_PRODUCT_VERSION}-${_BUILD_TIMESTAMP}"
+
+	if [ "$(get_release_output)" == "nightly" ]
+	then
+		LIFERAY_DOCKER_IMAGE_NAME="liferay/dxp:7.4.13.nightly"
+	fi
+
+	lc_log INFO "Setting Liferay Docker image name to ${LIFERAY_DOCKER_IMAGE_NAME}"
+
+	echo "LIFERAY_DOCKER_IMAGE_NAME=${LIFERAY_DOCKER_IMAGE_NAME}" > "/tmp/liferay_docker_image_name.properties"
 }
 
 function _is_info_sec_jira_issue_created {
@@ -66,16 +66,16 @@ function _notify_info_sec {
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	fi
 
-	local scan_results=$(echo "${1}" | sed --quiet "/^Scan results/,\$p")
+	local scan_results=$(echo "${1}" | sed --expression "/^Scan results/,\$p" --quiet)
 
-	LIFERAY_INFO_SEC_JIRA_ISSUE_KEY="$( \
+	LIFERAY_INFO_SEC_JIRA_ISSUE_KEY=$( \
 		add_jira_issue_with_description \
 			"Sec R&D-Sec Engineering" \
 			"Hi team, the Prisma Cloud Scan of image ${LIFERAY_DOCKER_IMAGE_NAME} had the following output: ${scan_results}" \
 			"$(get_due_date "3")" \
 			"Request" \
 			"LRINFOSEC" \
-			"${LIFERAY_DOCKER_IMAGE_NAME} - Release Candidate | Prisma Cloud Scan Vulnerabilities")"
+			"${LIFERAY_DOCKER_IMAGE_NAME} - Release Candidate | Prisma Cloud Scan Vulnerabilities")
 
 	if ! _is_info_sec_jira_issue_created
 	then
@@ -122,13 +122,13 @@ function _scan_docker_image {
 
 	local auth_response=$( \
 		curl \
-			"${api_url}/login" \
 			--data "${data}" \
 			--header "Content-Type: application/json" \
 			--request POST \
-			--silent)
+			--silent \
+			"${api_url}/login")
 
-	if (! echo "${auth_response}" | grep --quiet "login_successful")
+	if ! echo "${auth_response}" | grep --quiet "login_successful"
 	then
 		lc_log ERROR "Unable to authenticate with ${api_url}."
 
@@ -139,10 +139,10 @@ function _scan_docker_image {
 	local token=$(echo "${auth_response}" | jq --raw-output '.token')
 
 	curl \
-		"${console_url}/api/v1/util/twistcli" \
 		--header "x-redlock-auth: ${token}" \
 		--output twistcli \
-		--silent
+		--silent \
+		"${console_url}/api/v1/util/twistcli"
 
 	if [ ! -f "./twistcli" ]
 	then
@@ -153,7 +153,7 @@ function _scan_docker_image {
 
 	chmod +x ./twistcli
 
-	local scan_result="${LIFERAY_COMMON_EXIT_CODE_OK}"
+	local scan_result=${LIFERAY_COMMON_EXIT_CODE_OK}
 
 	lc_log INFO "Scanning ${LIFERAY_DOCKER_IMAGE_NAME}."
 
@@ -174,8 +174,8 @@ function _scan_docker_image {
 
 	lc_log INFO "${scan_output}"
 
-	if [[ ${scan_output} == *"Compliance threshold check results: PASS"* ]] &&
-	   [[ ${scan_output} == *"Vulnerability threshold check results: PASS"* ]]
+	if [[ "${scan_output}" == *"Compliance threshold check results: PASS"* ]] &&
+	   [[ "${scan_output}" == *"Vulnerability threshold check results: PASS"* ]]
 	then
 		lc_log INFO "The result of scan for ${LIFERAY_DOCKER_IMAGE_NAME} is: PASS."
 	else
@@ -203,14 +203,14 @@ function _scan_docker_image {
 			head --lines=1)
 
 		cat <<- END > scan_failure_slack_message.txt
-		*Affected release:* \`$(echo "${LIFERAY_DOCKER_IMAGE_NAME}" | sed "s/.*://")\`
+		*Affected release:* \`$(echo "${LIFERAY_DOCKER_IMAGE_NAME}" | sed --expression "s/.*://")\`
 
 		*Prisma Cloud scan result:* ${prisma_cloud_link}
 
 		${info_sec_jira_issue_message}
 		END
 
-		scan_result="${LIFERAY_COMMON_EXIT_CODE_BAD}"
+		scan_result=${LIFERAY_COMMON_EXIT_CODE_BAD}
 	fi
 
 	rm --force ./twistcli
