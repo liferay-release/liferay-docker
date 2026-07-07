@@ -12,12 +12,6 @@ function main {
 		touch /opt/liferay/data/.elasticsearch.initialized
 	fi
 
-	if [ "${LIFERAY_DISABLE_TRIAL_LICENSE}" == "true" ]
-	then
-		rm --force /opt/liferay/data/license/trial-commerce-enterprise-license-*.li
-		rm --force /opt/liferay/deploy/trial-dxp-license-*.xml
-	fi
-
 	if [ -n "${LIFERAY_JDBC_PERIOD_DEFAULT_PERIOD_PASSWORD_FILE}" ]
 	then
 		LIFERAY_JDBC_PERIOD_DEFAULT_PERIOD_PASSWORD=$(cat "${LIFERAY_JDBC_PERIOD_DEFAULT_PERIOD_PASSWORD_FILE}")
