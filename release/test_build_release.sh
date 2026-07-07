@@ -14,6 +14,7 @@ function main {
 	test_build_release_bundle_smaller_than_1_gb_300_mb
 	test_build_release_handle_automated_build
 	test_build_release_has_packaged_bundles
+	test_build_release_has_slack_message
 	test_build_release_not_handle_automated_build
 
 	test_build_hotfix_main || exit "${LIFERAY_COMMON_EXIT_CODE_BAD}"
@@ -119,6 +120,12 @@ function test_build_release_has_packaged_bundles {
 		"1"
 }
 
+function test_build_release_has_slack_message {
+	assert_equals \
+		"$(grep --count "^\*Version:\* \`2025.q4.1-[0-9]*\`$" "${_RELEASE_ROOT_DIR}/build_release_slack_message.txt")" \
+		"1"
+}
+
 function test_build_release_not_handle_automated_build {
 	_test_build_release_not_handle_automated_build "hotfix" "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	_test_build_release_not_handle_automated_build "nightly" "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
@@ -155,6 +162,8 @@ function _clean_up_release_data {
 		| xargs --no-run-if-empty kill -9
 
 	rm --force --recursive "${_RELEASE_ROOT_DIR}/release-data"
+
+	rm --force "build_release_slack_message.txt"
 }
 
 function _test_build_release_not_handle_automated_build {
