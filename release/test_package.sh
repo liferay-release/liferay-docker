@@ -43,7 +43,7 @@ function set_up {
 function tear_down {
 	common_tear_down
 
-	rm --force "${_BUILD_DIR}/"liferay-dxp-tomcat-*.zip
+	rm --force "${_BUILD_DIR}"/liferay-dxp-tomcat-*.zip
 	rm --force --recursive "${_BUILD_DIR}/release"
 
 	unset LIFERAY_PORTAL_REPOSITORY_NAME
@@ -88,7 +88,7 @@ function test_package_not_generate_release_properties_file {
 }
 
 function test_package_not_package_jakarta_transform_dependencies {
-	local original_projects_dir="${_PROJECTS_DIR}"
+	local original_projects_dir=${_PROJECTS_DIR}
 
 	_PROJECTS_DIR="${_BUILD_DIR}/jakarta-transform-dependencies"
 
@@ -107,11 +107,11 @@ function test_package_not_package_jakarta_transform_dependencies {
 	_test_package_not_package_jakarta_transform_dependencies "2025.q4.0" "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 	_test_package_not_package_jakarta_transform_dependencies "2026.q1.1-lts" "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 
-	_PROJECTS_DIR="${original_projects_dir}"
+	_PROJECTS_DIR=${original_projects_dir}
 }
 
 function test_package_package_jakarta_transform_dependencies {
-	local original_projects_dir="${_PROJECTS_DIR}"
+	local original_projects_dir=${_PROJECTS_DIR}
 
 	_PROJECTS_DIR="${_BUILD_DIR}/jakarta-transform-dependencies"
 
@@ -127,7 +127,7 @@ function test_package_package_jakarta_transform_dependencies {
 
 	rm --force --recursive "${_PROJECTS_DIR}"
 
-	_PROJECTS_DIR="${original_projects_dir}"
+	_PROJECTS_DIR=${original_projects_dir}
 }
 
 function test_package_package_wars {
@@ -243,7 +243,7 @@ function _test_package_not_generate_javadocs {
 }
 
 function _test_package_not_package_jakarta_transform_dependencies {
-	_PRODUCT_VERSION="${1}"
+	_PRODUCT_VERSION=${1}
 
 	package_jakarta_transform_dependencies &> /dev/null
 
@@ -255,7 +255,7 @@ function _test_package_not_package_jakarta_transform_dependencies {
 }
 
 function _test_package_package_jakarta_transform_dependencies {
-	_PRODUCT_VERSION="${1}"
+	_PRODUCT_VERSION=${1}
 
 	package_jakarta_transform_dependencies &> /dev/null
 
