@@ -420,7 +420,7 @@ function generate_pom_release_bom_test {
 
 	echo "" >> "${pom_file_name}"
 
-	local dependencies=(
+	local dependencies_list=(
 		biz.aQute.bnd:biz.aQute.bnd:3.5.0
 		biz.aQute.bnd:biz.aQute.bndlib:3.5.0
 		com.liferay.portal:com.liferay.portal.test
@@ -434,7 +434,7 @@ function generate_pom_release_bom_test {
 		org.slf4j:log4j-over-slf4j:1.7.25
 	)
 
-	local sorted_dependencies=($(printf "%s\n" "${dependencies[@]}" | sort --field-separator=':' --key=2,2))
+	local sorted_dependencies_list=($(printf "%s\n" "${dependencies_list[@]}" | sort --field-separator=':' --key=2,2))
 
 	local artifact_urls=""
 
@@ -450,7 +450,7 @@ function generate_pom_release_bom_test {
 		artifact_urls+=$'\n'
 	done
 
-	for dependency in "${sorted_dependencies[@]}"
+	for dependency in "${sorted_dependencies_list[@]}"
 	do
 		local artifact_id=$(echo "${dependency}" | cut --delimiter=':' --fields=2)
 		local group_id=$(echo "${dependency}" | cut --delimiter=':' --fields=1)
