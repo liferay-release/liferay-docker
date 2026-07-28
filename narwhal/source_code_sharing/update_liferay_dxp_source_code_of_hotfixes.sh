@@ -367,16 +367,13 @@ function get_hotfixes_url {
 
 	local partial_url="${release_version}"
 
-	if [[ "${release_version}" != *-u* ]] && [[ "${release_version}" != *q* ]]
-	then
-		partial_url="${release_version}/hotfix"
-	elif [[ $(echo "${release_version}" | cut --delimiter="." --fields 1) -ge 2025 ]] &&
+	if [[ $(echo "${release_version}" | cut --delimiter="." --fields 1) -ge 2025 ]] &&
 			[[ "${release_version}" == *q1* ]]
 	then
 		partial_url="${release_version}-lts"
 	fi
 
-	echo "liferay-releases-hotfix/${partial_url}"
+	echo "liferay-hotfixes/${partial_url}"
 }
 
 function get_hotfix_zip_list_file {
@@ -398,7 +395,7 @@ function get_hotfix_zip_list_file {
 
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
 	else
-		lc_log DEBUG "Generating the zip list file ${zip_list_file} from the liferay-releases-hotfix bucket."
+		lc_log DEBUG "Generating the zip list file ${zip_list_file} from the liferay-hotfixes bucket."
 
 		gsutil ls "gs://$(get_hotfixes_url ${release_version})/*" | \
 			grep --extended-regexp "liferay-(dxp|hotfix)" | \
