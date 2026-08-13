@@ -24,9 +24,7 @@ function set_up {
 	export _TEST_DERIVED_IMAGE="liferay/node-runner-derived:test"
 	export _TEST_NODE_RUNNER_IMAGE="liferay/node-runner:test"
 
-	docker build \
-		--tag "${_TEST_NODE_RUNNER_IMAGE}" \
-		templates/node-runner &> /dev/null
+	docker build --tag "${_TEST_NODE_RUNNER_IMAGE}" templates/node-runner &> /dev/null
 
 	export _TEST_APP_DIR=$(mktemp --directory)
 
@@ -58,9 +56,7 @@ function set_up {
 	RUN npm install --no-workspaces
 	EOF
 
-	docker build \
-		--tag "${_TEST_DERIVED_IMAGE}" \
-		"${_TEST_APP_DIR}" &> /dev/null
+	docker build --tag "${_TEST_DERIVED_IMAGE}" "${_TEST_APP_DIR}" &> /dev/null
 }
 
 function tear_down {
@@ -82,15 +78,13 @@ function test_build_node_runner_image_derived_image_installs_dependencies {
 
 function test_build_node_runner_image_entrypoint_passes_arguments {
 	assert_equals \
-		"$(_test_build_node_runner_image_run "${_TEST_NODE_RUNNER_IMAGE}" echo "[LIFERAY_NODE_RUNNER_TEST] argument" | \
-			grep --fixed-strings "[LIFERAY_NODE_RUNNER_TEST] argument")" \
+		"$(_test_build_node_runner_image_run "${_TEST_NODE_RUNNER_IMAGE}" echo "[LIFERAY_NODE_RUNNER_TEST] argument" | grep --fixed-strings "[LIFERAY_NODE_RUNNER_TEST] argument")" \
 		"[LIFERAY_NODE_RUNNER_TEST] argument"
 }
 
 function test_build_node_runner_image_entrypoint_starts_default_command {
 	assert_equals \
-		"$(_test_build_node_runner_image_run "${_TEST_DERIVED_IMAGE}" | \
-			grep --fixed-strings "[LIFERAY_NODE_RUNNER_TEST] started")" \
+		"$(_test_build_node_runner_image_run "${_TEST_DERIVED_IMAGE}" | grep --fixed-strings "[LIFERAY_NODE_RUNNER_TEST] started")" \
 		"[LIFERAY_NODE_RUNNER_TEST] started"
 }
 
@@ -115,7 +109,7 @@ function _test_build_node_runner_image_node_version {
 }
 
 function _test_build_node_runner_image_run {
-	local image="${1}"
+	local image=${1}
 
 	shift
 
@@ -126,11 +120,7 @@ function _test_build_node_runner_image_run {
 		environment_args+=("--env" "NODE_VERSION=${NODE_VERSION}")
 	fi
 
-	docker run \
-		"${environment_args[@]}" \
-		--rm \
-		"${image}" \
-		"${@}" 2>&1
+	docker run "${environment_args[@]}" --rm "${image}" "${@}" 2>&1
 }
 
 main "${@}"
