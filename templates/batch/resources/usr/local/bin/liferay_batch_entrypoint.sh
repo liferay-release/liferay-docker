@@ -260,9 +260,20 @@ function wait_for_import_task {
 
 	rm /tmp/liferay_batch_entrypoint.items.json
 
-	if [ "${status}" == "FAILED" ]
+	if [ "${status}" == "FAILED" ] || [ "${status}" == "NOT_FOUND" ]
 	then
-		echo "Batch import task failed. Check Liferay logs for more information."
+		echo "Batch import task ${external_reference_code} reported ${status}. ${LIFERAY_BATCH_HTTP_BODY}"
+
+		return 1
+	fi
+
+	local failed_items
+
+	failed_items=$(jq --raw-output '.failedItems//[] | length' <<< "${LIFERAY_BATCH_HTTP_BODY}")
+
+	if [ "${failed_items}" != "0" ]
+	then
+		echo "Batch import task ${external_reference_code} completed with ${failed_items} failed item(s). ${LIFERAY_BATCH_HTTP_BODY}"
 
 		return 1
 	fi
