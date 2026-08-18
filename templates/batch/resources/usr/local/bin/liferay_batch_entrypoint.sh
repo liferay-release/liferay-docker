@@ -88,7 +88,9 @@ function main {
 
 	log "OAuth Application ERC: ${LIFERAY_BATCH_OAUTH_APP_ERC}"
 
-	local lxc_dxp_main_domain=$(cat "${LIFERAY_ROUTES_DXP}/com.liferay.lxc.dxp.main.domain")
+	local lxc_dxp_main_domain
+
+	lxc_dxp_main_domain=$(cat "${LIFERAY_ROUTES_DXP}/com.liferay.lxc.dxp.main.domain")
 
 	if [ ! -n "${lxc_dxp_main_domain}" ]
 	then
@@ -127,11 +129,15 @@ function process_batch_data_file {
 
 	log "Processing: ${file_name}"
 
-	local href=$(jq --raw-output ".actions.createBatch.href" "${file_name}")
+	local href
+
+	href=$(jq --raw-output ".actions.createBatch.href" "${file_name}")
 
 	if [ "${href}" == "null" ]
 	then
-		local class_name=$(jq --raw-output ".configuration.className" "${file_name}")
+		local class_name
+
+		class_name=$(jq --raw-output ".configuration.className" "${file_name}")
 
 		if [ "${class_name}" == "null" ]
 		then
@@ -156,7 +162,9 @@ function process_batch_data_file {
 
 	log "Items: $(</tmp/liferay_batch_entrypoint.items.json)"
 
-	local parameters=$(jq --raw-output '.configuration.parameters | [map_values(. | @uri) | to_entries[] | .key + "=" + .value] | join("&")' "${file_name}" 2> /dev/null)
+	local parameters
+
+	parameters=$(jq --raw-output '.configuration.parameters | [map_values(. | @uri) | to_entries[] | .key + "=" + .value] | join("&")' "${file_name}" 2> /dev/null)
 
 	if [ "${parameters}" != "" ]
 	then
@@ -195,7 +203,9 @@ function process_batch_data_file {
 		return 1
 	fi
 
-	local external_reference_code=$(jq --raw-output ".externalReferenceCode" <<< "${LIFERAY_BATCH_HTTP_BODY}")
+	local external_reference_code
+
+	external_reference_code=$(jq --raw-output ".externalReferenceCode" <<< "${LIFERAY_BATCH_HTTP_BODY}")
 
 	wait_for_import_task "${external_reference_code}"
 
@@ -218,11 +228,15 @@ function process_site_initializer {
 
 	log "HREF: ${href}"
 
-	local site=$(jq --raw-output '.' "${LIFERAY_BATCH_SITE_INITIALIZER_DIR}/site-initializer.json")
+	local site
+
+	site=$(jq --raw-output '.' "${LIFERAY_BATCH_SITE_INITIALIZER_DIR}/site-initializer.json")
 
 	log "Site: ${site}"
 
-	local external_reference_code=$(jq --raw-output ".externalReferenceCode" <<< "${site}")
+	local external_reference_code
+
+	external_reference_code=$(jq --raw-output ".externalReferenceCode" <<< "${site}")
 
 	if ! execute_curl \
 			--form "file=@${LIFERAY_BATCH_SITE_INITIALIZER_DIR}/site-initializer.zip;type=application/zip" \
