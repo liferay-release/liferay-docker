@@ -1,16 +1,79 @@
 #!/bin/bash
 
+function execute_curl {
+	local response
+
+	response=$(curl --silent --write-out "\n%{http_code}" "${@}")
+
+	if [ "${?}" -gt 0 ]
+	then
+		LIFERAY_BATCH_HTTP_BODY="Unable to complete the request."
+		LIFERAY_BATCH_HTTP_STATUS="000"
+
+		return 1
+	fi
+
+	LIFERAY_BATCH_HTTP_BODY="${response%$'\n'*}"
+	LIFERAY_BATCH_HTTP_STATUS="${response##*$'\n'}"
+
+	if [ "${LIFERAY_BATCH_HTTP_STATUS}" == "000" ] ||
+	   [ "${LIFERAY_BATCH_HTTP_STATUS}" -ge 400 ]
+	then
+		return 1
+	fi
+
+	return 0
+}
+
+function log {
+	if [ "${LIFERAY_STRUCTURED_LOGGING_ENABLED}" != "true" ]
+	then
+		echo "${1}"
+
+		return
+	fi
+
+	#
+	# The message is piped rather than passed with --arg. A log line can carry an
+	# entire batch data file's items, which is well past ARG_MAX, and as an
+	# argument that fails the exec and loses the line entirely.
+	#
+
+	printf "%s" "${1}" | jq \
+		--arg severity "${2:-INFO}" \
+		--arg timestamp "$(date --utc +%Y-%m-%dT%H:%M:%SZ)" \
+		--compact-output \
+		--raw-input \
+		--slurp \
+		'{"message": ., "script": "liferay_batch_entrypoint.sh", "severity": $severity, "timestamp": $timestamp}'
+}
+
 function main {
 	if [ ! -n "${LIFERAY_BATCH_OAUTH_APP_ERC}" ]
 	then
-		echo "Set the environment variable LIFERAY_BATCH_OAUTH_APP_ERC."
+		log "Set the environment variable LIFERAY_BATCH_OAUTH_APP_ERC." ERROR
 
 		exit 1
+	fi
+
+	if [ ! -n "${LIFERAY_BATCH_DIR}" ]
+	then
+		LIFERAY_BATCH_DIR="/opt/liferay/batch"
+	fi
+
+	if [ ! -n "${LIFERAY_BATCH_SITE_INITIALIZER_DIR}" ]
+	then
+		LIFERAY_BATCH_SITE_INITIALIZER_DIR="/opt/liferay/site-initializer"
 	fi
 
 	if [ ! -n "${LIFERAY_BATCH_CURL_OPTIONS}" ]
 	then
 		LIFERAY_BATCH_CURL_OPTIONS=" "
+	fi
+
+	if [ ! -n "${LIFERAY_BATCH_MAX_WAIT_SECONDS}" ]
+	then
+		LIFERAY_BATCH_MAX_WAIT_SECONDS=540
 	fi
 
 	if [ ! -n "${LIFERAY_ROUTES_CLIENT_EXTENSION}" ]
@@ -23,228 +86,294 @@ function main {
 		LIFERAY_ROUTES_DXP="/etc/liferay/lxc/dxp-metadata"
 	fi
 
-	echo "OAuth Application ERC: ${LIFERAY_BATCH_OAUTH_APP_ERC}"
-	echo ""
+	log "OAuth Application ERC: ${LIFERAY_BATCH_OAUTH_APP_ERC}"
 
-	local lxc_dxp_main_domain=$(cat "${LIFERAY_ROUTES_DXP}/com.liferay.lxc.dxp.main.domain")
+	local lxc_dxp_main_domain
+
+	lxc_dxp_main_domain=$(cat "${LIFERAY_ROUTES_DXP}/com.liferay.lxc.dxp.main.domain")
 
 	if [ ! -n "${lxc_dxp_main_domain}" ]
 	then
 		lxc_dxp_main_domain=$(cat "${LIFERAY_ROUTES_DXP}/com.liferay.lxc.dxp.mainDomain")
 	fi
 
-	local lxc_dxp_server_protocol=$(cat "${LIFERAY_ROUTES_DXP}/com.liferay.lxc.dxp.server.protocol")
-	local oauth2_client_id=$(cat "${LIFERAY_ROUTES_CLIENT_EXTENSION}/${LIFERAY_BATCH_OAUTH_APP_ERC}.oauth2.headless.server.client.id")
-	local oauth2_client_secret=$(cat "${LIFERAY_ROUTES_CLIENT_EXTENSION}/${LIFERAY_BATCH_OAUTH_APP_ERC}.oauth2.headless.server.client.secret")
-	local oauth2_token_uri=$(cat "${LIFERAY_ROUTES_CLIENT_EXTENSION}/${LIFERAY_BATCH_OAUTH_APP_ERC}.oauth2.token.uri")
+	LIFERAY_BATCH_DXP_URL="$(cat "${LIFERAY_ROUTES_DXP}/com.liferay.lxc.dxp.server.protocol")://${lxc_dxp_main_domain}"
+	LIFERAY_BATCH_OAUTH2_CLIENT_ID=$(cat "${LIFERAY_ROUTES_CLIENT_EXTENSION}/${LIFERAY_BATCH_OAUTH_APP_ERC}.oauth2.headless.server.client.id")
+	LIFERAY_BATCH_OAUTH2_CLIENT_SECRET=$(cat "${LIFERAY_ROUTES_CLIENT_EXTENSION}/${LIFERAY_BATCH_OAUTH_APP_ERC}.oauth2.headless.server.client.secret")
+	LIFERAY_BATCH_OAUTH2_TOKEN_URI=$(cat "${LIFERAY_ROUTES_CLIENT_EXTENSION}/${LIFERAY_BATCH_OAUTH_APP_ERC}.oauth2.token.uri")
 
-	echo "LXC DXP Main Domain: ${lxc_dxp_main_domain}"
-	echo "LXC DXP Server Protocol: ${lxc_dxp_server_protocol}"
-	echo ""
-	echo "OAuth Client ID: ${oauth2_client_id}"
-	echo "OAuth Client Secret: ${oauth2_client_secret}"
-	echo "OAuth Token URI: ${oauth2_token_uri}"
-	echo ""
+	log "DXP URL: ${LIFERAY_BATCH_DXP_URL}"
 
-	local http_status_code_file=$(mktemp)
-
-	local oauth2_token_response=$( \
-		curl \
-			--data "client_id=${oauth2_client_id}&client_secret=${oauth2_client_secret}&grant_type=client_credentials" \
-			--header "Content-type: application/x-www-form-urlencoded" \
-			--request POST \
-			--silent \
-			--write-out "%output{${http_status_code_file}}%{http_code}" \
-			${LIFERAY_BATCH_CURL_OPTIONS} \
-			"${lxc_dxp_server_protocol}://${lxc_dxp_main_domain}${oauth2_token_uri}")
-
-	local http_status_code=$(cat "${http_status_code_file}")
-
-	if [[ "${http_status_code}" -ge 400 ]]
+	if ! request_oauth2_access_token
 	then
-		echo "POST ${lxc_dxp_server_protocol}://${lxc_dxp_main_domain}${oauth2_token_uri} errored with HTTP status ${http_status_code}."
-
 		exit 1
 	fi
 
-	echo "OAuth Token Response: ${oauth2_token_response}"
-	echo ""
-
-	local oauth2_access_token=$(jq --raw-output ".access_token" <<< "${oauth2_token_response}")
-
-	if [ "${oauth2_access_token}" == "" ]
+	if ! process_site_initializer
 	then
-		echo "Unable to get OAuth 2 access token."
-
 		exit 1
 	fi
 
-	if [ -e "/opt/liferay/site-initializer/site-initializer.json" ]
-	then
-		echo "Processing: /opt/liferay/site-initializer/site-initializer.json"
-		echo ""
-
-		local href="/o/headless-site/v1.0/sites/by-external-reference-code/"
-
-		echo "HREF: ${href}"
-
-		local site=$(jq --raw-output '.' /opt/liferay/site-initializer/site-initializer.json)
-
-		echo "Site: ${site}"
-
-		local external_reference_code=$(jq --raw-output ".externalReferenceCode" <<< "${site}")
-
-		local http_status_code_file=$(mktemp)
-
-		local put_response=$( \
-			curl \
-				--form "file=@/opt/liferay/site-initializer/site-initializer.zip;type=application/zip" \
-				--form "site=${site}" \
-				--header "Accept: application/json" \
-				--header "Authorization: Bearer ${oauth2_access_token}" \
-				--header "Content-Type: multipart/form-data" \
-				--request PUT \
-				--silent \
-				--write-out "%output{${http_status_code_file}}%{http_code}" \
-				${LIFERAY_BATCH_CURL_OPTIONS} \
-				"${lxc_dxp_server_protocol}://${lxc_dxp_main_domain}${href}${external_reference_code}")
-
-		local http_status_code=$(cat "${http_status_code_file}")
-
-		if [[ "${http_status_code}" -ge 400 ]]
-		then
-			echo "PUT ${lxc_dxp_server_protocol}://${lxc_dxp_main_domain}${href}${external_reference_code} errored with HTTP status ${http_status_code}."
-
-			exit 1
-		fi
-
-		echo "PUT Response: ${put_response}"
-		echo ""
-
-		if [ ! -n "${put_response}" ]
-		then
-			echo "Received empty PUT response. Check Liferay logs for more information."
-
-			exit 1
-		fi
-	fi
-
-	find /opt/liferay/batch -type f -name "*.batch-engine-data.json" -print0 2> /dev/null | LC_ALL=C sort --zero-terminated |
+	find ${LIFERAY_BATCH_DIR} -type f -name "*.batch-engine-data.json" -print0 2> /dev/null | LC_ALL=C sort --zero-terminated |
 	while IFS= read -r -d "" file_name
 	do
-		echo "Processing: ${file_name}"
-		echo ""
-
-		local href=$(jq --raw-output ".actions.createBatch.href" "${file_name}")
-
-		if [ "${href}" == "null" ]
+		if ! process_batch_data_file "${file_name}"
 		then
-			local class_name=$(jq --raw-output ".configuration.className" "${file_name}")
-
-			if [ "${class_name}" == "null" ]
-			then
-				echo "Batch data file is missing configuration class name."
-
-				exit 1
-			fi
-
-			href="/o/headless-batch-engine/v1.0/import-task/${class_name}"
-		fi
-
-		href="${href#*://*/}"
-
-		if [[ ! ${href} =~ ^/.* ]]
-		then
-			href="/${href}"
-		fi
-
-		echo "HREF: ${href}"
-
-		jq --raw-output ".items" "${file_name}" > /tmp/liferay_batch_entrypoint.items.json
-
-		echo "Items: $(</tmp/liferay_batch_entrypoint.items.json)"
-
-		local parameters=$(jq --raw-output '.configuration.parameters | [map_values(. | @uri) | to_entries[] | .key + "=" + .value] | join("&")' "${file_name}" 2> /dev/null)
-
-		if [ "${parameters}" != "" ]
-		then
-			parameters="?${parameters}"
-		fi
-
-		echo "Parameters: ${parameters}"
-
-		local http_status_code_file=$(mktemp)
-
-		local post_response=$( \
-			curl \
-				--data @/tmp/liferay_batch_entrypoint.items.json \
-				--header "Accept: application/json" \
-				--header "Authorization: Bearer ${oauth2_access_token}" \
-				--header "Content-Type: application/json" \
-				--request POST \
-				--silent \
-				--write-out "%output{${http_status_code_file}}%{http_code}" \
-				${LIFERAY_BATCH_CURL_OPTIONS} \
-				"${lxc_dxp_server_protocol}://${lxc_dxp_main_domain}${href}${parameters}")
-
-		local http_status_code=$(cat "${http_status_code_file}")
-
-		if [[ "${http_status_code}" -ge 400 ]]
-		then
-			echo "POST ${lxc_dxp_server_protocol}://${lxc_dxp_main_domain}${href}${parameters} errored with HTTP status ${http_status_code}."
-
 			exit 1
 		fi
+	done
+}
 
-		echo "POST Response: ${post_response}"
-		echo ""
+function process_batch_data_file {
+	local file_name="${1}"
 
-		if [ ! -n "${post_response}" ]
+	log "Processing: ${file_name}"
+
+	local href
+
+	href=$(jq --raw-output ".actions.createBatch.href" "${file_name}")
+
+	if [ "${href}" == "null" ]
+	then
+		local class_name
+
+		class_name=$(jq --raw-output ".configuration.className" "${file_name}")
+
+		if [ "${class_name}" == "null" ]
 		then
-			echo "Received empty POST response. Check Liferay logs for more information."
+			log "Batch data file is missing configuration class name." ERROR
 
-			rm /tmp/liferay_batch_entrypoint.items.json
-
-			exit 1
+			return 1
 		fi
 
-		local external_reference_code=$(jq --raw-output ".externalReferenceCode" <<< "${post_response}")
+		href="/o/headless-batch-engine/v1.0/import-task/${class_name}"
+	fi
 
-		local status=$(jq --raw-output ".executeStatus//.status" <<< "${post_response}")
+	href="${href#*://*/}"
 
-		until [ "${status}" == "COMPLETED" ] || [ "${status}" == "FAILED" ] || [ "${status}" == "NOT_FOUND" ]
-		do
-			local http_status_code_file=$(mktemp)
+	if [[ ! ${href} =~ ^/.* ]]
+	then
+		href="/${href}"
+	fi
 
-			local get_response=$( \
-				curl \
-					--header "accept: application/json" \
-					--header "Authorization: Bearer ${oauth2_access_token}" \
-					--request 'GET' \
-					--silent \
-					--write-out "%output{${http_status_code_file}}%{http_code}" \
-					${LIFERAY_BATCH_CURL_OPTIONS} \
-					"${lxc_dxp_server_protocol}://${lxc_dxp_main_domain}/o/headless-batch-engine/v1.0/import-task/by-external-reference-code/${external_reference_code}")
+	log "HREF: ${href}"
 
-			if [[ "${http_status_code}" -ge 400 ]]
-			then
-				echo "GET ${lxc_dxp_server_protocol}://${lxc_dxp_main_domain}/o/headless-batch-engine/v1.0/import-task/by-external-reference-code/${external_reference_code} errored with HTTP status ${http_status_code}."
+	jq --raw-output ".items" "${file_name}" > /tmp/liferay_batch_entrypoint.items.json
 
-				exit 1
-			fi
+	log "Items: $(</tmp/liferay_batch_entrypoint.items.json)"
 
-			status=$(jq --raw-output '.executeStatus//.status' <<< "${get_response}")
+	local parameters
 
-			echo "Execute Status: ${status}"
-		done
+	parameters=$(jq --raw-output '.configuration.parameters | [map_values(. | @uri) | to_entries[] | .key + "=" + .value] | join("&")' "${file_name}" 2> /dev/null)
+
+	if [ "${parameters}" != "" ]
+	then
+		parameters="?${parameters}"
+	fi
+
+	log "Parameters: ${parameters}"
+
+	if ! refresh_oauth2_access_token
+	then
+		return 1
+	fi
+
+	if ! execute_curl \
+			--data @/tmp/liferay_batch_entrypoint.items.json \
+			--header "Accept: application/json" \
+			--header "Authorization: Bearer ${LIFERAY_BATCH_OAUTH2_ACCESS_TOKEN}" \
+			--header "Content-Type: application/json" \
+			--request POST \
+			${LIFERAY_BATCH_CURL_OPTIONS} \
+			"${LIFERAY_BATCH_DXP_URL}${href}${parameters}"
+	then
+		log "POST ${LIFERAY_BATCH_DXP_URL}${href}${parameters} errored with HTTP status ${LIFERAY_BATCH_HTTP_STATUS}. ${LIFERAY_BATCH_HTTP_BODY}" ERROR
+
+		return 1
+	fi
+
+	log "POST Response: ${LIFERAY_BATCH_HTTP_BODY}"
+
+	if [ ! -n "${LIFERAY_BATCH_HTTP_BODY}" ]
+	then
+		log "Received empty POST response. Check Liferay logs for more information." ERROR
 
 		rm /tmp/liferay_batch_entrypoint.items.json
 
-		if [ "${status}" == "FAILED" ]
-		then
-			echo "Batch import task failed. Check Liferay logs for more information."
+		return 1
+	fi
 
-			exit 1
+	local external_reference_code
+
+	external_reference_code=$(jq --raw-output ".externalReferenceCode" <<< "${LIFERAY_BATCH_HTTP_BODY}")
+
+	wait_for_import_task "${external_reference_code}"
+
+	local exit_code=${?}
+
+	rm /tmp/liferay_batch_entrypoint.items.json
+
+	return ${exit_code}
+}
+
+function process_site_initializer {
+	if [ ! -e "${LIFERAY_BATCH_SITE_INITIALIZER_DIR}/site-initializer.json" ]
+	then
+		return 0
+	fi
+
+	log "Processing: ${LIFERAY_BATCH_SITE_INITIALIZER_DIR}/site-initializer.json"
+
+	local href="/o/headless-site/v1.0/sites/by-external-reference-code/"
+
+	log "HREF: ${href}"
+
+	local site
+
+	site=$(jq --raw-output '.' "${LIFERAY_BATCH_SITE_INITIALIZER_DIR}/site-initializer.json")
+
+	log "Site: ${site}"
+
+	local external_reference_code
+
+	external_reference_code=$(jq --raw-output ".externalReferenceCode" <<< "${site}")
+
+	if ! execute_curl \
+			--form "file=@${LIFERAY_BATCH_SITE_INITIALIZER_DIR}/site-initializer.zip;type=application/zip" \
+			--form "site=${site}" \
+			--header "Accept: application/json" \
+			--header "Authorization: Bearer ${LIFERAY_BATCH_OAUTH2_ACCESS_TOKEN}" \
+			--header "Content-Type: multipart/form-data" \
+			--request PUT \
+			${LIFERAY_BATCH_CURL_OPTIONS} \
+			"${LIFERAY_BATCH_DXP_URL}${href}${external_reference_code}"
+	then
+		log "PUT ${LIFERAY_BATCH_DXP_URL}${href}${external_reference_code} errored with HTTP status ${LIFERAY_BATCH_HTTP_STATUS}. ${LIFERAY_BATCH_HTTP_BODY}" ERROR
+
+		return 1
+	fi
+
+	log "PUT Response: ${LIFERAY_BATCH_HTTP_BODY}"
+
+	if [ ! -n "${LIFERAY_BATCH_HTTP_BODY}" ]
+	then
+		log "Received empty PUT response. Check Liferay logs for more information." ERROR
+
+		return 1
+	fi
+
+	return 0
+}
+
+function refresh_oauth2_access_token {
+	if [ $((SECONDS - LIFERAY_BATCH_OAUTH2_TOKEN_SECONDS)) -lt 480 ]
+	then
+		return 0
+	fi
+
+	request_oauth2_access_token
+}
+
+function request_oauth2_access_token {
+	if ! execute_curl \
+			--data "client_id=${LIFERAY_BATCH_OAUTH2_CLIENT_ID}&client_secret=${LIFERAY_BATCH_OAUTH2_CLIENT_SECRET}&grant_type=client_credentials" \
+			--header "Content-type: application/x-www-form-urlencoded" \
+			--request POST \
+			${LIFERAY_BATCH_CURL_OPTIONS} \
+			"${LIFERAY_BATCH_DXP_URL}${LIFERAY_BATCH_OAUTH2_TOKEN_URI}"
+	then
+		log "POST ${LIFERAY_BATCH_DXP_URL}${LIFERAY_BATCH_OAUTH2_TOKEN_URI} errored with HTTP status ${LIFERAY_BATCH_HTTP_STATUS}. ${LIFERAY_BATCH_HTTP_BODY}" ERROR
+
+		return 1
+	fi
+
+	LIFERAY_BATCH_OAUTH2_ACCESS_TOKEN=$(jq --raw-output ".access_token" <<< "${LIFERAY_BATCH_HTTP_BODY}")
+
+	if [ "${LIFERAY_BATCH_OAUTH2_ACCESS_TOKEN}" == "" ]
+	then
+		log "Unable to get OAuth 2 access token." ERROR
+
+		return 1
+	fi
+
+	LIFERAY_BATCH_OAUTH2_TOKEN_SECONDS=${SECONDS}
+
+	return 0
+}
+
+function wait_for_import_task {
+	local external_reference_code="${1}"
+
+	local sleep_seconds=1
+	local waited_seconds=0
+
+	while true
+	do
+		if ! refresh_oauth2_access_token
+		then
+			return 1
+		fi
+
+		if ! execute_curl \
+				--header "Accept: application/json" \
+				--header "Authorization: Bearer ${LIFERAY_BATCH_OAUTH2_ACCESS_TOKEN}" \
+				--request GET \
+				${LIFERAY_BATCH_CURL_OPTIONS} \
+				"${LIFERAY_BATCH_DXP_URL}/o/headless-batch-engine/v1.0/import-task/by-external-reference-code/${external_reference_code}"
+		then
+			log "GET ${LIFERAY_BATCH_DXP_URL}/o/headless-batch-engine/v1.0/import-task/by-external-reference-code/${external_reference_code} errored with HTTP status ${LIFERAY_BATCH_HTTP_STATUS}. ${LIFERAY_BATCH_HTTP_BODY}" ERROR
+
+			return 1
+		fi
+
+		local status
+
+		if ! status=$(jq --exit-status --raw-output '.executeStatus//.status' <<< "${LIFERAY_BATCH_HTTP_BODY}")
+		then
+			log "Unable to read a status for batch import task ${external_reference_code}. ${LIFERAY_BATCH_HTTP_BODY}" ERROR
+
+			return 1
+		fi
+
+		log "Execute Status: ${status}"
+
+		if [ "${status}" == "COMPLETED" ]
+		then
+			local failed_items
+
+			failed_items=$(jq --raw-output '.failedItems//[] | length' <<< "${LIFERAY_BATCH_HTTP_BODY}")
+
+			if [ "${failed_items}" != "0" ]
+			then
+				log "Batch import task ${external_reference_code} completed with ${failed_items} failed item(s). ${LIFERAY_BATCH_HTTP_BODY}" ERROR
+
+				return 1
+			fi
+
+			return 0
+		fi
+
+		if [ "${status}" == "FAILED" ] || [ "${status}" == "NOT_FOUND" ]
+		then
+			log "Batch import task ${external_reference_code} reported ${status}. ${LIFERAY_BATCH_HTTP_BODY}" ERROR
+
+			return 1
+		fi
+
+		if [ "${waited_seconds}" -ge "${LIFERAY_BATCH_MAX_WAIT_SECONDS}" ]
+		then
+			log "Batch import task ${external_reference_code} did not reach a terminal state within ${waited_seconds} seconds. The last reported status was ${status}." ERROR
+
+			return 1
+		fi
+
+		sleep "${sleep_seconds}"
+
+		waited_seconds=$((waited_seconds + sleep_seconds))
+
+		if [ "${sleep_seconds}" -lt 15 ]
+		then
+			sleep_seconds=$((sleep_seconds * 2))
 		fi
 	done
 }
