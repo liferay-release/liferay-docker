@@ -1,4 +1,4 @@
-FROM caddy:2.5.0
+FROM caddy:2.11.4
 
 ARG LABEL_BUILD_DATE
 ARG LABEL_NAME
@@ -21,5 +21,6 @@ LABEL org.label-schema.vendor="Liferay, Inc."
 LABEL org.label-schema.version="${LABEL_VERSION}"
 
 RUN apk add --no-cache bash tini && \
+	apk upgrade --no-cache && \
 	\
 	mkdir -p /etc/caddy.d /public_html
