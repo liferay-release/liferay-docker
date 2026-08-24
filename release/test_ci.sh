@@ -19,11 +19,13 @@ function main {
 }
 
 function set_up {
+	export JENKINS_CI_TRIGGER_API_KEY=""
 	export LIFERAY_AI_HUB_RELEASE="false"
 	export TRIGGER_CI_TEST_SUITE="false"
 }
 
 function tear_down {
+	unset JENKINS_CI_TRIGGER_API_KEY
 	unset LIFERAY_AI_HUB_RELEASE
 	unset TRIGGER_CI_TEST_SUITE
 }
@@ -42,6 +44,12 @@ function test_ci_not_trigger_ci_test_suite {
 	trigger_ci_test_suite &> /dev/null
 
 	assert_equals "${?}" "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
+
+	TRIGGER_CI_TEST_SUITE="true"
+
+	trigger_ci_test_suite &> /dev/null
+
+	assert_equals "${?}" "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 }
 
 function _test_ci_get_test_portal_branch_name {
