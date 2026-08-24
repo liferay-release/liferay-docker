@@ -1,0 +1,11 @@
+version: 2
+
+updates:
+    -   directories:
+            - "/templates/*"
+        labels:
+            - "dependencies"
+        open-pull-requests-limit: 5
+        package-ecosystem: "docker"
+        schedule:
+            interval: "weekly"
