@@ -244,7 +244,7 @@ function build_caddy_image {
 	echo "Building Docker image Caddy resources."
 	echo ""
 
-	LIFERAY_DOCKER_IMAGE_PLATFORMS="${LIFERAY_DOCKER_IMAGE_PLATFORMS}" LIFERAY_DOCKER_REPOSITORY="${LIFERAY_DOCKER_REPOSITORY}" time ./build_caddy_image.sh "${BUILD_ALL_IMAGES_PUSH}" | tee --append "${LIFERAY_DOCKER_LOGS_DIR}/caddy.log"
+	LIFERAY_DOCKER_IMAGE_PLATFORMS="${LIFERAY_DOCKER_IMAGE_PLATFORMS}" LIFERAY_DOCKER_LATEST=true LIFERAY_DOCKER_REPOSITORY="${LIFERAY_DOCKER_REPOSITORY}" time ./build_caddy_image.sh "${BUILD_ALL_IMAGES_PUSH}" | tee --append "${LIFERAY_DOCKER_LOGS_DIR}/caddy.log"
 
 	if [ "${PIPESTATUS[0]}" -gt 0 ]
 	then
