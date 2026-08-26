@@ -7,7 +7,11 @@ function build_docker_image {
 
 	DOCKER_IMAGE_TAGS=()
 	DOCKER_IMAGE_TAGS+=("${LIFERAY_DOCKER_REPOSITORY}/caddy:${image_version}-${TIMESTAMP}")
-	DOCKER_IMAGE_TAGS+=("${LIFERAY_DOCKER_REPOSITORY}/caddy")
+
+	if [[ "${LIFERAY_DOCKER_LATEST}" == "true" ]]
+	then
+		DOCKER_IMAGE_TAGS+=("${LIFERAY_DOCKER_REPOSITORY}/caddy")
+	fi
 
 	if [ "${1}" == "push-all" ]
 	then
