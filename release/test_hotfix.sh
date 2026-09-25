@@ -20,8 +20,8 @@ function set_up {
 	mkdir --parents "${_BUNDLES_DIR}/osgi/modules" "${_RELEASE_DIR}/osgi/modules"
 
 	_create_module_jar "${_BUNDLES_DIR}/osgi/modules/com.liferay.test.changed.impl.jar" "new content" "2020-01-01 00:00:00" "17.0.14"
-	_create_module_jar "${_RELEASE_DIR}/osgi/modules/com.liferay.test.changed.impl.jar" "original content" "2020-01-01 00:00:00" "17.0.14"
 	_create_module_jar "${_BUNDLES_DIR}/osgi/modules/com.liferay.test.rebuilt.impl.jar" "original content" "2021-01-01 00:00:00" "17.0.14"
+	_create_module_jar "${_RELEASE_DIR}/osgi/modules/com.liferay.test.changed.impl.jar" "original content" "2020-01-01 00:00:00" "17.0.14"
 	_create_module_jar "${_RELEASE_DIR}/osgi/modules/com.liferay.test.rebuilt.impl.jar" "original content" "2020-01-01 00:00:00" "17.0.18"
 
 	_create_portal_bootstrap_jar "${_BUNDLES_DIR}/osgi/modules/com.liferay.test.portal.bootstrap.changed.jar" "1772646511768" "2.20.0"
