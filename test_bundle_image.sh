@@ -214,7 +214,6 @@ function stop_container {
 	echo "Stopping container."
 
 	docker kill "${CONTAINER_ID}" > /dev/null
-	docker rm "${CONTAINER_ID}" > /dev/null
 }
 
 function test_docker_image_files {
