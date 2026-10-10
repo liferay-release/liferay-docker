@@ -611,6 +611,29 @@ function update_release_info_date {
 		release.properties
 }
 
+function update_release_info_name {
+	if ! is_cms_standalone_release
+	then
+		lc_log INFO "The release.info.name should only be updated for CMS standalone releases."
+
+		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
+	fi
+
+	lc_cd "${_PROJECTS_DIR}/${LIFERAY_PORTAL_REPOSITORY_NAME}"
+
+	#
+	# Release branches use release.info.name[release-private] while the
+	# CMS build from master uses release.info.name. Changing both simplifies
+	# the implementation since it will be correct for either build.
+	#
+
+	sed \
+		--expression "s/release.info.name=.*/release.info.name=Liferay Content Management System/" \
+		--expression "s/release.info.name\[release-private\]=.*/release.info.name[release-private]=Liferay Content Management System/" \
+		--in-place \
+		release.properties
+}
+
 function warm_up_tomcat {
 	if [ -e "${_BUILD_DIR}/warm-up-tomcat" ]
 	then
