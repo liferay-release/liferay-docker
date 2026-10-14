@@ -253,6 +253,15 @@ function is_cms_standalone_release {
 	return 1
 }
 
+function is_cms_standalone_weekly {
+	if [ "${LIFERAY_CMS_STANDALONE_WEEKLY}" == "true" ]
+	then
+		return 0
+	fi
+
+	return 1
+}
+
 function is_early_product_version_than {
 	_compare_product_versions "${1}" "early"
 }
