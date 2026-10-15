@@ -134,6 +134,17 @@ function get_release_candidates_dir_name {
 	fi
 }
 
+function get_release_dir_name {
+	local product_version=$(_get_product_version "${1}")
+
+	if is_cms_standalone_release "${product_version}"
+	then
+		echo "dxp/cms-standalone/${product_version}"
+	else
+		echo "dxp/${product_version}"
+	fi
+}
+
 function get_release_output {
 	if [ -z "${LIFERAY_RELEASE_OUTPUT}" ]
 	then
