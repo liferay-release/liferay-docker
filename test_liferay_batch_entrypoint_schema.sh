@@ -40,9 +40,9 @@ function test_liferay_batch_entrypoint_schema_fields {
 		return
 	fi
 
-	local expected_schema_fields="callbackURL className companyId fieldNameMappingMap multiCompany parameters taskItemDelegateName userId version"
-
-	assert_equals "${schema_fields}" "${expected_schema_fields}"
+	assert_equals \
+		"${schema_fields}" \
+		"callbackURL className companyId fieldNameMappingMap multiCompany parameters taskItemDelegateName userId version"
 
 	tear_down
 }

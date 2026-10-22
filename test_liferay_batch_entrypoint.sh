@@ -3,6 +3,7 @@
 source ./_test_common.sh
 
 function main {
+	test_liferay_batch_entrypoint_does_not_log_forwarded_configuration
 	test_liferay_batch_entrypoint_encodes_query_parameter_keys
 	test_liferay_batch_entrypoint_forwards_configuration
 	test_liferay_batch_entrypoint_import_task_status
@@ -70,17 +71,32 @@ function tear_down {
 	unset _TEST_TOKEN_HTTP_STATUS
 }
 
+function test_liferay_batch_entrypoint_does_not_log_forwarded_configuration {
+	set_up
+
+	echo "{\"configuration\": {\"callbackURL\": \"http://x/y\", \"className\": \"Foo\", \"fieldNameMappingMap\": {\"a\": \"b\"}, \"parameters\": {}, \"taskItemDelegateName\": \"C_Bar\"}, \"items\": [{\"name\": \"x\"}]}" > "${_TEST_FIXTURE_DIR}/batch/00-test.batch-engine-data.json"
+
+	_TEST_ENTRYPOINT_OUTPUT=$(_run_entrypoint)
+
+	_TEST_ENTRYPOINT_EXIT_CODE=${?}
+
+	assert_equals \
+		"$(_output_contains "Ignoring batch configuration")" "false" \
+		"${_TEST_ENTRYPOINT_EXIT_CODE}" "0"
+
+	tear_down
+}
+
 function test_liferay_batch_entrypoint_encodes_query_parameter_keys {
 	_test_liferay_batch_entrypoint_forwards_configuration "{\"className\": \"Foo\", \"parameters\": {\"a&b\": \"v\"}}" "a%26b=v" "true"
 }
 
 function test_liferay_batch_entrypoint_forwards_configuration {
-	_test_liferay_batch_entrypoint_forwards_configuration "{\"className\": \"Foo\", \"taskItemDelegateName\": \"C_Bar\"}" "taskItemDelegateName=C_Bar" "true"
 	_test_liferay_batch_entrypoint_forwards_configuration "{\"callbackURL\": \"http://example.com/done\", \"className\": \"Foo\"}" "callbackURL=http%3A%2F%2Fexample.com%2Fdone" "true"
 	_test_liferay_batch_entrypoint_forwards_configuration "{\"className\": \"Foo\", \"fieldNameMappingMap\": {\"a\": \"b\", \"c\": \"d\"}}" "fieldNameMapping=a%3Db%2Cc%3Dd" "true"
-
-	_test_liferay_batch_entrypoint_forwards_configuration "{\"className\": \"Foo\", \"parameters\": {\"taskItemDelegateName\": \"C_FromParameters\"}, \"taskItemDelegateName\": \"C_Sibling\"}" "taskItemDelegateName=C_Sibling" "true"
 	_test_liferay_batch_entrypoint_forwards_configuration "{\"className\": \"Foo\", \"parameters\": {\"taskItemDelegateName\": \"C_FromParameters\"}, \"taskItemDelegateName\": \"C_Sibling\"}" "C_FromParameters" "false"
+	_test_liferay_batch_entrypoint_forwards_configuration "{\"className\": \"Foo\", \"parameters\": {\"taskItemDelegateName\": \"C_FromParameters\"}, \"taskItemDelegateName\": \"C_Sibling\"}" "taskItemDelegateName=C_Sibling" "true"
+	_test_liferay_batch_entrypoint_forwards_configuration "{\"className\": \"Foo\", \"taskItemDelegateName\": \"C_Bar\"}" "taskItemDelegateName=C_Bar" "true"
 }
 
 function test_liferay_batch_entrypoint_import_task_status {
@@ -99,20 +115,6 @@ function test_liferay_batch_entrypoint_logs_ignored_configuration {
 
 	assert_equals \
 		"$(_output_contains "Ignoring batch configuration: onErrorFail")" "true" \
-		"${_TEST_ENTRYPOINT_EXIT_CODE}" "0"
-
-	tear_down
-
-	set_up
-
-	echo "{\"configuration\": {\"callbackURL\": \"http://x/y\", \"className\": \"Foo\", \"fieldNameMappingMap\": {\"a\": \"b\"}, \"parameters\": {}, \"taskItemDelegateName\": \"C_Bar\"}, \"items\": [{\"name\": \"x\"}]}" > "${_TEST_FIXTURE_DIR}/batch/00-test.batch-engine-data.json"
-
-	_TEST_ENTRYPOINT_OUTPUT=$(_run_entrypoint)
-
-	_TEST_ENTRYPOINT_EXIT_CODE=${?}
-
-	assert_equals \
-		"$(_output_contains "Ignoring batch configuration")" "false" \
 		"${_TEST_ENTRYPOINT_EXIT_CODE}" "0"
 
 	tear_down
