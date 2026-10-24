@@ -36,7 +36,26 @@ function is_transient_http_status {
 }
 
 function log {
-	echo "${1}"
+	if [ "${LIFERAY_BATCH_STRUCTURED_LOGGING_ENABLED}" != "true" ]
+	then
+		echo "${1}"
+
+		return
+	fi
+
+	#
+	# The message is piped rather than passed with --arg. A log line can carry an
+	# entire batch data file's items, which is well past ARG_MAX, and as an
+	# argument that fails the exec and loses the line entirely.
+	#
+
+	printf "%s" "${1}" | jq \
+		--arg severity "${2:-INFO}" \
+		--arg timestamp "$(date --utc +%Y-%m-%dT%H:%M:%SZ)" \
+		--compact-output \
+		--raw-input \
+		--slurp \
+		'{"message": ., "script": "liferay_batch_entrypoint.sh", "severity": $severity, "timestamp": $timestamp}'
 }
 
 function main {
@@ -332,7 +351,32 @@ function _process_batch_data_file {
 
 	log "Items: $(cat "${items_file}")"
 
-	local parameters=$(jq --raw-output '.configuration.parameters | [map_values(. | @uri) | to_entries[] | .key + "=" + .value] | join("&")' "${file_name}" 2> /dev/null)
+	local ignored_configuration=$( \
+		jq \
+			--raw-output \
+			'(.configuration // {} | keys) - ["callbackURL", "className", "fieldNameMappingMap", "parameters", "taskItemDelegateName"] | join(", ")' \
+			"${file_name}" 2> /dev/null)
+
+	if [ -n "${ignored_configuration}" ]
+	then
+		log "Ignoring batch configuration: ${ignored_configuration}" WARNING
+	fi
+
+	local parameters=$( \
+		jq \
+			--raw-output \
+			'.configuration |
+			(.parameters // {}) +
+			({
+				callbackURL,
+				fieldNameMapping: (.fieldNameMappingMap // {} | to_entries | map("\(.key)=\(.value)") | join(",")),
+				taskItemDelegateName
+			} |
+			with_entries(select(.value != null and .value != ""))) |
+			to_entries |
+			map("\(.key | @uri)=\(.value | @uri)") |
+			join("&")' \
+			"${file_name}" 2> /dev/null)
 
 	if [ "${parameters}" != "" ]
 	then
