@@ -217,6 +217,11 @@ function prepare_next_release_pull_request {
 		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 	fi
 
+	if ! close_jira_issue "${issue_key}"
+	then
+		lc_log ERROR "Unable to close the Jira issue ${issue_key}."
+	fi
+
 	commit_changes \
 		"${_PROJECTS_DIR}/liferay-portal-ee/release.properties" \
 		"${issue_key} prep next"
