@@ -122,6 +122,35 @@ function add_jira_issue_with_description {
 	_invoke_jira_api "https://liferay.atlassian.net/rest/api/2/issue/" "${data}"
 }
 
+function close_jira_issue {
+	local data=$(
+		cat <<- END
+		{
+			"fields": {
+				"resolution": {
+					"name": "Completed"
+				}
+			},
+			"transition": {
+				"id": "71"
+			}
+		}
+		END
+	)
+
+	curl \
+		--data "${data}" \
+		--fail \
+		--header "Accept: application/json" \
+		--header "Content-Type: application/json" \
+		--max-time 10 \
+		--request "POST" \
+		--retry 3 \
+		--silent \
+		--user "${LIFERAY_RELEASE_JIRA_USER}:${LIFERAY_RELEASE_JIRA_TOKEN}" \
+		"https://liferay.atlassian.net/rest/api/3/issue/${1}/transitions"
+}
+
 function _invoke_jira_api {
 	local http_response=$( \
 		curl \
