@@ -140,9 +140,19 @@ function test_marketplace_get_cmp_activation_key {
 
 function test_marketplace_get_dsr_activation_key {
 	LIFERAY_DSR_ACTIVATION_KEY_2026="activation-key-dsr-2026.xml"
+	LIFERAY_DSR_ACTIVATION_KEY_2027="activation-key-dsr-2027.xml"
+	LIFERAY_DSR_ACTIVATION_KEY_2028="activation-key-dsr-2028.xml"
+	LIFERAY_DSR_ACTIVATION_KEY_2029="activation-key-dsr-2029.xml"
 
 	_test_marketplace_get_dsr_activation_key "2026" "activation-key-dsr-2026.xml"
-	_test_marketplace_get_dsr_activation_key "2027" ""
+	_test_marketplace_get_dsr_activation_key "2027" "activation-key-dsr-2027.xml"
+	_test_marketplace_get_dsr_activation_key "2028" "activation-key-dsr-2028.xml"
+	_test_marketplace_get_dsr_activation_key "2029" "activation-key-dsr-2029.xml"
+	_test_marketplace_get_dsr_activation_key "2030" ""
+
+	unset LIFERAY_DSR_ACTIVATION_KEY_2027
+	unset LIFERAY_DSR_ACTIVATION_KEY_2028
+	unset LIFERAY_DSR_ACTIVATION_KEY_2029
 }
 
 function test_marketplace_get_latest_product_virtual_settings_file_entry_json_index {
