@@ -252,6 +252,8 @@ function main {
 
 		lc_time_run copy_release_info_date
 
+		lc_time_run update_release_info_name
+
 		lc_time_run set_up_profile
 
 		lc_time_run add_hotfix_testing_code
