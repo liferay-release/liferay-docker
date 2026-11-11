@@ -182,7 +182,7 @@ function download_trial_dxp_license {
 
 		mkdir --parents "${TEMP_DIR}/liferay/deploy"
 
-		cp "${LIFERAY_CMS_TRIAL_ACTIVATION_KEY}" "${TEMP_DIR}/liferay/deploy"
+		cp --no-preserve=mode "${LIFERAY_CMS_TRIAL_ACTIVATION_KEY}" "${TEMP_DIR}/liferay/deploy"
 
 		return
 	fi
