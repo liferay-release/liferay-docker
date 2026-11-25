@@ -16772,13 +16772,6 @@ liferay-dxp-2024.q1.21-hotfix-25.zip
 liferay-dxp-2024.q1.21-hotfix-24.zip
 liferay-dxp-2024.q1.21-hotfix-21.zip
 liferay-dxp-2024.q1.21-hotfix-18.zip
-liferay-dxp-2024.q1.22-hotfix-18.zip
-liferay-dxp-2024.q1.22-hotfix-15.zip
-liferay-dxp-2024.q1.22-hotfix-14.zip
-liferay-dxp-2024.q1.22-hotfix-13.zip
-liferay-dxp-2024.q1.22-hotfix-9.zip
-liferay-dxp-2024.q1.22-hotfix-8.zip
-liferay-dxp-2024.q1.22-hotfix-5.zip
 liferay-dxp-2024.q1.25-hotfix-7.zip
 liferay-dxp-2024.q1.25-hotfix-6.zip
 liferay-dxp-2024.q1.25-hotfix-5.zip
@@ -19431,7 +19424,6 @@ liferay-dxp-2025.q1.4-lts-hotfix-125.zip
 liferay-dxp-2025.q1.8-lts-hotfix-545.zip
 liferay-dxp-2026.q1.12-lts-hotfix-61.zip
 liferay-hotfix-10612-7310.zip
-liferay-dxp-2024.q1.23-hotfix-5.zip
 liferay-dxp-2024.q2.0-hotfix-215.zip
 liferay-dxp-2025.q1.14-lts-hotfix-871.zip
 liferay-dxp-2025.q1.15-lts-hotfix-321.zip
@@ -19636,7 +19628,6 @@ liferay-hotfix-7392-7413.zip
 liferay-hotfix-7391-7413.zip
 liferay-dxp-2023.q4.3-hotfix-115.zip
 liferay-dxp-2024.q1.1-hotfix-368.zip
-liferay-dxp-2024.q1.23-hotfix-6.zip
 liferay-dxp-2024.q1.4-hotfix-125.zip
 liferay-dxp-2025.q1.0-lts-hotfix-452.zip
 liferay-dxp-2025.q1.0-lts-hotfix-451.zip
