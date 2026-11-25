@@ -257,26 +257,46 @@ function prepare_branch_in_dxp {
 
 		git fetch upstream "refs/tags/${quarterly_release_baseline_version}:refs/tags/${quarterly_release_baseline_version}"
 
-		git checkout -b "${tag_name}" "${quarterly_release_baseline_version}"
+		if ! git checkout -b "${tag_name}" "${quarterly_release_baseline_version}"
+		then
+			lc_log ERROR "Unable to create the branch ${tag_name} from ${quarterly_release_baseline_version} in liferay-dxp."
+
+			return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+		fi
 	else
 		delete_if_exists "7.4.13"
 
 		git fetch upstream "refs/heads/7.4.13:refs/heads/7.4.13" --no-tags
 
-		git checkout 7.4.13
+		if ! git checkout 7.4.13
+		then
+			lc_log ERROR "Unable to check out the branch 7.4.13 in liferay-dxp."
+
+			return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+		fi
 	fi
 
-	rsync \
-		--archive \
-		--delete \
-		--exclude='.git/' \
-		--exclude='.github/' \
-		--verbose \
-		"${REPO_PATH_EE}/" "${REPO_PATH_DXP}/"
+	if ! rsync \
+			--archive \
+			--delete \
+			--exclude='.git/' \
+			--exclude='.github/' \
+			--verbose \
+			"${REPO_PATH_EE}/" "${REPO_PATH_DXP}/"
+	then
+		lc_log ERROR "Unable to sync liferay-portal-ee into liferay-dxp for ${tag_name}."
+
+		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+	fi
 
 	git add . --force
 
-	git commit -m "${tag_name}"
+	if ! git commit -m "${tag_name}"
+	then
+		lc_log ERROR "Unable to commit ${tag_name} in liferay-dxp."
+
+		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+	fi
 
 	git tag --force "${tag_name}"
 
@@ -299,9 +319,16 @@ function prepare_branch_in_portal_ee {
 
 	git fetch upstream "refs/tags/${1}:refs/tags/${1}" --no-tags
 
-	git checkout -b "${1}-branch" "${1}"
+	git checkout -B "${1}-branch" "refs/tags/${1}"
 
 	local commit_hash=$(git log -1 --format="%H")
+
+	if [ "${commit_hash}" != "$(git rev-parse --quiet --verify "refs/tags/${1}^{commit}")" ]
+	then
+		lc_log ERROR "Unable to check out the tag ${1} in liferay-portal-ee."
+
+		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+	fi
 
 	git filter-branch -f \
 		--commit-filter 'git_commit_non_empty_tree "$@"' \
@@ -331,6 +358,13 @@ function prepare_branch_in_portal_ee {
 		modules/dxp/apps/sync/vldap/*' \
 		--msg-filter 'read message; echo "$message ($GIT_COMMIT)"' \
 		"${commit_hash}~1..HEAD" > /dev/null 2>&1
+
+	if [ "$(git log -1 --format="%H")" == "${commit_hash}" ]
+	then
+		lc_log ERROR "Unable to filter the tag ${1} in liferay-portal-ee."
+
+		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
+	fi
 
 	find . -type f -size +100M -exec rm -f {} \;
 }
