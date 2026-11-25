@@ -194,11 +194,18 @@ function copy_hotfix_commit {
 
 	checkout_commit liferay-portal-ee "${commit_hash}"
 
-	if [ "${?}" -eq "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}" ]
+	local exit_code="${?}"
+
+	if [[ "${exit_code}" -eq "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}" ]]
 	then
 		lc_log ERROR "The commit ${commit_hash} is missing in the repository 'liferay-portal-ee'."
 
 		return "${LIFERAY_COMMON_EXIT_CODE_SKIPPED}"
+	elif [[ "${exit_code}" -ne "${LIFERAY_COMMON_EXIT_CODE_OK}" ]]
+	then
+		lc_log ERROR "Unable to check out the commit ${commit_hash} in the repository 'liferay-portal-ee'."
+
+		return "${LIFERAY_COMMON_EXIT_CODE_BAD}"
 	fi
 
 	local changed_files=""
